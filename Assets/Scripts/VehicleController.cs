@@ -16,11 +16,6 @@ namespace LastPassenger
         [SerializeField] private float roadAlignmentSpeed = 8f;
         [SerializeField] private float laneLimit = 3.25f;
 
-        [Header("Engine mix")]
-        [SerializeField, Range(0f, 1f)] private float idleEngineVolume = 0.04f;
-        [SerializeField, Range(0f, 1f)] private float maximumEngineVolume = 0.5f;
-        [SerializeField] private float engineVolumeResponse = 0.75f;
-
         private AudioSource engineSource;
         private AudioSource impactSource;
         private float speed;
@@ -43,7 +38,7 @@ namespace LastPassenger
             engineSource.clip = engine;
             engineSource.loop = true;
             engineSource.spatialBlend = 0f;
-            engineSource.volume = idleEngineVolume;
+            engineSource.volume = 0.2f;
             engineSource.Play();
 
             impactSource = gameObject.AddComponent<AudioSource>();
@@ -55,7 +50,6 @@ namespace LastPassenger
         public void SetControlsEnabled(bool enabled)
         {
             controlsEnabled = enabled;
-            if (engineSource != null) engineSource.mute = !enabled;
             if (!enabled)
             {
                 speed = Mathf.MoveTowards(speed, 0f, braking * Time.deltaTime);
@@ -144,12 +138,8 @@ namespace LastPassenger
 
             if (engineSource != null)
             {
-                engineSource.pitch = Mathf.Lerp(0.72f, 1.45f, speedRatio);
-                float targetVolume = Mathf.Lerp(idleEngineVolume, maximumEngineVolume, speedRatio);
-                engineSource.volume = Mathf.MoveTowards(
-                    engineSource.volume,
-                    Mathf.Min(targetVolume, 0.5f),
-                    engineVolumeResponse * Time.deltaTime);
+                engineSource.pitch = Mathf.Lerp(0.72f, 1.45f, speed / maximumSpeed);
+                engineSource.volume = Mathf.Lerp(0.12f, 0.32f, speed / maximumSpeed);
             }
         }
     }

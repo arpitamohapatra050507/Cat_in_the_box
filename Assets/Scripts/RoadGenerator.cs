@@ -9,14 +9,6 @@ namespace LastPassenger
         private const float ChunkLength = 80f;
         private const float RoadWidth = 8f;
 
-        [Header("Optional prefab overrides")]
-        [Tooltip("An 80-metre road segment centred on X=0, with its origin at the beginning and forward along +Z.")]
-        [SerializeField] private GameObject roadChunkPrefab;
-        [Tooltip("Tree origin must be at the base of the trunk. Its authored scale is preserved with slight variation.")]
-        [SerializeField] private GameObject livingTreePrefab;
-        [Tooltip("Dead-tree origin must be at the base of the trunk. Its authored scale is preserved with slight variation.")]
-        [SerializeField] private GameObject deadTreePrefab;
-
         private readonly List<Transform> chunks = new List<Transform>();
         private Transform vehicle;
         private Material roadMaterial;
@@ -48,29 +40,19 @@ namespace LastPassenger
 
         private Transform CreateChunk(int index, float z)
         {
-            GameObject chunk;
-            if (roadChunkPrefab != null)
-            {
-                chunk = Instantiate(roadChunkPrefab, transform, false);
-                chunk.name = $"Prefab road {index:00}";
-                chunk.transform.localPosition = new Vector3(0f, 0f, z);
-            }
-            else
-            {
-                chunk = RuntimeGeometry.Empty($"Repeating road {index:00}", transform, new Vector3(0f, 0f, z));
+            GameObject chunk = RuntimeGeometry.Empty($"Repeating road {index:00}", transform, new Vector3(0f, 0f, z));
 
-                RuntimeGeometry.Primitive("Road", PrimitiveType.Cube, chunk.transform,
-                    new Vector3(0f, -0.12f, ChunkLength * 0.5f), new Vector3(RoadWidth, 0.22f, ChunkLength), roadMaterial);
-                RuntimeGeometry.Primitive("Left shoulder", PrimitiveType.Cube, chunk.transform,
-                    new Vector3(-9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
-                RuntimeGeometry.Primitive("Right shoulder", PrimitiveType.Cube, chunk.transform,
-                    new Vector3(9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
+            RuntimeGeometry.Primitive("Road", PrimitiveType.Cube, chunk.transform,
+                new Vector3(0f, -0.12f, ChunkLength * 0.5f), new Vector3(RoadWidth, 0.22f, ChunkLength), roadMaterial);
+            RuntimeGeometry.Primitive("Left shoulder", PrimitiveType.Cube, chunk.transform,
+                new Vector3(-9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
+            RuntimeGeometry.Primitive("Right shoulder", PrimitiveType.Cube, chunk.transform,
+                new Vector3(9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
 
-                for (float markZ = 8f; markZ < ChunkLength; markZ += 12f)
-                {
-                    RuntimeGeometry.Primitive("Broken centre line", PrimitiveType.Cube, chunk.transform,
-                        new Vector3(0f, 0.015f, markZ), new Vector3(0.09f, 0.018f, 5.5f), lineMaterial);
-                }
+            for (float markZ = 8f; markZ < ChunkLength; markZ += 12f)
+            {
+                RuntimeGeometry.Primitive("Broken centre line", PrimitiveType.Cube, chunk.transform,
+                    new Vector3(0f, 0.015f, markZ), new Vector3(0.09f, 0.018f, 5.5f), lineMaterial);
             }
 
             System.Random random = new System.Random(7331 + index * 109);
@@ -89,20 +71,6 @@ namespace LastPassenger
 
         private void BuildTree(Transform parent, Vector3 position, float height, bool isPine)
         {
-            GameObject prefab = isPine ? livingTreePrefab : deadTreePrefab;
-            if (prefab != null)
-            {
-                GameObject instance = Instantiate(prefab, parent, false);
-                instance.name = isPine ? "Prefab living tree" : "Prefab dead tree";
-                instance.transform.localPosition = position;
-                instance.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-
-                float heightRatio = Mathf.InverseLerp(2.5f, 6f, height);
-                float scaleVariation = Mathf.Lerp(0.82f, 1.18f, heightRatio);
-                instance.transform.localScale *= scaleVariation;
-                return;
-            }
-
             GameObject tree = RuntimeGeometry.Empty(
                 isPine ? "Generated pine tree" : "Generated leafless tree",
                 parent,

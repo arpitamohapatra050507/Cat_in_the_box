@@ -1,16 +1,29 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LastPassenger
 {
     public sealed class LastPassengerBootstrap : MonoBehaviour
     {
-        private bool built;
+        private static bool started;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterSceneBootstrap()
+        {
+            started = false;
+            SceneManager.sceneLoaded -= CreatePrototype;
+            SceneManager.sceneLoaded += CreatePrototype;
+        }
+
+        private static void CreatePrototype(Scene scene, LoadSceneMode mode)
+        {
+            if (started || Object.FindFirstObjectByType<PrototypeGameManager>() != null) return;
+            started = true;
+            new GameObject("The Last Passenger — Generated Prototype").AddComponent<LastPassengerBootstrap>();
+        }
 
         private void Awake()
         {
-            if (built) return;
-            built = true;
-
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
             BuildEnvironment();
@@ -24,27 +37,19 @@ namespace LastPassenger
             GameObject vehicle = new GameObject("Player hearse");
             vehicle.transform.position = new Vector3(0f, 0.18f, 0f);
             VehicleController controller = vehicle.AddComponent<VehicleController>();
-            BuildMainCamera(vehicle.transform);
-
-            AudioClip customEngine = Resources.Load<AudioClip>("Audio/CarEngine");
-            controller.ConfigureAudio(
-                customEngine != null ? customEngine : ProceduralAudio.EngineLoop(),
-                ProceduralAudio.Impact());
+            controller.ConfigureAudio(ProceduralAudio.EngineLoop(), ProceduralAudio.Impact());
 
             BuildCabin(vehicle.transform, controller, cabin, trim, instrument, glass);
             Transform body = BuildCoveredBody(vehicle.transform, cloth);
+            BuildMainCamera(vehicle.transform);
             BuildHeadlights(vehicle.transform);
 
             GameObject mirrorObject = new GameObject("Mirror system");
             MirrorSystem mirror = mirrorObject.AddComponent<MirrorSystem>();
             mirror.Build(vehicle.transform, body);
 
-            RoadGenerator road = GetComponent<RoadGenerator>();
-            if (road == null)
-            {
-                GameObject roadObject = new GameObject("Generated repeating road");
-                road = roadObject.AddComponent<RoadGenerator>();
-            }
+            GameObject roadObject = new GameObject("Generated repeating road");
+            RoadGenerator road = roadObject.AddComponent<RoadGenerator>();
             road.Build(vehicle.transform);
 
             GameObject managerObject = new GameObject("Prototype game state");
@@ -55,9 +60,6 @@ namespace LastPassenger
 
         private static void BuildEnvironment()
         {
-            Light[] sceneLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-            for (int i = 0; i < sceneLights.Length; i++) sceneLights[i].enabled = false;
-
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogDensity = 0.018f;
@@ -77,34 +79,20 @@ namespace LastPassenger
 
         private static Camera BuildMainCamera(Transform vehicle)
         {
-            Camera[] sceneCameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
             GameObject cameraObject = new GameObject("Driver camera");
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(vehicle, false);
-            cameraObject.transform.localPosition = new Vector3(-0.56f, 1.34f, 0.08f);
-            cameraObject.transform.localRotation = Quaternion.Euler(7f, 0f, 0f);
+            cameraObject.transform.localPosition = new Vector3(0f, 1.47f, 0.15f);
+            cameraObject.transform.localRotation = Quaternion.identity;
 
             Camera camera = cameraObject.AddComponent<Camera>();
-            camera.fieldOfView = 68f;
+            camera.fieldOfView = 72f;
             camera.nearClipPlane = 0.04f;
             camera.farClipPlane = 360f;
-            camera.depth = 10f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.004f, 0.007f, 0.009f);
             cameraObject.AddComponent<AudioListener>();
             cameraObject.AddComponent<DriverCameraLook>();
-
-            for (int i = 0; i < sceneCameras.Length; i++)
-            {
-                Camera sceneCamera = sceneCameras[i];
-                sceneCamera.enabled = false;
-                if (sceneCamera.CompareTag("MainCamera")) sceneCamera.tag = "Untagged";
-
-                AudioListener sceneListener = sceneCamera.GetComponent<AudioListener>();
-                if (sceneListener != null) sceneListener.enabled = false;
-            }
-
-            camera.enabled = true;
             return camera;
         }
 
@@ -150,7 +138,7 @@ namespace LastPassenger
             GameObject dashboardRoot = RuntimeGeometry.Empty(
                 "Lowered slanted dashboard",
                 parent,
-                new Vector3(0f, 0.66f, 1.24f));
+                new Vector3(0f, 0.54f, 1.24f));
             dashboardRoot.transform.localRotation = Quaternion.Euler(21f, 0f, 0f);
 
             RuntimeGeometry.Primitive(
@@ -218,7 +206,7 @@ namespace LastPassenger
             GameObject wheel = RuntimeGeometry.TexturedQuad(
                 "Animated 2D steering wheel",
                 parent,
-                new Vector3(-0.56f, 0.68f, 0.88f),
+                new Vector3(-0.56f, 0.54f, 0.86f),
                 new Vector2(0.74f, 0.74f),
                 wheelMaterial);
 
@@ -313,5 +301,9 @@ namespace LastPassenger
             }
         }
 
+        private void OnDestroy()
+        {
+            started = false;
+        }
     }
 }

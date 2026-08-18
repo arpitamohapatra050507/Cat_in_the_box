@@ -1,11 +1,6 @@
-# Runtime audio
+# Radio static handoff
 
-- `RadioStatic.mp3` loops through the in-car radio. Unity normalizes and imports
-  it as mono because the uploaded source is unusually quiet.
-- `CarEngine.mp3` loops through the vehicle and follows its speed through pitch
-  and volume changes.
-- `MenuTheme.mp3` is streamed in stereo and plays only on the title screen.
-
-The radio and engine retain procedural fallbacks. If a loop clicks at its seam,
-make a short equal-power crossfade in an audio editor and re-export it under the
-same resource name.
+Put the final static loop at `Assets/Resources/Audio/RadioStatic.wav`. The game
+loads that exact resource automatically and falls back to the synthesized
+static until it exists. A loopable WAV is preferred; keep the peak level below
+clipping and leave a short crossfade at the loop boundary if needed.

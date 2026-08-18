@@ -13,12 +13,6 @@ namespace LastPassenger
 
         private Vector2 targetAngles;
         private Vector2 currentAngles;
-        private Quaternion neutralRotation;
-
-        private void Awake()
-        {
-            neutralRotation = transform.localRotation;
-        }
 
         private void Update()
         {
@@ -43,7 +37,7 @@ namespace LastPassenger
 
             float blend = 1f - Mathf.Exp(-smoothing * deltaTime);
             currentAngles = Vector2.Lerp(currentAngles, targetAngles, blend);
-            transform.localRotation = neutralRotation * Quaternion.Euler(currentAngles.x, currentAngles.y, 0f);
+            transform.localRotation = Quaternion.Euler(currentAngles.x, currentAngles.y, 0f);
         }
     }
 }

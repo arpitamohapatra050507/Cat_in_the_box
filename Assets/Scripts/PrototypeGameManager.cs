@@ -40,7 +40,6 @@ namespace LastPassenger
         private const float AnomalyDistance = 1080f;
         private const float FailureDistance = 1480f;
         private const float FinishDistance = 2000f;
-        private const string MenuSceneName = "MainMenu";
 
         public RunState State => state;
         public bool RadioEnabled => radioEnabled;
@@ -92,8 +91,7 @@ namespace LastPassenger
             AudioClip customRadioStatic = Resources.Load<AudioClip>("Audio/RadioStatic");
             radioSource.clip = customRadioStatic != null ? customRadioStatic : ProceduralAudio.RadioStatic();
             radioSource.loop = true;
-            radioSource.spatialBlend = 0f;
-            radioSource.volume = customRadioStatic != null ? 0.03f : 0.025f;
+            radioSource.volume = customRadioStatic != null ? 0.18f : 0.075f;
             radioSource.Play();
 
             stingSource = gameObject.AddComponent<AudioSource>();
@@ -105,12 +103,6 @@ namespace LastPassenger
         {
             if (vehicle == null || mirror == null) return;
 
-            if (PrototypeInput.CancelPressed)
-            {
-                SceneManager.LoadScene(MenuSceneName);
-                return;
-            }
-
             if (PrototypeInput.RadioPressed)
             {
                 radioEnabled = !radioEnabled;
@@ -121,6 +113,7 @@ namespace LastPassenger
             if (state == RunState.Success || state == RunState.Failure)
             {
                 if (PrototypeInput.ConfirmPressed) Restart();
+                if (PrototypeInput.CancelPressed) Application.Quit();
                 return;
             }
 
@@ -177,13 +170,13 @@ namespace LastPassenger
             if (choseLeft)
             {
                 ShowMessage("LEFT ROUTE SELECTED — the radio goes silent.", new Color(0.66f, 0.78f, 0.67f), 6f);
-                radioSource.volume = 0.01f;
+                radioSource.volume = 0.025f;
             }
             else
             {
                 ShowMessage("RIGHT ROUTE SELECTED — something knocks behind you.", new Color(1f, 0.48f, 0.35f), 6f);
                 radioSource.pitch = 0.58f;
-                radioSource.volume = 0.04f;
+                radioSource.volume = 0.14f;
             }
         }
 
