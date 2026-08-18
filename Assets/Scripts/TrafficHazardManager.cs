@@ -17,7 +17,8 @@ namespace LastPassenger
         {
             OncomingCar,
             SlowerCar,
-            ChaseBarricade
+            ChaseBarricade,
+            RoadFigure
         }
 
         private sealed class Hazard
@@ -42,6 +43,7 @@ namespace LastPassenger
         private PrototypeGameManager manager;
         private PrototypeAssetConfiguration assetConfiguration;
         private float nextTrafficSpawnTime;
+        private float nextRoadFigureTime;
         private bool chaseActive;
         private bool finalStateCleared;
         private bool junctionQuietActive;
@@ -57,6 +59,9 @@ namespace LastPassenger
         private Material barricadeImageMaterial;
         private Material barricadeFrameMaterial;
         private Material barricadeDarkMaterial;
+        private Material sideImageMaterial;
+        private Material topImageMaterial;
+        private Material roadFigureMaterial;
 
         public event Action BarricadeHit;
 
@@ -74,6 +79,7 @@ namespace LastPassenger
             junctionQuietActive = false;
             lastBarricadeLaneIndex = -1;
             ScheduleNextTrafficSpawn();
+            ScheduleNextRoadFigure();
             BuildFallbackMaterials();
         }
 
@@ -84,7 +90,7 @@ namespace LastPassenger
             chaseActive = active;
             if (active)
             {
-                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar);
+                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar, HazardKind.RoadFigure);
             }
             else
             {
@@ -134,8 +140,7 @@ namespace LastPassenger
         {
             if (vehicle == null || manager == null) return;
 
-            bool runFinished = manager.State == PrototypeGameManager.RunState.Success ||
-                               manager.State == PrototypeGameManager.RunState.Failure;
+            bool runFinished = !manager.IsGameplayActive;
             if (runFinished)
             {
                 if (!finalStateCleared)
@@ -150,7 +155,7 @@ namespace LastPassenger
             bool junctionQuiet = vehicle.Distance >= 500f && vehicle.Distance <= 720f;
             if (junctionQuiet && !junctionQuietActive)
             {
-                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar);
+                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar, HazardKind.RoadFigure);
             }
             else if (!junctionQuiet && junctionQuietActive)
             {
@@ -165,6 +170,12 @@ namespace LastPassenger
                     SpawnOrdinaryTraffic();
                 }
                 ScheduleNextTrafficSpawn();
+            }
+
+            if (!chaseActive && !junctionQuiet && Time.time >= nextRoadFigureTime)
+            {
+                SpawnRoadFigure();
+                ScheduleNextRoadFigure();
             }
 
             UpdateHazards();
@@ -210,6 +221,25 @@ namespace LastPassenger
             }
 
             AddHazard(root, kind, forwardSpeed, collisionHalfWidth, collisionHalfLength);
+        }
+
+        private void SpawnRoadFigure()
+        {
+            if (roadFigureMaterial == null || vehicle == null) return;
+
+            float lane = UnityEngine.Random.Range(-2.15f, 2.15f);
+            float z = vehicle.transform.position.z + UnityEngine.Random.Range(58f, 76f);
+            GameObject root = RuntimeGeometry.Empty(
+                "Figure standing in the headlights",
+                transform,
+                new Vector3(lane, 0f, z));
+            RuntimeGeometry.TexturedQuad(
+                "Black roadside figure",
+                root.transform,
+                new Vector3(0f, 1.72f, 0f),
+                new Vector2(1.5f, 3.45f),
+                roadFigureMaterial);
+            AddHazard(root, HazardKind.RoadFigure, 0f, 0.82f, 0.65f);
         }
 
         private void AddHazard(
@@ -275,13 +305,19 @@ namespace LastPassenger
         {
             if (hazard.kind == HazardKind.ChaseBarricade)
             {
-                vehicle.ApplyImpact(0.5f);
+                vehicle.ApplyImpact(0.62f);
                 manager.NotifyBarricadeCollision();
                 BarricadeHit?.Invoke();
                 return;
             }
 
-            vehicle.ApplyImpact(0.28f);
+            if (hazard.kind == HazardKind.RoadFigure)
+            {
+                manager.NotifyRoadFigurePassed();
+                return;
+            }
+
+            vehicle.ApplyImpact(0f);
             manager.NotifyTrafficCollision();
         }
 
@@ -323,6 +359,38 @@ namespace LastPassenger
                     new Vector3(0f, 0.91f, -1.685f),
                     new Vector2(2.15f, 1.44f),
                     imageMaterial);
+            }
+
+
+            if (sideImageMaterial != null)
+            {
+                RuntimeGeometry.TexturedQuad(
+                    "Traffic car right side image",
+                    root.transform,
+                    new Vector3(0.886f, 0.78f, 0f),
+                    new Vector2(3.3f, 1.34f),
+                    sideImageMaterial,
+                    new Vector3(0f, -90f, 0f));
+                RuntimeGeometry.TexturedQuad(
+                    "Traffic car left side image",
+                    root.transform,
+                    new Vector3(-0.886f, 0.78f, 0f),
+                    new Vector2(3.3f, 1.34f),
+                    sideImageMaterial,
+                    new Vector3(0f, 90f, 0f),
+                    flipHorizontal: true);
+            }
+
+            if (topImageMaterial != null)
+            {
+                RuntimeGeometry.TexturedQuad(
+                    "Traffic car top hull image",
+                    root.transform,
+                    new Vector3(0f, 1.275f, 0f),
+                    new Vector2(1.74f, 3.3f),
+                    topImageMaterial,
+                    new Vector3(90f, 0f, 0f),
+                    flipVertical: true);
             }
 
             return root;
@@ -461,7 +529,8 @@ namespace LastPassenger
             int count = 0;
             for (int i = 0; i < hazards.Count; i++)
             {
-                if (hazards[i].kind != HazardKind.ChaseBarricade) count++;
+                if (hazards[i].kind == HazardKind.OncomingCar ||
+                    hazards[i].kind == HazardKind.SlowerCar) count++;
             }
             return count;
         }
@@ -471,6 +540,11 @@ namespace LastPassenger
             nextTrafficSpawnTime = Time.time + UnityEngine.Random.Range(
                 SpawnIntervalMinimum,
                 SpawnIntervalMaximum);
+        }
+
+        private void ScheduleNextRoadFigure()
+        {
+            nextRoadFigureTime = Time.time + UnityEngine.Random.Range(105f, 135f);
         }
 
         private void ClearHazards(params HazardKind[] kinds)
@@ -517,6 +591,9 @@ namespace LastPassenger
             Texture2D oncomingTexture = Resources.Load<Texture2D>("Traffic/OncomingSedanFront");
             Texture2D rearTexture = Resources.Load<Texture2D>("Traffic/TrafficSedanRear");
             Texture2D barricadeTexture = Resources.Load<Texture2D>("Traffic/BarricadeReflective");
+            Texture2D sideTexture = Resources.Load<Texture2D>("Traffic/TrafficSedanSide");
+            Texture2D topTexture = Resources.Load<Texture2D>("Traffic/TrafficSedanTop");
+            Texture2D figureTexture = Resources.Load<Texture2D>("Anomalies/RoadFigure");
             if (oncomingTexture != null)
             {
                 oncomingImageMaterial = RuntimeGeometry.TexturedMaterial("Oncoming sedan image", oncomingTexture, true);
@@ -528,6 +605,18 @@ namespace LastPassenger
             if (barricadeTexture != null)
             {
                 barricadeImageMaterial = RuntimeGeometry.TexturedMaterial("Reflective barricade image", barricadeTexture, true);
+            }
+            if (sideTexture != null)
+            {
+                sideImageMaterial = RuntimeGeometry.TexturedMaterial("Traffic sedan side image", sideTexture, true);
+            }
+            if (topTexture != null)
+            {
+                topImageMaterial = RuntimeGeometry.TexturedMaterial("Traffic sedan top image", topTexture, true);
+            }
+            if (figureTexture != null)
+            {
+                roadFigureMaterial = RuntimeGeometry.TexturedMaterial("Road figure silhouette", figureTexture, true);
             }
         }
     }

@@ -8,24 +8,29 @@ namespace LastPassenger
         private Texture2D anomalyTexture;
         private Texture2D sideMirrorTexture;
         private Texture2D truckTexture;
+        private Texture2D handsTexture;
 
         private bool apparitionVisible;
         private bool severeApparition;
-        private bool mirrorObservedAfterAnomaly;
+        private bool apparitionDispelled;
         private float apparitionStartedAt;
-        private float apparitionExpiresAt;
+        private float apparitionSafetyExpiry;
         private float observationTime;
         private float pulse;
         private Vector2 anomalyJitter;
         private float anomalyAlpha;
+        private float apparitionDanger;
 
         private bool truckRequested;
         private float truckFade;
         private float truckProximity;
         private float requestedTruckProximity;
+        private float truckJumpscareStartedAt = -100f;
+        private float truckJumpscareDuration;
 
         public bool IsExpanded { get; private set; }
-        public bool WasObservedAfterAnomaly => mirrorObservedAfterAnomaly;
+        public bool WasObservedAfterAnomaly => apparitionDispelled;
+        public bool WasDispelledByObservation => apparitionDispelled;
         public bool ApparitionVisible => apparitionVisible;
         public Texture MirrorTexture => mirrorTexture;
 
@@ -37,6 +42,7 @@ namespace LastPassenger
             anomalyTexture = Resources.Load<Texture2D>("Mirror/WhiteGrainAnomaly");
             sideMirrorTexture = Resources.Load<Texture2D>("Anomalies/SideMirrorNightRoad");
             truckTexture = Resources.Load<Texture2D>("Anomalies/PursuerTruckFront");
+            handsTexture = Resources.Load<Texture2D>("Anomalies/ApparitionHandsEdges");
         }
 
         public bool ShowSeatApparition(bool severe, float seconds)
@@ -45,30 +51,43 @@ namespace LastPassenger
 
             apparitionVisible = true;
             severeApparition = severe;
-            mirrorObservedAfterAnomaly = false;
+            apparitionDispelled = false;
             observationTime = 0f;
             pulse = Random.Range(0f, 20f);
             apparitionStartedAt = Time.time;
-            apparitionExpiresAt = apparitionStartedAt + Mathf.Max(1f, seconds);
+            apparitionSafetyExpiry = apparitionStartedAt + Mathf.Max(8f, seconds + 5f);
             anomalyAlpha = 0f;
+            apparitionDanger = 0f;
             return true;
         }
 
         public void TriggerAnomaly(bool severe)
         {
-            ShowSeatApparition(severe, 4.5f);
+            ShowSeatApparition(severe, 3f);
         }
 
         public void HideSeatApparition()
         {
             apparitionVisible = false;
             observationTime = 0f;
+            apparitionDanger = 0f;
+        }
+
+        public void SetApparitionDanger(float danger)
+        {
+            apparitionDanger = Mathf.Clamp01(danger);
         }
 
         public void SetTruckPursuit(bool visible, float proximity)
         {
             truckRequested = visible;
             requestedTruckProximity = Mathf.Clamp01(proximity);
+        }
+
+        public void StartTruckJumpscare(float duration)
+        {
+            truckJumpscareDuration = Mathf.Max(0.2f, duration);
+            truckJumpscareStartedAt = Time.unscaledTime;
         }
 
         private void Update()
@@ -79,22 +98,20 @@ namespace LastPassenger
             {
                 pulse += Time.deltaTime;
                 float elapsed = Time.time - apparitionStartedAt;
-                float remaining = apparitionExpiresAt - Time.time;
-                float fadeEnvelope = Mathf.Min(
-                    Mathf.Clamp01(elapsed / 0.3f),
-                    Mathf.Clamp01(remaining / 0.45f));
+                float fadeIn = Mathf.Clamp01(elapsed / 0.25f);
                 float flicker = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
-                anomalyAlpha = fadeEnvelope * flicker;
+                anomalyAlpha = fadeIn * flicker;
                 anomalyJitter.x = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.018f;
                 anomalyJitter.y = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.025f;
 
                 if (IsExpanded)
                 {
-                    mirrorObservedAfterAnomaly = true;
                     observationTime += Time.deltaTime;
-                    if (observationTime >= 0.85f)
+                    if (observationTime >= 0.55f)
                     {
-                        apparitionExpiresAt = Mathf.Min(apparitionExpiresAt, Time.time + 0.28f);
+                        apparitionDispelled = true;
+                        apparitionVisible = false;
+                        apparitionDanger = 0f;
                     }
                 }
                 else
@@ -102,7 +119,7 @@ namespace LastPassenger
                     observationTime = Mathf.MoveTowards(observationTime, 0f, Time.deltaTime * 2f);
                 }
 
-                if (Time.time >= apparitionExpiresAt)
+                if (Time.time >= apparitionSafetyExpiry)
                 {
                     HideSeatApparition();
                 }
@@ -124,13 +141,21 @@ namespace LastPassenger
 
         private void OnGUI()
         {
-            if (PrototypeGameManager.Instance != null && !PrototypeGameManager.Instance.IsGameplayActive) return;
+            PrototypeGameManager manager = PrototypeGameManager.Instance;
+            bool gameplay = manager != null && manager.IsGameplayActive;
 
-            DrawCabinMirror();
-            if (truckFade > 0.01f && sideMirrorTexture != null)
+            if (gameplay)
             {
-                DrawTruckMirrors();
+                DrawCabinMirror();
+                if (truckFade > 0.01f && sideMirrorTexture != null)
+                {
+                    DrawTruckMirrors();
+                }
+
+                DrawApparitionHands();
             }
+
+            DrawTruckJumpscare();
         }
 
         private void DrawCabinMirror()
@@ -187,12 +212,37 @@ namespace LastPassenger
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = IsExpanded ? 18 : 12,
-                normal = { textColor = new Color(0.72f, 0.78f, 0.76f) }
+                normal = { textColor = apparitionVisible
+                    ? new Color(1f, 0.76f, 0.67f)
+                    : new Color(0.72f, 0.78f, 0.76f) }
             };
+            string prompt = apparitionVisible
+                ? (IsExpanded ? "KEEP LOOKING — hold R" : "HOLD R — LOOK BEHIND YOU")
+                : (IsExpanded ? "REAR-VIEW MIRROR — release R to lower" : "Hold R to inspect");
             GUI.Label(
                 new Rect(mirrorRect.x, mirrorRect.yMax + 6f, mirrorRect.width, 24f),
-                IsExpanded ? "REAR-VIEW MIRROR — release R to lower" : "Hold R to inspect",
+                prompt,
                 label);
+            GUI.color = previous;
+        }
+
+        private void DrawApparitionHands()
+        {
+            if (handsTexture == null || apparitionDanger <= 0.01f) return;
+
+            float eased = apparitionDanger * apparitionDanger;
+            float scale = Mathf.Lerp(1.22f, 1f, eased);
+            float width = Screen.width * scale;
+            float height = Screen.height * scale;
+            Rect rect = new Rect(
+                (Screen.width - width) * 0.5f,
+                (Screen.height - height) * 0.5f,
+                width,
+                height);
+
+            Color previous = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.08f, 0.96f, eased));
+            GUI.DrawTexture(rect, handsTexture, ScaleMode.StretchToFill, true);
             GUI.color = previous;
         }
 
@@ -244,6 +294,34 @@ namespace LastPassenger
                 GUI.EndGroup();
             }
 
+            GUI.color = previous;
+        }
+
+        private void DrawTruckJumpscare()
+        {
+            if (truckTexture == null || truckJumpscareDuration <= 0f) return;
+
+            float progress = (Time.unscaledTime - truckJumpscareStartedAt) / truckJumpscareDuration;
+            if (progress < 0f || progress >= 1f) return;
+
+            float eased = 1f - Mathf.Pow(1f - Mathf.Clamp01(progress), 4f);
+            float targetHeight = Screen.height * Mathf.Lerp(0.28f, 2.35f, eased);
+            float targetWidth = targetHeight * (truckTexture.width / (float)truckTexture.height);
+            float shake = eased * 18f;
+            Rect rect = new Rect(
+                (Screen.width - targetWidth) * 0.5f + Random.Range(-shake, shake),
+                (Screen.height - targetHeight) * 0.5f + Random.Range(-shake, shake),
+                targetWidth,
+                targetHeight);
+
+            Color previous = GUI.color;
+            GUI.color = Color.white;
+            GUI.DrawTexture(rect, truckTexture, ScaleMode.ScaleToFit, true);
+            if (progress > 0.7f)
+            {
+                GUI.color = new Color(1f, 1f, 1f, Mathf.InverseLerp(0.7f, 1f, progress) * 0.68f);
+                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+            }
             GUI.color = previous;
         }
     }

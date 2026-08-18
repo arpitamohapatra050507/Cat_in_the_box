@@ -73,7 +73,9 @@ namespace LastPassenger
             Vector3 localPosition,
             Vector2 localSize,
             Material material,
-            Vector3 localEuler = default)
+            Vector3 localEuler = default,
+            bool flipHorizontal = false,
+            bool flipVertical = false)
         {
             GameObject created = new GameObject(name);
             created.transform.SetParent(parent, false);
@@ -89,12 +91,16 @@ namespace LastPassenger
                 new Vector3(0.5f, 0.5f, 0f),
                 new Vector3(0.5f, -0.5f, 0f)
             };
+            float left = flipHorizontal ? 1f : 0f;
+            float right = flipHorizontal ? 0f : 1f;
+            float bottom = flipVertical ? 1f : 0f;
+            float top = flipVertical ? 0f : 1f;
             mesh.uv = new[]
             {
-                new Vector2(0f, 0f),
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(1f, 0f)
+                new Vector2(left, bottom),
+                new Vector2(left, top),
+                new Vector2(right, top),
+                new Vector2(right, bottom)
             };
             mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
             mesh.RecalculateNormals();

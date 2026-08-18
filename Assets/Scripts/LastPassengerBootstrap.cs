@@ -75,17 +75,17 @@ namespace LastPassenger
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.018f;
+            RenderSettings.fogDensity = 0.022f;
             RenderSettings.fogColor = new Color(0.012f, 0.018f, 0.022f);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.025f, 0.035f, 0.04f);
+            RenderSettings.ambientLight = new Color(0.012f, 0.018f, 0.022f);
             RenderSettings.skybox = null;
 
             GameObject moonObject = new GameObject("Cold moon light");
             Light moon = moonObject.AddComponent<Light>();
             moon.type = LightType.Directional;
             moon.color = new Color(0.28f, 0.38f, 0.5f);
-            moon.intensity = 0.32f;
+            moon.intensity = 0.18f;
             moon.shadows = LightShadows.Soft;
             moonObject.transform.rotation = Quaternion.Euler(36f, -28f, 0f);
         }
@@ -305,13 +305,26 @@ namespace LastPassenger
 
                 Light light = lightObject.AddComponent<Light>();
                 light.type = LightType.Spot;
-                light.range = 72f;
-                light.spotAngle = 48f;
-                light.innerSpotAngle = 30f;
-                light.intensity = 4.6f;
+                light.range = 115f;
+                light.spotAngle = 58f;
+                light.innerSpotAngle = 38f;
+                light.intensity = 8.5f;
                 light.color = new Color(0.78f, 0.82f, 0.72f);
                 light.shadows = LightShadows.Soft;
             }
+
+            GameObject fillObject = new GameObject("Headlight central fill");
+            fillObject.transform.SetParent(vehicle, false);
+            fillObject.transform.localPosition = new Vector3(0f, 0.72f, 1.62f);
+            fillObject.transform.localRotation = Quaternion.Euler(5f, 0f, 0f);
+            Light fill = fillObject.AddComponent<Light>();
+            fill.type = LightType.Spot;
+            fill.range = 82f;
+            fill.spotAngle = 76f;
+            fill.innerSpotAngle = 42f;
+            fill.intensity = 2.2f;
+            fill.color = new Color(0.66f, 0.72f, 0.66f);
+            fill.shadows = LightShadows.None;
         }
 
         private void OnDestroy()

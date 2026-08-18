@@ -71,6 +71,29 @@ record so judges can inspect how the temporary content was made.
   built-in image generation on 2026-08-18 as the transparent rear view of
   same-direction traffic. Its prompt summary and checksum are stored beside it
   in `TrafficSedanRear_SOURCE.md`.
+- `Assets/Resources/Traffic/TrafficSedanSide.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as the side skin shared by both sides
+  of the procedural traffic-car hull. The image generator twice baked its
+  checkerboard into the pixels, so a connected-background alpha cleanup was
+  applied without redrawing the car. Prompt and checksum are in
+  `TrafficSedanSide_SOURCE.md`.
+- `Assets/Resources/Traffic/TrafficSedanTop.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as the overhead skin on the traffic
+  car hull. Prompt and checksum are in `TrafficSedanTop_SOURCE.md`.
+- `Assets/Resources/Anomalies/ApparitionHandsEdges.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as the transparent escalating
+  hands overlay for the rear-seat anomaly. Prompt and checksum are in
+  `ApparitionHandsEdges_SOURCE.md`.
+- `Assets/Resources/Anomalies/BrokenGlassOverlay.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as the transparent collision
+  and truck-catch failure layer. Prompt and checksum are in
+  `BrokenGlassOverlay_SOURCE.md`.
+- `Assets/Resources/Anomalies/RoadFigure.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as a transparent road-silhouette
+  billboard. Prompt and checksum are in `RoadFigure_SOURCE.md`.
+- `Assets/Resources/Anomalies/CliffRoadEnding.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as the ten-minute cliff finale plate.
+  Prompt and checksum are in `CliffRoadEnding_SOURCE.md`.
 
 ## Team-supplied audio
 

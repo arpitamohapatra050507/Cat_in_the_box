@@ -124,6 +124,32 @@ namespace LastPassenger
             return BuildClip("Generated distant truck horn", data, false);
         }
 
+        public static AudioClip TruckImpact()
+        {
+            const float seconds = 1.05f;
+            int samples = Mathf.RoundToInt(SampleRate * seconds);
+            float[] data = new float[samples];
+            uint state = 0xDEADC0DEu;
+
+            for (int i = 0; i < samples; i++)
+            {
+                state = state * 1664525u + 1013904223u;
+                float t = i / (float)SampleRate;
+                float normalized = i / (float)samples;
+                float noise = ((state >> 8) / 16777215f) * 2f - 1f;
+                float body = Mathf.Sin(t * Mathf.PI * 2f * Mathf.Lerp(58f, 31f, normalized));
+                float metal = Mathf.Sin(t * Mathf.PI * 2f * (410f + Mathf.Sin(t * 39f) * 90f));
+                float envelope = Mathf.Pow(1f - normalized, 2.2f);
+                float initialCrack = Mathf.Clamp01(1f - normalized * 18f);
+                data[i] = Mathf.Clamp(
+                    (body * 0.62f + noise * (0.4f + initialCrack * 0.38f) + metal * 0.16f) * envelope,
+                    -0.95f,
+                    0.95f);
+            }
+
+            return BuildClip("Generated truck collision", data, false);
+        }
+
         private static AudioClip BuildClip(string name, float[] samples, bool loop)
         {
             AudioClip clip = AudioClip.Create(name, samples.Length, 1, SampleRate, false);

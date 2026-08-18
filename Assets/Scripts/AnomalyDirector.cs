@@ -3,44 +3,46 @@ using UnityEngine;
 
 namespace LastPassenger
 {
-    /// <summary>
-    /// Coordinates repeatable mirror scares and the single truck pursuit without
-    /// coupling either anomaly to the road generator or the vehicle visuals.
-    /// </summary>
     public sealed class AnomalyDirector : MonoBehaviour
     {
         [Header("Rear-seat apparition")]
-        [SerializeField] private float apparitionCheckInterval = 10f;
+        [SerializeField] private float apparitionCheckInterval = 30f;
         [SerializeField, Range(0f, 1f)] private float apparitionChance = 0.5f;
-        [SerializeField] private float apparitionDuration = 4.5f;
-        [SerializeField, Range(0f, 1f)] private float ghostAudioVolume = 0.4f;
+        [SerializeField] private float apparitionKillDelay = 3f;
+        [SerializeField, Range(0f, 1f)] private float ghostStartingVolume = 0.16f;
+        [SerializeField, Range(0f, 1f)] private float ghostMaximumVolume = 0.85f;
 
         [Header("Truck pursuit")]
         [SerializeField] private float truckWarningDuration = 4.5f;
-        [SerializeField] private float truckChaseDuration = 12f;
-        [SerializeField] private Vector2 barricadeInterval = new Vector2(3.2f, 4.5f);
+        [SerializeField] private float truckChaseDuration = 30f;
+        [SerializeField] private Vector2 barricadeInterval = new Vector2(1.6f, 2.5f);
         [SerializeField, Range(0f, 0.05f)] private float maximumTruckVolume = 0.05f;
-        [SerializeField] private float initialTruckGap = 16f;
-        [SerializeField] private float barricadeGapPenalty = 7f;
-        [SerializeField, Range(0f, 1f)] private float dangerSpeedRatio = 0.83f;
+        [SerializeField] private float truckAudioFadeSeconds = 3f;
+        [SerializeField] private float initialTruckGap = 20f;
+        [SerializeField] private float barricadeGapPenalty = 4f;
+        [SerializeField, Range(0f, 1f)] private float dangerSpeedRatio = 0.78f;
 
         private VehicleController vehicle;
         private MirrorSystem mirror;
         private TrafficHazardManager traffic;
         private PrototypeGameManager gameManager;
         private AudioSource effectsSource;
+        private AudioSource apparitionSource;
         private AudioSource truckSource;
         private AudioClip ghostClip;
         private AudioClip hornClip;
+        private AudioClip truckImpactClip;
         private float apparitionCheckTimer;
+        private float apparitionThreatStartedAt;
         private float truckGap;
+        private bool apparitionThreatActive;
         private bool truckSequenceRequested;
         private bool truckSequenceRunning;
         private bool truckChaseActive;
         private bool truckChaseCompleted;
+        private bool truckCatchRunning;
 
-        public bool MajorAnomalyActive =>
-            truckSequenceRunning || (mirror != null && mirror.ApparitionVisible);
+        public bool MajorAnomalyActive => apparitionThreatActive || truckSequenceRunning;
 
         public void Configure(
             VehicleController controller,
@@ -48,60 +50,53 @@ namespace LastPassenger
             TrafficHazardManager trafficManager,
             PrototypeGameManager manager)
         {
-            if (traffic != null)
-            {
-                traffic.BarricadeHit -= OnBarricadeHit;
-            }
+            if (traffic != null) traffic.BarricadeHit -= OnBarricadeHit;
 
             vehicle = controller;
             mirror = mirrorSystem;
             traffic = trafficManager;
             gameManager = manager;
 
-            if (traffic != null)
-            {
-                traffic.BarricadeHit += OnBarricadeHit;
-            }
-
+            if (traffic != null) traffic.BarricadeHit += OnBarricadeHit;
             BuildAudio();
             apparitionCheckTimer = apparitionCheckInterval;
         }
 
         public void ForceApparition()
         {
-            if (!CanRunGameplayAnomaly() || truckSequenceRunning) return;
+            if (!CanRunGameplayAnomaly() || truckSequenceRunning || apparitionThreatActive) return;
             ShowApparition();
             apparitionCheckTimer = apparitionCheckInterval;
         }
 
         public void ForceTruckChase()
         {
-            if (!CanRunGameplayAnomaly() || truckSequenceRunning) return;
+            if (!CanRunGameplayAnomaly() || truckSequenceRunning || apparitionThreatActive) return;
             truckChaseCompleted = false;
             truckSequenceRequested = true;
         }
 
         private void BuildAudio()
         {
-            if (effectsSource == null)
-            {
-                effectsSource = gameObject.AddComponent<AudioSource>();
-                effectsSource.playOnAwake = false;
-                effectsSource.spatialBlend = 0f;
-            }
-
-            if (truckSource == null)
-            {
-                truckSource = gameObject.AddComponent<AudioSource>();
-                truckSource.playOnAwake = false;
-                truckSource.loop = false;
-                truckSource.spatialBlend = 0f;
-                truckSource.volume = 0f;
-            }
+            effectsSource = EnsureSource(effectsSource, false);
+            apparitionSource = EnsureSource(apparitionSource, true);
+            truckSource = EnsureSource(truckSource, true);
 
             ghostClip = Resources.Load<AudioClip>("Audio/Anomalies/GhostAppearance");
             hornClip = ProceduralAudio.TruckHorn();
+            truckImpactClip = ProceduralAudio.TruckImpact();
+            apparitionSource.clip = ghostClip;
             truckSource.clip = Resources.Load<AudioClip>("Audio/Anomalies/TruckChase");
+        }
+
+        private AudioSource EnsureSource(AudioSource source, bool loop)
+        {
+            if (source == null) source = gameObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.spatialBlend = 0f;
+            source.loop = loop;
+            source.volume = 0f;
+            return source;
         }
 
         private void Update()
@@ -109,6 +104,13 @@ namespace LastPassenger
             if (!CanRunGameplayAnomaly())
             {
                 if (truckSequenceRunning) AbortTruckSequence();
+                if (apparitionThreatActive) EndApparition(false);
+                return;
+            }
+
+            if (apparitionThreatActive)
+            {
+                UpdateApparitionThreat();
                 return;
             }
 
@@ -118,8 +120,7 @@ namespace LastPassenger
                 truckSequenceRequested = true;
             }
 
-            if (truckSequenceRequested && !truckSequenceRunning &&
-                !mirror.ApparitionVisible)
+            if (truckSequenceRequested && !truckSequenceRunning)
             {
                 StartCoroutine(TruckSequence());
                 return;
@@ -131,10 +132,7 @@ namespace LastPassenger
             if (apparitionCheckTimer > 0f) return;
 
             apparitionCheckTimer = Mathf.Max(0.1f, apparitionCheckInterval);
-            if (Random.value <= apparitionChance)
-            {
-                ShowApparition();
-            }
+            if (Random.value <= apparitionChance) ShowApparition();
         }
 
         private bool CanRunGameplayAnomaly()
@@ -145,19 +143,65 @@ namespace LastPassenger
 
         private void ShowApparition()
         {
-            bool severe = Random.value < 0.5f;
-            float duration = Mathf.Max(0.25f, apparitionDuration);
-            if (!mirror.ShowSeatApparition(severe, duration)) return;
+            if (!mirror.ShowSeatApparition(Random.value < 0.5f, apparitionKillDelay)) return;
 
-            if (ghostClip != null && effectsSource != null)
+            apparitionThreatActive = true;
+            apparitionThreatStartedAt = Time.time;
+            mirror.SetApparitionDanger(0f);
+            if (apparitionSource != null && ghostClip != null)
             {
-                effectsSource.PlayOneShot(ghostClip, ghostAudioVolume);
+                apparitionSource.volume = ghostStartingVolume;
+                apparitionSource.Play();
             }
 
             gameManager.ShowGameplayMessage(
-                severe ? "Something is sitting behind you." : "The rear seat shifts in the mirror.",
-                severe ? new Color(0.95f, 0.3f, 0.26f) : new Color(0.72f, 0.78f, 0.74f),
-                duration);
+                "Something is behind you. HOLD R. LOOK AT IT.",
+                new Color(1f, 0.3f, 0.26f),
+                apparitionKillDelay);
+        }
+
+        private void UpdateApparitionThreat()
+        {
+            if (mirror.WasDispelledByObservation)
+            {
+                EndApparition(true);
+                return;
+            }
+
+            float progress = Mathf.Clamp01((Time.time - apparitionThreatStartedAt) /
+                Mathf.Max(0.1f, apparitionKillDelay));
+            mirror.SetApparitionDanger(progress);
+            gameManager.SetThreatLevel(progress * 0.62f);
+            if (apparitionSource != null && apparitionSource.isPlaying)
+            {
+                apparitionSource.volume = Mathf.Lerp(ghostStartingVolume, ghostMaximumVolume,
+                    progress * progress);
+            }
+
+            if (progress < 1f) return;
+
+            mirror.HideSeatApparition();
+            mirror.SetApparitionDanger(1f);
+            if (apparitionSource != null) apparitionSource.Stop();
+            apparitionThreatActive = false;
+            gameManager.FailFromApparition();
+        }
+
+        private void EndApparition(bool dispelled)
+        {
+            apparitionThreatActive = false;
+            mirror?.HideSeatApparition();
+            mirror?.SetApparitionDanger(0f);
+            if (apparitionSource != null) apparitionSource.Stop();
+            if (gameManager != null) gameManager.SetThreatLevel(0f);
+            if (dispelled && gameManager != null)
+            {
+                gameManager.ShowGameplayMessage(
+                    "The seat is empty again.",
+                    new Color(0.68f, 0.76f, 0.73f),
+                    2f);
+            }
+            apparitionCheckTimer = apparitionCheckInterval;
         }
 
         private IEnumerator TruckSequence()
@@ -171,9 +215,6 @@ namespace LastPassenger
                 "A horn sounds behind you. Do not slow down.",
                 new Color(1f, 0.5f, 0.28f),
                 warningTime);
-            // If inspecting the apparition dismissed it early, do not let its
-            // remaining one-shot audio muddy the truck's warning cadence.
-            if (effectsSource != null) effectsSource.Stop();
             PlayHorn();
 
             float warningElapsed = 0f;
@@ -193,35 +234,34 @@ namespace LastPassenger
                     PlayHorn();
                 }
 
-                float warningProximity = Mathf.Lerp(0.06f, 0.18f,
+                float proximity = Mathf.Lerp(0.06f, 0.18f,
                     Mathf.Clamp01(warningElapsed / warningTime));
-                mirror.SetTruckPursuit(true, warningProximity);
-                gameManager.SetThreatLevel(warningProximity * 0.35f);
+                mirror.SetTruckPursuit(true, proximity);
+                gameManager.SetThreatLevel(proximity * 0.35f);
                 yield return null;
             }
 
             truckChaseActive = true;
             truckGap = Mathf.Max(initialTruckGap, 2f);
             traffic.SetChaseActive(true);
+            gameManager.BeginTruckChaseHud(3);
 
             if (truckSource != null && truckSource.clip != null)
             {
-                truckSource.volume = maximumTruckVolume * 0.55f;
+                truckSource.volume = 0f;
                 truckSource.Play();
             }
 
             gameManager.ShowGameplayMessage(
-                "FULL THROTTLE — keep the truck out of reach.",
+                "FULL THROTTLE — three impacts will kill the engine.",
                 new Color(1f, 0.32f, 0.22f),
                 5f);
 
             float elapsed = 0f;
-            // Put the first obstacle in play early enough that the player can
-            // encounter two fair, well-spaced barricades during a short chase.
-            float nextBarricade = Random.Range(1.1f, 1.8f);
-
+            float nextBarricade = Random.Range(0.7f, 1.1f);
             while (elapsed < truckChaseDuration)
             {
+                if (truckCatchRunning) yield break;
                 if (!CanRunGameplayAnomaly())
                 {
                     AbortTruckSequence();
@@ -243,18 +283,11 @@ namespace LastPassenger
                 float proximity = GapToProximity(truckGap);
                 mirror.SetTruckPursuit(true, proximity);
                 gameManager.SetThreatLevel(proximity);
-                if (truckSource != null && truckSource.isPlaying)
-                {
-                    truckSource.volume = Mathf.Lerp(
-                        maximumTruckVolume * 0.45f,
-                        maximumTruckVolume,
-                        proximity);
-                }
+                UpdateTruckAudio(elapsed, proximity);
 
                 if (truckGap <= 1.5f)
                 {
-                    gameManager.FailFromHazard("The truck fills every mirror, then drives straight through you.");
-                    AbortTruckSequence();
+                    yield return TruckCatch();
                     yield break;
                 }
 
@@ -262,6 +295,26 @@ namespace LastPassenger
             }
 
             EndTruckSequence();
+        }
+
+        private void UpdateTruckAudio(float elapsed, float proximity)
+        {
+            if (truckSource == null || !truckSource.isPlaying) return;
+
+            // The team clip contains a long silent tail. Restart its audible
+            // section before that tail so a 30-second chase stays continuous.
+            float audibleLoopEnd = Mathf.Min(12f, truckSource.clip.length - 0.1f);
+            if (audibleLoopEnd > 0.1f && truckSource.time >= audibleLoopEnd)
+            {
+                truckSource.time = 0f;
+            }
+
+            float fadeIn = Mathf.Clamp01(elapsed / Mathf.Max(0.1f, truckAudioFadeSeconds));
+            float fadeOut = Mathf.Clamp01((truckChaseDuration - elapsed) /
+                Mathf.Max(0.1f, truckAudioFadeSeconds));
+            float envelope = Mathf.Min(fadeIn, fadeOut);
+            truckSource.volume = Mathf.Lerp(maximumTruckVolume * 0.45f,
+                maximumTruckVolume, proximity) * envelope;
         }
 
         private void UpdateTruckGap(float deltaTime)
@@ -272,37 +325,67 @@ namespace LastPassenger
                 float normalizedSpeed = dangerSpeedRatio > 0f
                     ? speedRatio / dangerSpeedRatio
                     : 1f;
-                // Even sitting just below the safe band is fatal over a full chase;
-                // the player has to commit to the accelerator instead of coasting.
-                float closingSpeed = Mathf.Lerp(2.4f, 1.35f, normalizedSpeed);
-                truckGap -= closingSpeed * deltaTime;
+                truckGap -= Mathf.Lerp(2.25f, 1.05f, normalizedSpeed) * deltaTime;
             }
             else
             {
                 float escapeProgress = Mathf.InverseLerp(dangerSpeedRatio, 1f, speedRatio);
-                truckGap += escapeProgress * 0.9f * deltaTime;
+                truckGap += escapeProgress * 0.64f * deltaTime;
             }
 
-            truckGap = Mathf.Clamp(truckGap, 0f, 26f);
+            truckGap = Mathf.Clamp(truckGap, 0f, 30f);
         }
 
         private float GapToProximity(float gap)
         {
-            return 1f - Mathf.InverseLerp(1.5f, 22f, gap);
+            return 1f - Mathf.InverseLerp(1.5f, 26f, gap);
         }
 
         private void OnBarricadeHit()
         {
-            if (!truckChaseActive) return;
+            if (!truckChaseActive || truckCatchRunning) return;
 
             truckGap = Mathf.Max(0f, truckGap - barricadeGapPenalty);
+            int remaining = gameManager.DamageChaseVehicle();
             float proximity = GapToProximity(truckGap);
             mirror.SetTruckPursuit(true, proximity);
             gameManager.SetThreatLevel(proximity);
+
+            if (remaining <= 0)
+            {
+                StartCoroutine(TruckCatch());
+                return;
+            }
+
             gameManager.ShowGameplayMessage(
-                "The impact lets the truck gain ground.",
+                remaining == 1 ? "ENGINE FAILING — one bar remains." : "The truck gains ground.",
                 new Color(1f, 0.32f, 0.22f),
                 2f);
+        }
+
+        private IEnumerator TruckCatch()
+        {
+            if (truckCatchRunning) yield break;
+            truckCatchRunning = true;
+            truckChaseActive = false;
+            vehicle.ApplyImpact(0f);
+            vehicle.SetControlsEnabled(false);
+            mirror.SetTruckPursuit(true, 1f);
+            gameManager.SetThreatLevel(1f);
+            traffic.SetChaseActive(false);
+            if (truckSource != null) truckSource.volume = maximumTruckVolume;
+
+            yield return new WaitForSeconds(0.38f);
+            if (effectsSource != null && truckImpactClip != null)
+            {
+                effectsSource.PlayOneShot(truckImpactClip, 0.95f);
+            }
+            mirror.StartTruckJumpscare(0.9f);
+            yield return new WaitForSecondsRealtime(0.86f);
+
+            gameManager.FailFromTruckImpact();
+            AbortTruckSequence();
+            truckCatchRunning = false;
         }
 
         private void EndTruckSequence()
@@ -314,7 +397,7 @@ namespace LastPassenger
             traffic.SetChaseActive(false);
             mirror.SetTruckPursuit(false, 0f);
             gameManager.SetThreatLevel(0f);
-
+            gameManager.EndTruckChaseHud();
             if (truckSource != null) truckSource.Stop();
 
             gameManager.ShowGameplayMessage(
@@ -330,8 +413,16 @@ namespace LastPassenger
             truckSequenceRunning = false;
             truckSequenceRequested = false;
             if (traffic != null) traffic.SetChaseActive(false);
-            if (mirror != null) mirror.SetTruckPursuit(false, 0f);
-            if (gameManager != null) gameManager.SetThreatLevel(0f);
+            if (mirror != null)
+            {
+                mirror.SetTruckPursuit(false, 0f);
+                mirror.SetApparitionDanger(0f);
+            }
+            if (gameManager != null)
+            {
+                gameManager.SetThreatLevel(0f);
+                gameManager.EndTruckChaseHud();
+            }
             if (truckSource != null) truckSource.Stop();
         }
 
@@ -345,12 +436,9 @@ namespace LastPassenger
 
         private void OnDisable()
         {
-            if (traffic != null)
-            {
-                traffic.BarricadeHit -= OnBarricadeHit;
-            }
-
+            if (traffic != null) traffic.BarricadeHit -= OnBarricadeHit;
             AbortTruckSequence();
+            EndApparition(false);
         }
 
         private void OnEnable()

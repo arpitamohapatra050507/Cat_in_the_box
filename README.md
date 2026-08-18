@@ -68,40 +68,55 @@ Debug shortcuts are available only in the editor or development builds:
 ## Prototype flow
 
 The radio warns that "the dead keep left." At the fork, position the car in
-the left or right lane before crossing the decision line. The right route ends
-in failure; the left route reaches the temporary delivery ending.
+the left or right lane before crossing the decision line. Both routes continue
+into the full prototype run; at sustained maximum speed, the road reaches its
+cliff ending at roughly ten minutes. Slower driving naturally takes longer.
 
-Ordinary road traffic now appears throughout the active run. At most three
+Ordinary road traffic appears throughout the active run. At most three
 oncoming or slower cars are present, with another spawn attempt every 7–12
 seconds. Their movement and collision use swept X/Z checks rather than
 Rigidbody physics, so a fast oncoming car cannot pass through the
-transform-driven player between frames. One crash removes most of the car's
-speed and warns the player; a second traffic crash within eight seconds causes
-a pile-up failure.
+transform-driven player between frames. Any collision with another car is
+immediately fatal. The fallback remains cheap to render, but its basic 3D hull
+now carries generated front/rear, mirrored side-profile, and overhead skins
+rather than looking like a single flat card.
 
-The rear-seat apparition is now a recurring ambient anomaly. Every ten seconds
-there is currently a 50% chance of a roughly 4.5-second appearance, accompanied
-by `Assets/Resources/Audio/Anomalies/GhostAppearance.mp3`. Holding `R` keeps the
-mirror interaction meaningful: observing the figure continuously makes it
-retreat early. These odds are intentionally high for prototype testing and can
-be lowered later.
+The rear-seat apparition checks once every 30 seconds with a 50% chance. When
+it appears, the player has three seconds to hold `R` and face it in the
+rear-view mirror. Holding the view for about half a second dispels it. Ignoring
+it makes pale hands creep in from the screen edges while its audio rises; once
+the timer expires, the apparition kills the driver. Missed probability rolls
+do not accumulate or overlap later checks.
 
 Once the player has passed the junction and travelled far enough, a horn warns
-of a pursuing truck. The chase then lasts about 12 seconds. Image-based side
-mirrors show the truck gaining or losing ground, while the team-supplied
+of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
+show the truck gaining or losing ground, while the team-supplied
 `Assets/Resources/Audio/Anomalies/TruckChase.mp3` plays over the existing audio
-mix. Stay above roughly 83% of maximum speed to open the gap. Slowing lets the
-truck close in, and being caught produces a run-down failure. During the chase,
-ordinary traffic is cleared and a single-lane barricade appears every 3.2–4.5
-seconds. Hitting one halves the current speed and lets the truck gain about
-seven metres; surviving the timer makes the truck fade away and ordinary
-traffic resumes.
+mix. The loud source is capped at 5% playback volume and fades in for three
+seconds at pursuit start and out over the last three seconds. Stay above roughly
+78% of maximum speed to open the gap. Slowing lets the truck close in. Ordinary
+traffic is cleared and a single-lane barricade appears every 1.6–2.5 seconds,
+always leaving another path open. Three compact bars above the dashboard show
+the engine's remaining chase health; each barricade removes one bar and cuts
+speed. At zero bars, or if the truck closes the gap, the engine dies, the truck
+slams into the screen, and broken glass frames the death menu. Surviving the
+timer fades the truck away and resumes ordinary traffic.
+
+At approximately two-minute randomized intervals, a featureless black figure
+can appear in the headlight beam. It has no collision penalty and vanishes when
+the player drives through it. It is an atmospheric fake-out, not another health
+system.
 
 The dark-red screen border is a danger indicator, not an unexplained creature
 or separate anomaly. A short flash means the car struck the shoulder, traffic,
 or a barricade. During the truck chase it becomes a pulsing proximity warning:
 the stronger and faster it pulses, the closer the truck is. The dashboard also
 shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
+
+The forest is darker under a generated soft edge vignette, with lower moon and
+ambient illumination. Two fixed long-range headlights plus a wide fill beam
+keep the lane, traffic, barricades, and figure readable. They are attached to
+the car and intentionally do not follow the mouse yet.
 
 Road messages are editable without changing C# in
 `Assets/Resources/road_events.json`. Each entry has an ID, trigger distance,

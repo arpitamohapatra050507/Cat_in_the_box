@@ -28,6 +28,8 @@ namespace LastPassenger
         private float visualRoll;
         private float edgeCooldown;
         private bool controlsEnabled = true;
+        private bool cliffFalling;
+        private float cliffFallStartedAt;
 
         public float Speed => speed;
         public float MaximumSpeed => maximumSpeed;
@@ -80,8 +82,23 @@ namespace LastPassenger
             impactSource?.Play();
         }
 
+        public void BeginCliffFall()
+        {
+            controlsEnabled = false;
+            cliffFalling = true;
+            cliffFallStartedAt = Time.time;
+            speed = Mathf.Max(speed, maximumSpeed * 0.82f);
+            heading *= 0.35f;
+        }
+
         private void Update()
         {
+            if (cliffFalling)
+            {
+                UpdateCliffFall();
+                return;
+            }
+
             edgeCooldown -= Time.deltaTime;
 
             float throttle = controlsEnabled && PrototypeInput.AccelerateHeld ? 1f : 0f;
@@ -166,6 +183,30 @@ namespace LastPassenger
                 {
                     engineSource.volume = 0f;
                 }
+            }
+        }
+
+        private void UpdateCliffFall()
+        {
+            float elapsed = Time.time - cliffFallStartedAt;
+            speed = Mathf.MoveTowards(speed, maximumSpeed * 1.08f, acceleration * Time.deltaTime);
+            Vector3 position = transform.position;
+            position += Vector3.forward * speed * Time.deltaTime;
+            if (elapsed > 0.65f)
+            {
+                float fallTime = elapsed - 0.65f;
+                position.y -= (2.5f + fallTime * 9f) * Time.deltaTime;
+            }
+            transform.position = position;
+            transform.rotation = Quaternion.Euler(
+                Mathf.Lerp(0f, 34f, Mathf.Clamp01(elapsed / 2.2f)),
+                heading,
+                Mathf.Sin(elapsed * 2.8f) * 5f);
+
+            if (engineSource != null)
+            {
+                engineSource.pitch = Mathf.Lerp(1.38f, 1.7f, Mathf.Clamp01(elapsed / 2f));
+                engineSource.volume = maximumEngineVolume;
             }
         }
     }
