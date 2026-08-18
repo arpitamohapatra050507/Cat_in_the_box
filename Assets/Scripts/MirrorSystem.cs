@@ -9,6 +9,9 @@ namespace LastPassenger
         private Transform coveredBody;
         private Material bodyMaterial;
         private Material anomalyMaterial;
+        private Transform anomalySprite;
+        private Material anomalySpriteMaterial;
+        private Vector3 anomalyBasePosition;
         private bool anomalyTriggered;
         private bool mirrorObservedAfterAnomaly;
         private float pulse;
@@ -24,6 +27,7 @@ namespace LastPassenger
             anomalyMaterial = RuntimeGeometry.Material("Anomalous cloth", new Color(0.22f, 0.025f, 0.02f), 0f, 0.15f, true);
 
             SetBodyMaterial(bodyMaterial);
+            BuildGeneratedRearCabin(vehicle);
 
             GameObject cameraObject = new GameObject("Rear-view mirror camera");
             cameraObject.transform.SetParent(vehicle, false);
@@ -50,6 +54,18 @@ namespace LastPassenger
             if (anomalyTriggered || coveredBody == null) return;
             anomalyTriggered = true;
 
+            if (anomalySprite != null)
+            {
+                anomalyBasePosition = severe
+                    ? new Vector3(0f, 1.28f, -2.14f)
+                    : new Vector3(0.76f, 1.22f, -2.14f);
+                anomalySprite.localPosition = anomalyBasePosition;
+                anomalySprite.localScale = severe
+                    ? new Vector3(0.92f, 1.38f, 1f)
+                    : new Vector3(0.72f, 1.08f, 1f);
+                anomalySprite.gameObject.SetActive(true);
+            }
+
             coveredBody.localPosition += severe ? new Vector3(0f, 0.45f, 0.48f) : new Vector3(0.18f, 0.08f, 0.12f);
             coveredBody.localRotation = severe ? Quaternion.Euler(12f, 0f, 0f) : Quaternion.Euler(86f, 0f, 7f);
             coveredBody.localScale = severe ? new Vector3(1.1f, 1.18f, 1.08f) : Vector3.one;
@@ -69,7 +85,58 @@ namespace LastPassenger
             {
                 pulse += Time.deltaTime;
                 coveredBody.localPosition += Vector3.up * (Mathf.Sin(pulse * 2.7f) * 0.0015f);
+
+                if (anomalySprite != null)
+                {
+                    float xJitter = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.025f;
+                    float yJitter = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.018f;
+                    anomalySprite.localPosition = anomalyBasePosition + new Vector3(xJitter, yJitter, 0f);
+
+                    float alpha = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
+                    Color flicker = new Color(1f, 1f, 1f, alpha);
+                    anomalySpriteMaterial.color = flicker;
+                    if (anomalySpriteMaterial.HasProperty("_BaseColor"))
+                    {
+                        anomalySpriteMaterial.SetColor("_BaseColor", flicker);
+                    }
+                }
             }
+        }
+
+        private void BuildGeneratedRearCabin(Transform vehicle)
+        {
+            Texture2D cabinTexture = Resources.Load<Texture2D>("Mirror/RearCabinBackseat");
+            if (cabinTexture != null)
+            {
+                Material cabinMaterial = RuntimeGeometry.TexturedMaterial(
+                    "Generated rear-cabin plate",
+                    cabinTexture);
+                RuntimeGeometry.TexturedQuad(
+                    "Generated rear cabin and backseat",
+                    vehicle,
+                    new Vector3(0f, 1.18f, -2.48f),
+                    new Vector2(8.9f, 3.56f),
+                    cabinMaterial,
+                    new Vector3(0f, 180f, 0f));
+            }
+
+            Texture2D apparitionTexture = Resources.Load<Texture2D>("Mirror/WhiteGrainAnomaly");
+            if (apparitionTexture == null) return;
+
+            anomalySpriteMaterial = RuntimeGeometry.TexturedMaterial(
+                "Generated white-grain apparition",
+                apparitionTexture,
+                transparent: true);
+            GameObject apparition = RuntimeGeometry.TexturedQuad(
+                "White grainy passenger anomaly",
+                vehicle,
+                new Vector3(0.76f, 1.22f, -2.14f),
+                new Vector2(0.72f, 1.08f),
+                anomalySpriteMaterial,
+                new Vector3(0f, 180f, 0f));
+            anomalySprite = apparition.transform;
+            anomalyBasePosition = anomalySprite.localPosition;
+            apparition.SetActive(false);
         }
 
         private void SetBodyMaterial(Material material)

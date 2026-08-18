@@ -44,8 +44,11 @@ radio reports, memories, accusations, and ambiguous story fragments.
 
 Steering now rotates the vehicle and moves it along its heading instead of
 sliding it sideways. A transparent 2D wheel follows steering input in front of
-a lowered, slanted dashboard, while the radio display flickers and changes
-during the anomaly. The team-supplied static is installed at
+a lowered, widened, slanted dashboard with physical side trim. A procedural
+front passenger seat supplies real parallax when looking right. The rear-view
+camera renders a generated dark backseat plate, then reveals an independently
+flickering transparent white-grain apparition during the anomaly. The radio
+display flickers and changes during the same event. The team-supplied static is installed at
 `Assets/Resources/Audio/RadioStatic.wav`.
 
 The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when

@@ -42,6 +42,14 @@ inspect how each temporary asset was created.
   Codex built-in image generation on 2026-08-18 as a transparent, separately
   animated steering-wheel sprite. Its exact prompt is stored beside it in
   `DarkSteeringWheel_SOURCE.md`.
+- `Assets/Resources/Mirror/RearCabinBackseat.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as the dark, empty rear-cabin plate
+  used by the live rear-view camera. Its exact prompt and checksum are stored
+  beside it in `RearCabinBackseat_SOURCE.md`.
+- `Assets/Resources/Mirror/WhiteGrainAnomaly.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as a transparent apparition layer.
+  Its exact prompt and checksum are stored beside it in
+  `WhiteGrainAnomaly_SOURCE.md`.
 
 ## Team-supplied audio
 

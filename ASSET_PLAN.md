@@ -27,6 +27,23 @@ animated object.
 Keep the procedural cabin as a structural fallback. Validate the panel at 16:9
 and 16:10 resolutions before replacing more of the cabin geometry.
 
+The fascia now spans farther across the cabin, sits lower, and has dark
+procedural edge fillers plus an upper trim rail behind it. A worn 3D passenger
+seat remains procedural so it has real parallax when the player looks right.
+
+## Asset batch 1B — rear-view mirror
+
+The mirror uses two generated layers while remaining a real RenderTexture
+camera view:
+
+1. `RearCabinBackseat.png` is an empty, opaque rear-cabin plate kept in
+   permanently behind the covered body.
+2. `WhiteGrainAnomaly.png` is a transparent apparition that is disabled until
+   the anomaly event, then jitters and flickers independently of the body.
+
+This keeps the mirror readable and consistently dark while retaining spatial
+movement from the body, camera, and anomaly layers.
+
 ## Asset batch 2 — forest kit
 
 Generate only two 3D source models:
@@ -56,7 +73,8 @@ horizon cheaply while nearby 3D trees preserve motion parallax.
 ## Order of work
 
 1. Approve one cockpit concept and one forest concept sheet.
-2. Validate the generated dashboard fascia, animated wheel, and radio placement.
+2. Validate the dashboard, passenger seat, mirror layers, animated wheel, and
+   radio placement.
 3. Generate and clean the two tree models.
 4. Add the distant billboard only if visible gaps remain through the fog.
 5. Record prompts, generator, date, license, and manual cleanup in

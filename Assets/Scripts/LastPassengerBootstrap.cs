@@ -106,7 +106,7 @@ namespace LastPassenger
         {
             GameObject cabinRoot = RuntimeGeometry.Empty("Generated hearse cabin", vehicle, Vector3.zero);
 
-            BuildDashboardFascia(cabinRoot.transform, instrument);
+            BuildDashboardFascia(cabinRoot.transform, instrument, cabin, trim);
             RuntimeGeometry.Primitive("Cabin floor", PrimitiveType.Cube, cabinRoot.transform,
                 new Vector3(0f, 0.02f, -0.35f), new Vector3(3.5f, 0.18f, 4.7f), cabin);
 
@@ -125,16 +125,43 @@ namespace LastPassenger
             RuntimeGeometry.Primitive("Right door", PrimitiveType.Cube, cabinRoot.transform,
                 new Vector3(1.7f, 0.85f, -0.2f), new Vector3(0.15f, 1.7f, 3.2f), cabin);
 
+            BuildPassengerSeat(cabinRoot.transform);
             BuildSteeringWheelSprite(cabinRoot.transform, controller);
         }
 
-        private static void BuildDashboardFascia(Transform parent, Material instrument)
+        private static void BuildDashboardFascia(
+            Transform parent,
+            Material instrument,
+            Material cabin,
+            Material trim)
         {
             GameObject dashboardRoot = RuntimeGeometry.Empty(
                 "Lowered slanted dashboard",
                 parent,
-                new Vector3(0f, 0.72f, 1.3f));
-            dashboardRoot.transform.localRotation = Quaternion.Euler(18f, 0f, 0f);
+                new Vector3(0f, 0.54f, 1.24f));
+            dashboardRoot.transform.localRotation = Quaternion.Euler(21f, 0f, 0f);
+
+            RuntimeGeometry.Primitive(
+                "Dashboard left edge fill",
+                PrimitiveType.Cube,
+                dashboardRoot.transform,
+                new Vector3(-1.77f, -0.04f, 0.08f),
+                new Vector3(0.38f, 1.08f, 0.34f),
+                cabin);
+            RuntimeGeometry.Primitive(
+                "Dashboard right edge fill",
+                PrimitiveType.Cube,
+                dashboardRoot.transform,
+                new Vector3(1.77f, -0.04f, 0.08f),
+                new Vector3(0.38f, 1.08f, 0.34f),
+                cabin);
+            RuntimeGeometry.Primitive(
+                "Dashboard upper edge trim",
+                PrimitiveType.Cube,
+                dashboardRoot.transform,
+                new Vector3(0f, 0.53f, 0.07f),
+                new Vector3(3.75f, 0.08f, 0.22f),
+                trim);
 
             Texture2D dashboardTexture = Resources.Load<Texture2D>("Dashboard/DarkDashboardFascia");
             if (dashboardTexture != null)
@@ -144,7 +171,7 @@ namespace LastPassenger
                     "Generated dashboard fascia",
                     dashboardRoot.transform,
                     Vector3.zero,
-                    new Vector2(2.95f, 1.03f),
+                    new Vector2(3.62f, 1.26f),
                     dashboardMaterial);
             }
 
@@ -179,12 +206,64 @@ namespace LastPassenger
             GameObject wheel = RuntimeGeometry.TexturedQuad(
                 "Animated 2D steering wheel",
                 parent,
-                new Vector3(-0.56f, 0.68f, 0.88f),
+                new Vector3(-0.56f, 0.54f, 0.86f),
                 new Vector2(0.74f, 0.74f),
                 wheelMaterial);
 
             SteeringWheelAnimator animator = wheel.AddComponent<SteeringWheelAnimator>();
             animator.Configure(controller);
+        }
+
+        private static void BuildPassengerSeat(Transform parent)
+        {
+            Material seat = RuntimeGeometry.Material(
+                "Worn passenger-seat vinyl",
+                new Color(0.035f, 0.042f, 0.038f),
+                0f,
+                0.11f);
+            Material seam = RuntimeGeometry.Material(
+                "Passenger-seat seams",
+                new Color(0.075f, 0.082f, 0.075f),
+                0f,
+                0.08f);
+
+            GameObject seatRoot = RuntimeGeometry.Empty(
+                "Front passenger seat",
+                parent,
+                new Vector3(0.93f, 0.03f, -0.23f));
+
+            RuntimeGeometry.Primitive(
+                "Passenger seat cushion",
+                PrimitiveType.Cube,
+                seatRoot.transform,
+                new Vector3(0f, 0.36f, 0.14f),
+                new Vector3(0.72f, 0.18f, 0.78f),
+                seat,
+                new Vector3(-4f, 0f, 0f));
+            RuntimeGeometry.Primitive(
+                "Passenger seat backrest",
+                PrimitiveType.Cube,
+                seatRoot.transform,
+                new Vector3(0f, 0.91f, -0.19f),
+                new Vector3(0.72f, 0.94f, 0.19f),
+                seat,
+                new Vector3(-8f, 0f, 0f));
+            RuntimeGeometry.Primitive(
+                "Passenger headrest",
+                PrimitiveType.Cube,
+                seatRoot.transform,
+                new Vector3(0f, 1.49f, -0.30f),
+                new Vector3(0.40f, 0.30f, 0.18f),
+                seat,
+                new Vector3(-8f, 0f, 0f));
+            RuntimeGeometry.Primitive(
+                "Passenger backrest seam",
+                PrimitiveType.Cube,
+                seatRoot.transform,
+                new Vector3(0f, 0.92f, -0.295f),
+                new Vector3(0.025f, 0.72f, 0.012f),
+                seam,
+                new Vector3(-8f, 0f, 0f));
         }
 
         private static Transform BuildCoveredBody(Transform vehicle, Material cloth)
