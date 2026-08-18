@@ -16,11 +16,11 @@ Run this once in the Unity editor and once in the final Windows build.
 4. Hold the right mouse button and look left, right, up, and down. The view must
    remain within the cabin and return smoothly to the road when released.
 5. Press `F9`; verify the fork prompt appears and select the left lane.
-6. Before `F10`, hold `R` and confirm the generated empty backseat is visible
-   behind the covered body with no white figure present. Press `F10`, hold `R`
-   again, and verify the body's position changes and the grainy white passenger
-   appears and flickers. The mirror must remain dark instead of clearing to
-   daylight blue.
+6. Before `F10`, hold `R` and confirm the fixed generated empty-backseat image
+   fills the mirror with no live car geometry or white figure visible. Press
+   `F10`, hold `R` again, and verify the grainy white passenger appears and
+   flickers as a separate image layer. The mirror must remain dark and must not
+   change with the live camera view.
 7. Press `F11`; verify the temporary success screen appears.
 8. Restart, use `F9`, select the right lane, then use `F10` and `F11`; verify failure.
 9. Press Enter from each ending and confirm the scene restarts cleanly.

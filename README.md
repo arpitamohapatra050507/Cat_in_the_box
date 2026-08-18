@@ -46,9 +46,10 @@ Steering now rotates the vehicle and moves it along its heading instead of
 sliding it sideways. A transparent 2D wheel follows steering input in front of
 a lowered, widened, slanted dashboard with physical side trim. A procedural
 front passenger seat supplies real parallax when looking right. The rear-view
-camera renders a generated dark backseat plate, then reveals an independently
-flickering transparent white-grain apparition during the anomaly. The radio
-display flickers and changes during the same event. The team-supplied static is
+mirror is fully image-based: it displays a fixed generated dark backseat plate
+and never renders the vehicle's live geometry. A separately composited,
+transparent white-grain apparition flickers over that image during the anomaly.
+The radio display flickers and changes during the same event. The team-supplied static is
 installed at `Assets/Resources/Audio/RadioStatic.wav` and plays quietly on its
 own 2D audio source. The team-supplied engine at
 `Assets/Resources/Audio/CarEngine.mp3` is layered over it on a separate source:

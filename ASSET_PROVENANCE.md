@@ -12,7 +12,7 @@ inspect how each temporary asset was created.
 
 - Road modules, lane markings, junction signs, trees, poles, and barriers
 - Hearse dashboard, windshield frame, steering wheel, cabin, and covered body
-- Rear-view mirror render and anomaly states
+- Image-composited rear-view mirror and anomaly states
 - Engine tone, wind ambience, radio static, impact sound, and horror sting
 - Text interface, route prompt, temporary success screen, and failure screen
 

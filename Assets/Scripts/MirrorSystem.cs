@@ -4,17 +4,17 @@ namespace LastPassenger
 {
     public sealed class MirrorSystem : MonoBehaviour
     {
-        private Camera rearCamera;
-        private RenderTexture mirrorTexture;
+        private Texture2D mirrorTexture;
+        private Texture2D anomalyTexture;
         private Transform coveredBody;
         private Material bodyMaterial;
         private Material anomalyMaterial;
-        private Transform anomalySprite;
-        private Material anomalySpriteMaterial;
-        private Vector3 anomalyBasePosition;
         private bool anomalyTriggered;
+        private bool severeAnomaly;
         private bool mirrorObservedAfterAnomaly;
         private float pulse;
+        private Vector2 anomalyJitter;
+        private float anomalyAlpha;
 
         public bool IsExpanded { get; private set; }
         public bool WasObservedAfterAnomaly => mirrorObservedAfterAnomaly;
@@ -22,49 +22,21 @@ namespace LastPassenger
 
         public void Build(Transform vehicle, Transform body)
         {
+            transform.SetParent(vehicle, false);
             coveredBody = body;
             bodyMaterial = RuntimeGeometry.Material("Covered body cloth", new Color(0.18f, 0.19f, 0.17f), 0f, 0.08f);
             anomalyMaterial = RuntimeGeometry.Material("Anomalous cloth", new Color(0.22f, 0.025f, 0.02f), 0f, 0.15f, true);
 
             SetBodyMaterial(bodyMaterial);
-            BuildGeneratedRearCabin(vehicle);
-
-            GameObject cameraObject = new GameObject("Rear-view mirror camera");
-            cameraObject.transform.SetParent(vehicle, false);
-            cameraObject.transform.localPosition = new Vector3(0f, 1.52f, -0.15f);
-            cameraObject.transform.localRotation = Quaternion.Euler(8f, 180f, 0f);
-            rearCamera = cameraObject.AddComponent<Camera>();
-            rearCamera.fieldOfView = 74f;
-            rearCamera.nearClipPlane = 0.05f;
-            rearCamera.farClipPlane = 180f;
-            rearCamera.depth = -2f;
-            rearCamera.allowHDR = false;
-            rearCamera.clearFlags = CameraClearFlags.SolidColor;
-            rearCamera.backgroundColor = new Color(0.004f, 0.007f, 0.009f, 1f);
-
-            mirrorTexture = new RenderTexture(640, 256, 16, RenderTextureFormat.ARGB32)
-            {
-                name = "Generated rear-view mirror"
-            };
-            rearCamera.targetTexture = mirrorTexture;
+            mirrorTexture = Resources.Load<Texture2D>("Mirror/RearCabinBackseat");
+            anomalyTexture = Resources.Load<Texture2D>("Mirror/WhiteGrainAnomaly");
         }
 
         public void TriggerAnomaly(bool severe)
         {
             if (anomalyTriggered || coveredBody == null) return;
             anomalyTriggered = true;
-
-            if (anomalySprite != null)
-            {
-                anomalyBasePosition = severe
-                    ? new Vector3(0f, 1.28f, -2.14f)
-                    : new Vector3(0.76f, 1.22f, -2.14f);
-                anomalySprite.localPosition = anomalyBasePosition;
-                anomalySprite.localScale = severe
-                    ? new Vector3(0.92f, 1.38f, 1f)
-                    : new Vector3(0.72f, 1.08f, 1f);
-                anomalySprite.gameObject.SetActive(true);
-            }
+            severeAnomaly = severe;
 
             coveredBody.localPosition += severe ? new Vector3(0f, 0.45f, 0.48f) : new Vector3(0.18f, 0.08f, 0.12f);
             coveredBody.localRotation = severe ? Quaternion.Euler(12f, 0f, 0f) : Quaternion.Euler(86f, 0f, 7f);
@@ -86,57 +58,10 @@ namespace LastPassenger
                 pulse += Time.deltaTime;
                 coveredBody.localPosition += Vector3.up * (Mathf.Sin(pulse * 2.7f) * 0.0015f);
 
-                if (anomalySprite != null)
-                {
-                    float xJitter = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.025f;
-                    float yJitter = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.018f;
-                    anomalySprite.localPosition = anomalyBasePosition + new Vector3(xJitter, yJitter, 0f);
-
-                    float alpha = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
-                    Color flicker = new Color(1f, 1f, 1f, alpha);
-                    anomalySpriteMaterial.color = flicker;
-                    if (anomalySpriteMaterial.HasProperty("_BaseColor"))
-                    {
-                        anomalySpriteMaterial.SetColor("_BaseColor", flicker);
-                    }
-                }
+                anomalyJitter.x = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.018f;
+                anomalyJitter.y = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.025f;
+                anomalyAlpha = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
             }
-        }
-
-        private void BuildGeneratedRearCabin(Transform vehicle)
-        {
-            Texture2D cabinTexture = Resources.Load<Texture2D>("Mirror/RearCabinBackseat");
-            if (cabinTexture != null)
-            {
-                Material cabinMaterial = RuntimeGeometry.TexturedMaterial(
-                    "Generated rear-cabin plate",
-                    cabinTexture);
-                RuntimeGeometry.TexturedQuad(
-                    "Generated rear cabin and backseat",
-                    vehicle,
-                    new Vector3(0f, 1.18f, -2.48f),
-                    new Vector2(8.9f, 3.56f),
-                    cabinMaterial,
-                    new Vector3(0f, 180f, 0f));
-            }
-
-            Texture2D apparitionTexture = Resources.Load<Texture2D>("Mirror/WhiteGrainAnomaly");
-            if (apparitionTexture == null) return;
-
-            anomalySpriteMaterial = RuntimeGeometry.TexturedMaterial(
-                "Generated white-grain apparition",
-                apparitionTexture,
-                transparent: true);
-            GameObject apparition = RuntimeGeometry.TexturedQuad(
-                "White grainy passenger anomaly",
-                vehicle,
-                new Vector3(0.76f, 1.22f, -2.14f),
-                new Vector2(0.72f, 1.08f),
-                anomalySpriteMaterial,
-                new Vector3(0f, 180f, 0f));
-            anomalySprite = apparition.transform;
-            anomalyBasePosition = anomalySprite.localPosition;
-            apparition.SetActive(false);
         }
 
         private void SetBodyMaterial(Material material)
@@ -163,6 +88,32 @@ namespace LastPassenger
             GUI.color = Color.white;
             GUI.DrawTexture(mirrorRect, mirrorTexture, ScaleMode.StretchToFill, false);
 
+            if (anomalyTriggered && anomalyTexture != null)
+            {
+                float anomalyWidth = mirrorRect.width * (severeAnomaly ? 0.28f : 0.22f);
+                float anomalyHeight = mirrorRect.height * (severeAnomaly ? 1.12f : 0.9f);
+                float centerX = mirrorRect.x + mirrorRect.width *
+                    ((severeAnomaly ? 0.5f : 0.68f) + anomalyJitter.x);
+                float bottom = mirrorRect.y + mirrorRect.height * (1.04f + anomalyJitter.y);
+                Rect anomalyRect = new Rect(
+                    centerX - anomalyWidth * 0.5f,
+                    bottom - anomalyHeight,
+                    anomalyWidth,
+                    anomalyHeight);
+
+                GUI.BeginGroup(mirrorRect);
+                Rect clippedAnomalyRect = new Rect(
+                    anomalyRect.x - mirrorRect.x,
+                    anomalyRect.y - mirrorRect.y,
+                    anomalyRect.width,
+                    anomalyRect.height);
+                GUI.color = new Color(1f, 1f, 1f, anomalyAlpha);
+                GUI.DrawTexture(clippedAnomalyRect, anomalyTexture, ScaleMode.ScaleToFit, true);
+                GUI.EndGroup();
+            }
+
+            GUI.color = Color.white;
+
             GUIStyle label = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
@@ -171,15 +122,6 @@ namespace LastPassenger
             };
             GUI.Label(new Rect(mirrorRect.x, mirrorRect.yMax + 6f, mirrorRect.width, 24f), IsExpanded ? "REAR-VIEW MIRROR — release R to lower" : "Hold R to inspect", label);
             GUI.color = previous;
-        }
-
-        private void OnDestroy()
-        {
-            if (mirrorTexture != null)
-            {
-                mirrorTexture.Release();
-                Destroy(mirrorTexture);
-            }
         }
     }
 }
