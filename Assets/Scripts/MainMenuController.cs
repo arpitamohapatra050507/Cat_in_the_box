@@ -20,6 +20,7 @@ namespace LastPassenger
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             inputReadyAt = Time.unscaledTime + 0.2f;
+            EnsureMenuCamera();
 
             AudioClip theme = menuTheme != null
                 ? menuTheme
@@ -32,6 +33,24 @@ namespace LastPassenger
             source.spatialBlend = 0f;
             source.volume = menuVolume;
             source.Play();
+        }
+
+        private void EnsureMenuCamera()
+        {
+            Camera menuCamera = GetComponent<Camera>();
+            if (menuCamera == null) menuCamera = Object.FindFirstObjectByType<Camera>();
+            if (menuCamera == null) menuCamera = gameObject.AddComponent<Camera>();
+
+            menuCamera.enabled = true;
+            menuCamera.targetTexture = null;
+            menuCamera.targetDisplay = 0;
+            menuCamera.clearFlags = CameraClearFlags.SolidColor;
+            menuCamera.backgroundColor = new Color(0.004f, 0.008f, 0.007f);
+            if (!menuCamera.CompareTag("MainCamera")) menuCamera.tag = "MainCamera";
+
+            AudioListener listener = menuCamera.GetComponent<AudioListener>();
+            if (listener == null) listener = menuCamera.gameObject.AddComponent<AudioListener>();
+            listener.enabled = true;
         }
 
         private void Update()

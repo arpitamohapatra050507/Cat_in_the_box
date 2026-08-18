@@ -24,6 +24,8 @@ namespace LastPassenger
             GameObject vehicle = new GameObject("Player hearse");
             vehicle.transform.position = new Vector3(0f, 0.18f, 0f);
             VehicleController controller = vehicle.AddComponent<VehicleController>();
+            BuildMainCamera(vehicle.transform);
+
             AudioClip customEngine = Resources.Load<AudioClip>("Audio/CarEngine");
             controller.ConfigureAudio(
                 customEngine != null ? customEngine : ProceduralAudio.EngineLoop(),
@@ -31,7 +33,6 @@ namespace LastPassenger
 
             BuildCabin(vehicle.transform, controller, cabin, trim, instrument, glass);
             Transform body = BuildCoveredBody(vehicle.transform, cloth);
-            BuildMainCamera(vehicle.transform);
             BuildHeadlights(vehicle.transform);
 
             GameObject mirrorObject = new GameObject("Mirror system");
@@ -77,16 +78,6 @@ namespace LastPassenger
         private static Camera BuildMainCamera(Transform vehicle)
         {
             Camera[] sceneCameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
-            for (int i = 0; i < sceneCameras.Length; i++)
-            {
-                Camera sceneCamera = sceneCameras[i];
-                sceneCamera.enabled = false;
-                if (sceneCamera.CompareTag("MainCamera")) sceneCamera.tag = "Untagged";
-
-                AudioListener sceneListener = sceneCamera.GetComponent<AudioListener>();
-                if (sceneListener != null) sceneListener.enabled = false;
-            }
-
             GameObject cameraObject = new GameObject("Driver camera");
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(vehicle, false);
@@ -102,6 +93,18 @@ namespace LastPassenger
             camera.backgroundColor = new Color(0.004f, 0.007f, 0.009f);
             cameraObject.AddComponent<AudioListener>();
             cameraObject.AddComponent<DriverCameraLook>();
+
+            for (int i = 0; i < sceneCameras.Length; i++)
+            {
+                Camera sceneCamera = sceneCameras[i];
+                sceneCamera.enabled = false;
+                if (sceneCamera.CompareTag("MainCamera")) sceneCamera.tag = "Untagged";
+
+                AudioListener sceneListener = sceneCamera.GetComponent<AudioListener>();
+                if (sceneListener != null) sceneListener.enabled = false;
+            }
+
+            camera.enabled = true;
             return camera;
         }
 
