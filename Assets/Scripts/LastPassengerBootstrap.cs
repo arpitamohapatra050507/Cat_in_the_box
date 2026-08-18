@@ -209,7 +209,7 @@ namespace LastPassenger
             GameObject wheel = RuntimeGeometry.TexturedQuad(
                 "Animated 2D steering wheel",
                 parent,
-                new Vector3(-0.56f, 0.54f, 0.86f),
+                new Vector3(-0.56f, 0.68f, 0.88f),
                 new Vector2(0.74f, 0.74f),
                 wheelMaterial);
 
