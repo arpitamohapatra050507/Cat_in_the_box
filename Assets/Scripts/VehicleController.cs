@@ -9,15 +9,19 @@ namespace LastPassenger
         [SerializeField] private float acceleration = 3.4f;
         [SerializeField] private float braking = 7f;
         [SerializeField] private float naturalDrag = 0.8f;
-        [SerializeField] private float steeringSpeed = 3.8f;
         [SerializeField] private float steeringResponse = 2.2f;
         [SerializeField] private float steeringReturnSpeed = 3f;
+        [SerializeField] private float maximumTurnRate = 26f;
+        [SerializeField] private float maximumHeading = 14f;
+        [SerializeField] private float roadAlignmentSpeed = 8f;
         [SerializeField] private float laneLimit = 3.25f;
 
         private AudioSource engineSource;
         private AudioSource impactSource;
         private float speed;
         private float steeringInput;
+        private float heading;
+        private float visualRoll;
         private float edgeCooldown;
         private bool controlsEnabled = true;
 
@@ -25,6 +29,8 @@ namespace LastPassenger
         public float MaximumSpeed => maximumSpeed;
         public float Distance => transform.position.z;
         public float LanePosition => transform.position.x;
+        public float SteeringInput => steeringInput;
+        public float Heading => heading;
 
         public void ConfigureAudio(AudioClip engine, AudioClip impact)
         {
@@ -90,28 +96,45 @@ namespace LastPassenger
                 targetSteering,
                 steeringChangeSpeed * Time.deltaTime);
 
+            float speedRatio = maximumSpeed > 0f ? Mathf.Clamp01(speed / maximumSpeed) : 0f;
+            float steeringAuthority = Mathf.Lerp(0.18f, 1f, speedRatio);
+            if (Mathf.Abs(steeringInput) > 0.01f)
+            {
+                heading += steeringInput * maximumTurnRate * steeringAuthority * Time.deltaTime;
+            }
+            else
+            {
+                heading = Mathf.MoveTowards(heading, 0f, roadAlignmentSpeed * Time.deltaTime);
+            }
+            heading = Mathf.Clamp(heading, -maximumHeading, maximumHeading);
+
             Vector3 position = transform.position;
-            position.z += speed * Time.deltaTime;
-            position.x += steeringInput * steeringSpeed * Mathf.Lerp(0.35f, 1f, speed / maximumSpeed) * Time.deltaTime;
+            Vector3 travelDirection = Quaternion.Euler(0f, heading, 0f) * Vector3.forward;
+            position += travelDirection * (speed * Time.deltaTime);
 
             float unclampedX = position.x;
             position.x = Mathf.Clamp(position.x, -laneLimit, laneLimit);
 
-            if (!Mathf.Approximately(unclampedX, position.x) && edgeCooldown <= 0f)
+            bool hitRoadEdge = !Mathf.Approximately(unclampedX, position.x);
+            if (hitRoadEdge)
             {
-                speed *= 0.65f;
-                edgeCooldown = 0.45f;
-                impactSource?.Play();
-                PrototypeGameManager.Instance?.NotifyRoadImpact();
+                float inwardHeading = -Mathf.Sign(position.x) * 5f;
+                heading = Mathf.MoveTowards(heading, inwardHeading, 24f * Time.deltaTime);
+
+                if (edgeCooldown <= 0f)
+                {
+                    speed *= 0.65f;
+                    edgeCooldown = 0.45f;
+                    impactSource?.Play();
+                    PrototypeGameManager.Instance?.NotifyRoadImpact();
+                }
             }
 
             transform.position = position;
 
-            float lean = -steeringInput * Mathf.Lerp(0f, 2.2f, speed / maximumSpeed);
-            transform.rotation = Quaternion.Lerp(
-                transform.rotation,
-                Quaternion.Euler(0f, steeringInput * 1.2f, lean),
-                Time.deltaTime * 5f);
+            float targetRoll = -steeringInput * Mathf.Lerp(0f, 2.2f, speedRatio);
+            visualRoll = Mathf.Lerp(visualRoll, targetRoll, Time.deltaTime * 5f);
+            transform.rotation = Quaternion.Euler(0f, heading, visualRoll);
 
             if (engineSource != null)
             {

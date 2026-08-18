@@ -7,8 +7,9 @@ Run this once in the Unity editor and once in the final Windows build.
 1. Press Play and confirm the road, cabin, dashboard, body, fog, and mirror appear.
 2. Hold `W`; speed should rise smoothly and the engine pitch should increase.
 3. Tap and hold steering in both directions; it should ramp smoothly rather than
-   snapping sideways. Steer into each shoulder; the car must remain constrained
-   and play an impact.
+   snapping sideways. Confirm the road perspective yaws as the car turns and
+   that the steering wheel rotates with it. Steer into each shoulder; the car
+   must remain constrained and play an impact.
 4. Hold the right mouse button and look left, right, up, and down. The view must
    remain within the cabin and return smoothly to the road when released.
 5. Press `F9`; verify the fork prompt appears and select the left lane.
@@ -17,6 +18,9 @@ Run this once in the Unity editor and once in the final Windows build.
 7. Press `F11`; verify the temporary success screen appears.
 8. Restart, use `F9`, select the right lane, then use `F10` and `F11`; verify failure.
 9. Press Enter from each ending and confirm the scene restarts cleanly.
+10. Toggle `M`; confirm both the radio audio and animated display turn off and on.
+11. Confirm the generated dashboard is readable and the radio display aligns
+    with its blank screen at 1280x720 and 1920x1080.
 
 ## Full pacing pass
 

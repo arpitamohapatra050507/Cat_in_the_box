@@ -39,7 +39,7 @@ namespace LastPassenger
             VehicleController controller = vehicle.AddComponent<VehicleController>();
             controller.ConfigureAudio(ProceduralAudio.EngineLoop(), ProceduralAudio.Impact());
 
-            BuildCabin(vehicle.transform, cabin, trim, instrument, glass);
+            BuildCabin(vehicle.transform, controller, cabin, trim, instrument, glass);
             Transform body = BuildCoveredBody(vehicle.transform, cloth);
             BuildMainCamera(vehicle.transform);
             BuildHeadlights(vehicle.transform);
@@ -96,16 +96,21 @@ namespace LastPassenger
             return camera;
         }
 
-        private static void BuildCabin(Transform vehicle, Material cabin, Material trim, Material instrument, Material glass)
+        private static void BuildCabin(
+            Transform vehicle,
+            VehicleController controller,
+            Material cabin,
+            Material trim,
+            Material instrument,
+            Material glass)
         {
             GameObject cabinRoot = RuntimeGeometry.Empty("Generated hearse cabin", vehicle, Vector3.zero);
 
-            RuntimeGeometry.Primitive("Dashboard", PrimitiveType.Cube, cabinRoot.transform,
-                new Vector3(0f, 0.78f, 1.18f), new Vector3(3.2f, 0.48f, 0.72f), cabin,
+            RuntimeGeometry.Primitive("Dashboard support", PrimitiveType.Cube, cabinRoot.transform,
+                new Vector3(0f, 0.46f, 1.18f), new Vector3(3.2f, 0.3f, 0.72f), cabin,
                 new Vector3(-6f, 0f, 0f));
-            RuntimeGeometry.Primitive("Instrument panel", PrimitiveType.Cube, cabinRoot.transform,
-                new Vector3(0f, 1.04f, 0.84f), new Vector3(1.25f, 0.25f, 0.08f), instrument,
-                new Vector3(-8f, 0f, 0f));
+
+            BuildDashboardFascia(cabinRoot.transform, instrument);
             RuntimeGeometry.Primitive("Cabin floor", PrimitiveType.Cube, cabinRoot.transform,
                 new Vector3(0f, 0.02f, -0.35f), new Vector3(3.5f, 0.18f, 4.7f), cabin);
 
@@ -124,10 +129,43 @@ namespace LastPassenger
             RuntimeGeometry.Primitive("Right door", PrimitiveType.Cube, cabinRoot.transform,
                 new Vector3(1.7f, 0.85f, -0.2f), new Vector3(0.15f, 1.7f, 3.2f), cabin);
 
-            BuildSteeringWheel(cabinRoot.transform, trim);
+            BuildSteeringWheel(cabinRoot.transform, trim, controller);
         }
 
-        private static void BuildSteeringWheel(Transform parent, Material material)
+        private static void BuildDashboardFascia(Transform parent, Material instrument)
+        {
+            Texture2D dashboardTexture = Resources.Load<Texture2D>("Dashboard/DarkDashboardFascia");
+            if (dashboardTexture != null)
+            {
+                Material dashboardMaterial = RuntimeGeometry.TexturedMaterial("Generated dashboard fascia", dashboardTexture);
+                RuntimeGeometry.TexturedQuad(
+                    "Generated dashboard fascia",
+                    parent,
+                    new Vector3(0f, 1f, 1.45f),
+                    new Vector2(2.72f, 0.95f),
+                    dashboardMaterial);
+            }
+
+            GameObject radioDisplay = RuntimeGeometry.Primitive(
+                "Animated radio display",
+                PrimitiveType.Cube,
+                parent,
+                new Vector3(0.02f, 0.985f, 1.405f),
+                new Vector3(0.38f, 0.1f, 0.025f),
+                instrument);
+            GameObject tuningNeedle = RuntimeGeometry.Primitive(
+                "Radio tuning needle",
+                PrimitiveType.Cube,
+                parent,
+                new Vector3(0.02f, 0.985f, 1.385f),
+                new Vector3(0.012f, 0.074f, 0.012f),
+                instrument);
+
+            RadioAnimator radioAnimator = radioDisplay.AddComponent<RadioAnimator>();
+            radioAnimator.Configure(radioDisplay.GetComponent<Renderer>().sharedMaterial, tuningNeedle.transform);
+        }
+
+        private static void BuildSteeringWheel(Transform parent, Material material, VehicleController controller)
         {
             GameObject wheel = RuntimeGeometry.Empty("Steering wheel", parent, new Vector3(-0.62f, 0.97f, 0.62f));
             wheel.transform.localEulerAngles = new Vector3(68f, 0f, 0f);
@@ -142,6 +180,23 @@ namespace LastPassenger
 
             RuntimeGeometry.Primitive("Wheel hub", PrimitiveType.Cylinder, wheel.transform,
                 Vector3.zero, new Vector3(0.12f, 0.06f, 0.12f), material, new Vector3(90f, 0f, 0f));
+
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = i * 120f;
+                float radians = angle * Mathf.Deg2Rad;
+                RuntimeGeometry.Primitive(
+                    "Wheel spoke",
+                    PrimitiveType.Cube,
+                    wheel.transform,
+                    new Vector3(Mathf.Cos(radians) * 0.16f, Mathf.Sin(radians) * 0.16f, 0f),
+                    new Vector3(0.32f, 0.045f, 0.045f),
+                    material,
+                    new Vector3(0f, 0f, angle));
+            }
+
+            SteeringWheelAnimator animator = wheel.AddComponent<SteeringWheelAnimator>();
+            animator.Configure(controller);
         }
 
         private static Transform BuildCoveredBody(Transform vehicle, Material cloth)

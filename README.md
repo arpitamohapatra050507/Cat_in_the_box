@@ -42,6 +42,15 @@ Road messages are editable without changing C# in
 message, color, and display duration; this is the extension point for later
 radio reports, memories, accusations, and ambiguous story fragments.
 
+Steering now rotates the vehicle and moves it along its heading instead of
+sliding it sideways. The wheel follows steering input, while the radio display
+flickers and changes during the anomaly. A custom static loop placed at
+`Assets/Resources/Audio/RadioStatic.wav` is loaded automatically.
+
+The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
+provided. The `demo` branch's FBX currently references a texture that was not
+committed, so the procedural asphalt remains the safe fallback.
+
 The production asset workflow and first three generation batches are described
 in `ASSET_PLAN.md`.
 

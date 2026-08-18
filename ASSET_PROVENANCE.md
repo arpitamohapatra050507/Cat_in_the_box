@@ -31,3 +31,18 @@ inspect how each temporary asset was created.
   with OpenAI Codex built-in image generation on 2026-08-18 as an image-to-3D
   reference for Meshy. The full prompt is stored beside it in
   `DarkFir_MeshyReference_SOURCE.md`.
+
+## Generated runtime images
+
+- `Assets/Resources/Dashboard/DarkDashboardFascia.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 and used as the in-world
+  dashboard fascia. Its exact prompt is stored beside it in
+  `DarkDashboardFascia_SOURCE.md`.
+
+## Team-created assets pending import
+
+- The `demo` branch contains `Assets/Models/RoadTemplate.fbx`, credited by the
+  team as an older custom racing-game asset. Its referenced `Color_Grid.png`
+  texture is not present in Git yet, so it has not been imported into the
+  prototype. Record the original author and license/permission when the missing
+  texture is supplied.

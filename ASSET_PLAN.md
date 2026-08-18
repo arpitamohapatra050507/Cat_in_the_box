@@ -15,18 +15,15 @@ models for objects that need parallax and lighting.
 Keep this direction in every generation prompt. Generate a few candidates,
 choose one, and iterate from it instead of mixing unrelated generator styles.
 
-## Asset batch 1 — cockpit overlay
+## Asset batch 1 — dashboard fascia
 
-Create one 2560x1440 transparent PNG viewed from the driver's seat. The opaque
-dashboard and pillars should occupy the lower and outer portions, leaving a
-large transparent windshield opening. Do not bake the mirror, speed readout,
-road, hands, or steering animation into the image; Unity will layer those
-interactive elements separately.
+The first dashboard fascia is now generated at
+`Assets/Resources/Dashboard/DarkDashboardFascia.png`. It is mapped to an
+in-world quad so camera-look still has parallax. The steering wheel and radio
+display remain separate procedural objects and animate independently.
 
-Use it as a Screen Space Overlay canvas image. Add a few pixels of sway from
-steering and road impacts so it does not feel completely static. Keep the
-current procedural cabin available as a fallback until the overlay works at
-16:9 and 16:10 resolutions.
+Keep the procedural cabin as a structural fallback. Validate the panel at 16:9
+and 16:10 resolutions before replacing more of the cabin geometry.
 
 ## Asset batch 2 — forest kit
 
@@ -57,7 +54,7 @@ horizon cheaply while nearby 3D trees preserve motion parallax.
 ## Order of work
 
 1. Approve one cockpit concept and one forest concept sheet.
-2. Finish the cockpit overlay because it replaces the most visibly temporary art.
+2. Validate the generated dashboard fascia, animated wheel, and radio placement.
 3. Generate and clean the two tree models.
 4. Add the distant billboard only if visible gaps remain through the fog.
 5. Record prompts, generator, date, license, and manual cleanup in

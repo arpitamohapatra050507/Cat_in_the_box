@@ -42,6 +42,7 @@ namespace LastPassenger
         private const float FinishDistance = 2000f;
 
         public RunState State => state;
+        public bool RadioEnabled => radioEnabled;
 
         public void Configure(VehicleController controller, MirrorSystem mirrorSystem)
         {
@@ -87,7 +88,8 @@ namespace LastPassenger
             windSource.Play();
 
             radioSource = gameObject.AddComponent<AudioSource>();
-            radioSource.clip = ProceduralAudio.RadioStatic();
+            AudioClip customRadioStatic = Resources.Load<AudioClip>("Audio/RadioStatic");
+            radioSource.clip = customRadioStatic != null ? customRadioStatic : ProceduralAudio.RadioStatic();
             radioSource.loop = true;
             radioSource.volume = 0.075f;
             radioSource.Play();

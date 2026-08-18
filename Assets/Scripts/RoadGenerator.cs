@@ -22,6 +22,8 @@ namespace LastPassenger
         {
             vehicle = vehicleTransform;
             roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.035f, 0.04f, 0.045f), 0.05f, 0.32f);
+            Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
+            RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
             lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.46f, 0.43f, 0.29f), 0f, 0.08f);
             dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.018f, 0.024f, 0.018f));
             barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.075f, 0.055f, 0.045f));
