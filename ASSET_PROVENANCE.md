@@ -24,3 +24,10 @@ inspect how each temporary asset was created.
 - Add every later Meshy, Tripo, Scenario, or image-generation export with its
   prompt, generation date, model/version, license, and required attribution.
 - Do not introduce stock Unity Asset Store content without organizer approval.
+
+## Generated reference images
+
+- `Assets/GeneratedAssets/Trees/References/DarkFir_MeshyReference.png` — generated
+  with OpenAI Codex built-in image generation on 2026-08-18 as an image-to-3D
+  reference for Meshy. The full prompt is stored beside it in
+  `DarkFir_MeshyReference_SOURCE.md`.
