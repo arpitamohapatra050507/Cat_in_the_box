@@ -13,6 +13,28 @@ audio are generated at runtime. No external art or audio packages are needed.
 3. Open that scene if Unity did not do so automatically, then press Play.
 4. To rebuild the scene manually, use **Tools > The Last Passenger > Rebuild Prototype Scene**.
 
+## Replace the generated road and trees
+
+Open **Tools > The Last Passenger > Select Prefab Overrides**. Unity selects the
+`Prototype asset configuration — assign prefabs here` object in the Prototype
+scene. Its Inspector contains these optional serialized fields:
+
+- **Road Chunk Prefab** — replaces every ordinary repeating road chunk.
+- **Pine Tree Prefab** — replaces the common roadside fir trees.
+- **Leafless Tree Prefab** — replaces the occasional bare trees.
+- **Road Chunk Length** — distance between repeated road-prefab instances;
+  leave it at `80` unless the custom chunk has a different length.
+
+Each field falls back independently. For example, assigning only the Meshy fir
+prefab replaces the pine trees while the generated road and leafless trees stay
+in use. Custom trees are automatically scaled to the randomized target height,
+centered, and placed on the ground, so arbitrary Meshy export scale is fine.
+
+A road prefab's root must represent the beginning of the chunk at local
+`(0, 0, 0)`, face forward along local `+Z`, and extend for **Road Chunk Length**
+units. Stop Play Mode before changing a slot, then start it again to rebuild the
+runtime road. Rebuilding the Prototype scene preserves all assigned overrides.
+
 ## Controls
 
 - `W` / Up Arrow — accelerate
@@ -57,9 +79,10 @@ its volume rises smoothly from silence while accelerating, reaches at most 50%
 at full speed, and returns to silence when the car stops. Procedural audio is
 used if either custom clip is missing.
 
-The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
-provided. The `demo` branch's FBX currently references a texture that was not
-committed, so the procedural asphalt remains the safe fallback.
+When no road prefab is assigned, the generated road material loads
+`Assets/Resources/Road/RoadAlbedo.png` when provided. The `demo` branch's FBX
+currently references a texture that was not committed, so the procedural
+asphalt remains the safe fallback.
 
 The production asset workflow and first three generation batches are described
 in `ASSET_PLAN.md`.

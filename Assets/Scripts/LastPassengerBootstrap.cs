@@ -53,7 +53,9 @@ namespace LastPassenger
 
             GameObject roadObject = new GameObject("Generated repeating road");
             RoadGenerator road = roadObject.AddComponent<RoadGenerator>();
-            road.Build(vehicle.transform);
+            PrototypeAssetConfiguration assetConfiguration =
+                Object.FindFirstObjectByType<PrototypeAssetConfiguration>();
+            road.Build(vehicle.transform, assetConfiguration);
 
             GameObject managerObject = new GameObject("Prototype game state");
             PrototypeGameManager manager = managerObject.AddComponent<PrototypeGameManager>();

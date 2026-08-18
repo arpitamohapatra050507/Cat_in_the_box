@@ -34,6 +34,21 @@ Run this once in the Unity editor and once in the final Windows build.
 12. Look right and confirm the front passenger seat has visible cushion,
     backrest, headrest, and parallax without blocking the forward road view.
 
+## Prefab override pass
+
+1. Use **Tools > The Last Passenger > Select Prefab Overrides** and confirm the
+   scene configuration object exposes Road Chunk, Pine Tree, Leafless Tree, and
+   Road Chunk Length fields.
+2. Leave all three prefab fields empty, enter Play Mode, and confirm the current
+   generated road and both generated tree types still appear.
+3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
+   common trees while the generated road and leafless trees remain.
+4. Assign a road prefab with the correct length, restart Play Mode, and confirm
+   all ordinary chunks use it, remain gap-free, and continue recycling as the
+   car advances.
+5. Remove the prefab assignments and confirm the procedural fallbacks return.
+6. Use **Rebuild Prototype Scene** and confirm assigned overrides are preserved.
+
 ## Full pacing pass
 
 1. Start without debug shortcuts and complete the left route.

@@ -6,11 +6,15 @@ namespace LastPassenger
     public sealed class RoadGenerator : MonoBehaviour
     {
         private const int ChunkCount = 16;
-        private const float ChunkLength = 80f;
+        private const float DefaultChunkLength = 80f;
         private const float RoadWidth = 8f;
 
         private readonly List<Transform> chunks = new List<Transform>();
         private Transform vehicle;
+        private GameObject roadChunkPrefab;
+        private GameObject pineTreePrefab;
+        private GameObject leaflessTreePrefab;
+        private float chunkLength = DefaultChunkLength;
         private Material roadMaterial;
         private Material lineMaterial;
         private Material dirtMaterial;
@@ -18,9 +22,19 @@ namespace LastPassenger
         private Material branchMaterial;
         private Material reflectorMaterial;
 
-        public void Build(Transform vehicleTransform)
+        public void Build(
+            Transform vehicleTransform,
+            PrototypeAssetConfiguration assetConfiguration = null)
         {
             vehicle = vehicleTransform;
+            if (assetConfiguration != null)
+            {
+                roadChunkPrefab = assetConfiguration.RoadChunkPrefab;
+                pineTreePrefab = assetConfiguration.PineTreePrefab;
+                leaflessTreePrefab = assetConfiguration.LeaflessTreePrefab;
+                chunkLength = assetConfiguration.RoadChunkLength;
+            }
+
             roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.035f, 0.04f, 0.045f), 0.05f, 0.32f);
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
@@ -32,7 +46,7 @@ namespace LastPassenger
 
             for (int i = 0; i < ChunkCount; i++)
             {
-                chunks.Add(CreateChunk(i, i * ChunkLength));
+                chunks.Add(CreateChunk(i, i * chunkLength));
             }
 
             BuildJunction(650f);
@@ -42,23 +56,22 @@ namespace LastPassenger
         {
             GameObject chunk = RuntimeGeometry.Empty($"Repeating road {index:00}", transform, new Vector3(0f, 0f, z));
 
-            RuntimeGeometry.Primitive("Road", PrimitiveType.Cube, chunk.transform,
-                new Vector3(0f, -0.12f, ChunkLength * 0.5f), new Vector3(RoadWidth, 0.22f, ChunkLength), roadMaterial);
-            RuntimeGeometry.Primitive("Left shoulder", PrimitiveType.Cube, chunk.transform,
-                new Vector3(-9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
-            RuntimeGeometry.Primitive("Right shoulder", PrimitiveType.Cube, chunk.transform,
-                new Vector3(9f, -0.3f, ChunkLength * 0.5f), new Vector3(10f, 0.35f, ChunkLength), dirtMaterial);
-
-            for (float markZ = 8f; markZ < ChunkLength; markZ += 12f)
+            if (roadChunkPrefab != null)
             {
-                RuntimeGeometry.Primitive("Broken centre line", PrimitiveType.Cube, chunk.transform,
-                    new Vector3(0f, 0.015f, markZ), new Vector3(0.09f, 0.018f, 5.5f), lineMaterial);
+                GameObject customRoad = Instantiate(roadChunkPrefab, chunk.transform);
+                customRoad.name = $"Custom road chunk {index:00}";
+                customRoad.transform.localPosition = Vector3.zero;
+                customRoad.transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                BuildProceduralRoadChunk(chunk.transform);
             }
 
             System.Random random = new System.Random(7331 + index * 109);
             for (int i = 0; i < 9; i++)
             {
-                float localZ = 4f + (float)random.NextDouble() * (ChunkLength - 8f);
+                float localZ = 4f + (float)random.NextDouble() * (chunkLength - 8f);
                 float side = i % 2 == 0 ? -1f : 1f;
                 float x = side * (6f + (float)random.NextDouble() * 7f);
                 float height = 2.5f + (float)random.NextDouble() * 3.5f;
@@ -69,12 +82,35 @@ namespace LastPassenger
             return chunk.transform;
         }
 
+        private void BuildProceduralRoadChunk(Transform chunk)
+        {
+            RuntimeGeometry.Primitive("Road", PrimitiveType.Cube, chunk,
+                new Vector3(0f, -0.12f, chunkLength * 0.5f), new Vector3(RoadWidth, 0.22f, chunkLength), roadMaterial);
+            RuntimeGeometry.Primitive("Left shoulder", PrimitiveType.Cube, chunk,
+                new Vector3(-9f, -0.3f, chunkLength * 0.5f), new Vector3(10f, 0.35f, chunkLength), dirtMaterial);
+            RuntimeGeometry.Primitive("Right shoulder", PrimitiveType.Cube, chunk,
+                new Vector3(9f, -0.3f, chunkLength * 0.5f), new Vector3(10f, 0.35f, chunkLength), dirtMaterial);
+
+            for (float markZ = 8f; markZ < chunkLength; markZ += 12f)
+            {
+                RuntimeGeometry.Primitive("Broken centre line", PrimitiveType.Cube, chunk,
+                    new Vector3(0f, 0.015f, markZ), new Vector3(0.09f, 0.018f, 5.5f), lineMaterial);
+            }
+        }
+
         private void BuildTree(Transform parent, Vector3 position, float height, bool isPine)
         {
             GameObject tree = RuntimeGeometry.Empty(
-                isPine ? "Generated pine tree" : "Generated leafless tree",
+                isPine ? "Roadside pine tree" : "Roadside leafless tree",
                 parent,
                 position);
+            GameObject treePrefab = isPine ? pineTreePrefab : leaflessTreePrefab;
+            if (treePrefab != null)
+            {
+                BuildPrefabTree(tree.transform, treePrefab, height);
+                return;
+            }
+
             RuntimeGeometry.Primitive("Trunk", PrimitiveType.Cylinder, tree.transform,
                 new Vector3(0f, height * 0.5f, 0f), new Vector3(0.18f, height * 0.5f, 0.18f), barkMaterial,
                 new Vector3(0f, 0f, Random.Range(-5f, 5f)));
@@ -93,6 +129,35 @@ namespace LastPassenger
                     new Vector3(direction * 0.45f, y, 0f), new Vector3(0.07f, 0.62f, 0.07f), branchMaterial,
                     new Vector3(0f, 0f, direction * 52f));
             }
+        }
+
+        private static void BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
+        {
+            GameObject instance = Instantiate(prefab, parent);
+            instance.name = $"Custom {prefab.name}";
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = Vector3.one;
+
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return;
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            if (bounds.size.y <= 0.001f) return;
+
+            float uniformScale = targetHeight / bounds.size.y;
+            instance.transform.localScale = Vector3.one * uniformScale;
+
+            renderers = instance.GetComponentsInChildren<Renderer>(true);
+            bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            Vector3 desiredBase = parent.position;
+            instance.transform.position += new Vector3(
+                desiredBase.x - bounds.center.x,
+                desiredBase.y - bounds.min.y,
+                desiredBase.z - bounds.center.z);
         }
 
         private void BuildPineCrown(Transform tree, float height)
@@ -160,9 +225,9 @@ namespace LastPassenger
             for (int i = 0; i < chunks.Count; i++)
             {
                 Transform chunk = chunks[i];
-                if (vehicle.position.z - chunk.position.z > ChunkLength)
+                if (vehicle.position.z - chunk.position.z > chunkLength)
                 {
-                    furthestZ += ChunkLength;
+                    furthestZ += chunkLength;
                     Vector3 position = chunk.position;
                     position.z = furthestZ;
                     chunk.position = position;
