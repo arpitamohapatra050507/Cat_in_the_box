@@ -16,6 +16,7 @@ namespace LastPassenger
         private float apparitionStartedAt;
         private float apparitionSafetyExpiry;
         private float observationTime;
+        [SerializeField] private float apparitionObservationSeconds = 1.1f;
         private float pulse;
         private Vector2 anomalyJitter;
         private float anomalyAlpha;
@@ -32,6 +33,9 @@ namespace LastPassenger
         public bool WasObservedAfterAnomaly => apparitionDispelled;
         public bool WasDispelledByObservation => apparitionDispelled;
         public bool ApparitionVisible => apparitionVisible;
+        public float ApparitionObservationProgress => apparitionVisible
+            ? Mathf.Clamp01(observationTime / Mathf.Max(0.1f, apparitionObservationSeconds))
+            : (apparitionDispelled ? 1f : 0f);
         public Texture MirrorTexture => mirrorTexture;
 
         public void Build(Transform vehicle, Transform body)
@@ -98,25 +102,31 @@ namespace LastPassenger
             {
                 pulse += Time.deltaTime;
                 float elapsed = Time.time - apparitionStartedAt;
-                float fadeIn = Mathf.Clamp01(elapsed / 0.25f);
-                float flicker = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
-                anomalyAlpha = fadeIn * flicker;
-                anomalyJitter.x = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.018f;
-                anomalyJitter.y = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.025f;
 
                 if (IsExpanded)
                 {
                     observationTime += Time.deltaTime;
-                    if (observationTime >= 0.55f)
-                    {
-                        apparitionDispelled = true;
-                        apparitionVisible = false;
-                        apparitionDanger = 0f;
-                    }
                 }
                 else
                 {
                     observationTime = Mathf.MoveTowards(observationTime, 0f, Time.deltaTime * 2f);
+                }
+
+                float observationProgress = Mathf.Clamp01(
+                    observationTime / Mathf.Max(0.1f, apparitionObservationSeconds));
+                float fadeIn = Mathf.Clamp01(elapsed / 0.25f);
+                float fadeFromLooking = 1f - Mathf.SmoothStep(0f, 1f, observationProgress);
+                float flicker = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
+                anomalyAlpha = fadeIn * fadeFromLooking * flicker;
+                anomalyJitter.x = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.018f;
+                anomalyJitter.y = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.025f;
+
+                if (observationProgress >= 1f)
+                {
+                    apparitionDispelled = true;
+                    apparitionVisible = false;
+                    apparitionDanger = 0f;
+                    anomalyAlpha = 0f;
                 }
 
                 if (Time.time >= apparitionSafetyExpiry)

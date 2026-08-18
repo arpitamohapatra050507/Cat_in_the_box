@@ -139,6 +139,55 @@ namespace LastPassenger
             return created;
         }
 
+        public static GameObject TaperedBox(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector2 bottomSize,
+            Vector2 topSize,
+            float height,
+            Material material)
+        {
+            GameObject created = new GameObject(name);
+            created.transform.SetParent(parent, false);
+            created.transform.localPosition = localPosition;
+
+            float bottomHalfWidth = bottomSize.x * 0.5f;
+            float bottomHalfDepth = bottomSize.y * 0.5f;
+            float topHalfWidth = topSize.x * 0.5f;
+            float topHalfDepth = topSize.y * 0.5f;
+            float halfHeight = height * 0.5f;
+
+            Mesh mesh = new Mesh { name = $"{name} mesh" };
+            mesh.vertices = new[]
+            {
+                new Vector3(-bottomHalfWidth, -halfHeight, -bottomHalfDepth),
+                new Vector3(bottomHalfWidth, -halfHeight, -bottomHalfDepth),
+                new Vector3(bottomHalfWidth, -halfHeight, bottomHalfDepth),
+                new Vector3(-bottomHalfWidth, -halfHeight, bottomHalfDepth),
+                new Vector3(-topHalfWidth, halfHeight, -topHalfDepth),
+                new Vector3(topHalfWidth, halfHeight, -topHalfDepth),
+                new Vector3(topHalfWidth, halfHeight, topHalfDepth),
+                new Vector3(-topHalfWidth, halfHeight, topHalfDepth)
+            };
+            mesh.triangles = new[]
+            {
+                0, 4, 5, 0, 5, 1,
+                1, 5, 6, 1, 6, 2,
+                2, 6, 7, 2, 7, 3,
+                3, 7, 4, 3, 4, 0,
+                4, 7, 6, 4, 6, 5,
+                3, 0, 1, 3, 1, 2
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            created.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = created.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            return created;
+        }
+
         public static GameObject Empty(string name, Transform parent, Vector3 localPosition)
         {
             GameObject created = new GameObject(name);

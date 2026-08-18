@@ -48,7 +48,7 @@ namespace LastPassenger
 
         private const float JunctionWarningDistance = 540f;
         private const float JunctionDistance = 650f;
-        private const float FinishDistance = 6000f;
+        private const float FinishDistance = 7500f;
         private const float CliffEndingDuration = 3.5f;
 
         public RunState State => state;

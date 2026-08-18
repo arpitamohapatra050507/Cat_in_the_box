@@ -15,7 +15,7 @@ namespace LastPassenger
         [Header("Truck pursuit")]
         [SerializeField] private float truckWarningDuration = 4.5f;
         [SerializeField] private float truckChaseDuration = 30f;
-        [SerializeField] private Vector2 barricadeInterval = new Vector2(1.6f, 2.5f);
+        [SerializeField] private Vector2 barricadeInterval = new Vector2(2.2f, 3.1f);
         [SerializeField, Range(0f, 0.05f)] private float maximumTruckVolume = 0.05f;
         [SerializeField] private float truckAudioFadeSeconds = 3f;
         [SerializeField] private float initialTruckGap = 20f;
@@ -170,12 +170,15 @@ namespace LastPassenger
 
             float progress = Mathf.Clamp01((Time.time - apparitionThreatStartedAt) /
                 Mathf.Max(0.1f, apparitionKillDelay));
-            mirror.SetApparitionDanger(progress);
-            gameManager.SetThreatLevel(progress * 0.62f);
+            float observationProgress = mirror.ApparitionObservationProgress;
+            float visibleDanger = progress * Mathf.Lerp(1f, 0.22f, observationProgress);
+            mirror.SetApparitionDanger(visibleDanger);
+            gameManager.SetThreatLevel(visibleDanger * 0.62f);
             if (apparitionSource != null && apparitionSource.isPlaying)
             {
-                apparitionSource.volume = Mathf.Lerp(ghostStartingVolume, ghostMaximumVolume,
+                float dangerVolume = Mathf.Lerp(ghostStartingVolume, ghostMaximumVolume,
                     progress * progress);
+                apparitionSource.volume = dangerVolume * Mathf.Lerp(1f, 0.24f, observationProgress);
             }
 
             if (progress < 1f) return;
@@ -248,7 +251,8 @@ namespace LastPassenger
 
             if (truckSource != null && truckSource.clip != null)
             {
-                truckSource.volume = 0f;
+                truckSource.time = 0f;
+                truckSource.volume = maximumTruckVolume;
                 truckSource.Play();
             }
 
@@ -258,7 +262,7 @@ namespace LastPassenger
                 5f);
 
             float elapsed = 0f;
-            float nextBarricade = Random.Range(0.7f, 1.1f);
+            float nextBarricade = Random.Range(1.2f, 1.8f);
             while (elapsed < truckChaseDuration)
             {
                 if (truckCatchRunning) yield break;
@@ -283,7 +287,7 @@ namespace LastPassenger
                 float proximity = GapToProximity(truckGap);
                 mirror.SetTruckPursuit(true, proximity);
                 gameManager.SetThreatLevel(proximity);
-                UpdateTruckAudio(elapsed, proximity);
+                MaintainTruckAudioLoop();
 
                 if (truckGap <= 1.5f)
                 {
@@ -294,10 +298,10 @@ namespace LastPassenger
                 yield return null;
             }
 
-            EndTruckSequence();
+            yield return EndTruckSequence();
         }
 
-        private void UpdateTruckAudio(float elapsed, float proximity)
+        private void MaintainTruckAudioLoop()
         {
             if (truckSource == null || !truckSource.isPlaying) return;
 
@@ -308,13 +312,7 @@ namespace LastPassenger
             {
                 truckSource.time = 0f;
             }
-
-            float fadeIn = Mathf.Clamp01(elapsed / Mathf.Max(0.1f, truckAudioFadeSeconds));
-            float fadeOut = Mathf.Clamp01((truckChaseDuration - elapsed) /
-                Mathf.Max(0.1f, truckAudioFadeSeconds));
-            float envelope = Mathf.Min(fadeIn, fadeOut);
-            truckSource.volume = Mathf.Lerp(maximumTruckVolume * 0.45f,
-                maximumTruckVolume, proximity) * envelope;
+            truckSource.volume = maximumTruckVolume;
         }
 
         private void UpdateTruckGap(float deltaTime)
@@ -388,22 +386,38 @@ namespace LastPassenger
             truckCatchRunning = false;
         }
 
-        private void EndTruckSequence()
+        private IEnumerator EndTruckSequence()
         {
             truckChaseActive = false;
             truckChaseCompleted = true;
-            truckSequenceRunning = false;
             truckSequenceRequested = false;
             traffic.SetChaseActive(false);
             mirror.SetTruckPursuit(false, 0f);
             gameManager.SetThreatLevel(0f);
             gameManager.EndTruckChaseHud();
-            if (truckSource != null) truckSource.Stop();
 
             gameManager.ShowGameplayMessage(
                 "The headlights shrink, then vanish without turning away.",
                 new Color(0.68f, 0.74f, 0.72f),
                 4.5f);
+
+            if (truckSource != null && truckSource.isPlaying)
+            {
+                float startingVolume = truckSource.volume;
+                float elapsed = 0f;
+                float fadeSeconds = Mathf.Max(0.1f, truckAudioFadeSeconds);
+                while (elapsed < fadeSeconds && truckSource.isPlaying)
+                {
+                    elapsed += Time.deltaTime;
+                    truckSource.volume = Mathf.Lerp(startingVolume, 0f,
+                        Mathf.Clamp01(elapsed / fadeSeconds));
+                    yield return null;
+                }
+                truckSource.Stop();
+                truckSource.volume = 0f;
+            }
+
+            truckSequenceRunning = false;
             apparitionCheckTimer = apparitionCheckInterval;
         }
 

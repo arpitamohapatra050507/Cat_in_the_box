@@ -78,13 +78,15 @@ seconds. Their movement and collision use swept X/Z checks rather than
 Rigidbody physics, so a fast oncoming car cannot pass through the
 transform-driven player between frames. Any collision with another car is
 immediately fatal. The fallback remains cheap to render, but its basic 3D hull
-now carries generated front/rear, mirrored side-profile, and overhead skins
-rather than looking like a single flat card.
+is now a tapered low-poly sedan with a sloped cabin, roof, bumpers, full-sized
+wheels, and visible hubs. Generated front/rear, mirrored side-profile, and
+overhead skins sit tightly over that volume instead of covering a cube.
 
 The rear-seat apparition checks once every 30 seconds with a 50% chance. When
 it appears, the player has three seconds to hold `R` and face it in the
-rear-view mirror. Holding the view for about half a second dispels it. Ignoring
-it makes pale hands creep in from the screen edges while its audio rises; once
+rear-view mirror. Over roughly 1.1 seconds of continuous observation it visibly
+fades away while the hands and apparition audio recede. Ignoring it makes pale
+hands creep in from the screen edges while its audio rises; once
 the timer expires, the apparition kills the driver. Missed probability rolls
 do not accumulate or overlap later checks.
 
@@ -92,11 +94,14 @@ Once the player has passed the junction and travelled far enough, a horn warns
 of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
 show the truck gaining or losing ground, while the team-supplied
 `Assets/Resources/Audio/Anomalies/TruckChase.mp3` plays over the existing audio
-mix. The loud source is capped at 5% playback volume and fades in for three
-seconds at pursuit start and out over the last three seconds. Stay above roughly
+mix. The loud source is capped at 5% playback volume, begins immediately,
+repeats its audible section at constant volume, and fades only after the chase
+has ended. Stay above roughly
 78% of maximum speed to open the gap. Slowing lets the truck close in. Ordinary
-traffic is cleared and a single-lane barricade appears every 1.6–2.5 seconds,
-always leaving another path open. Three compact bars above the dashboard show
+traffic is cleared and the director attempts a single-lane barricade every
+2.2–3.1 seconds. Obstacles appear farther ahead, use a more forgiving hitbox,
+and must remain at least 27 world units apart, so another path and enough
+reaction distance remain available. Three compact bars above the dashboard show
 the engine's remaining chase health; each barricade removes one bar and cuts
 speed. At zero bars, or if the truck closes the gap, the engine dies, the truck
 slams into the screen, and broken glass frames the death menu. Surviving the
@@ -106,6 +111,13 @@ At approximately two-minute randomized intervals, a featureless black figure
 can appear in the headlight beam. It has no collision penalty and vanishes when
 the player drives through it. It is an atmospheric fake-out, not another health
 system.
+
+The player's available top speed rises smoothly from 10 to 15.5 world units
+per second, beginning after the first minute and reaching its maximum around
+the nine-minute mark. Faster late-run driving makes steering and obstacle
+avoidance more demanding; impacts still remove actual speed. The cliff was
+moved to distance 7500 so a clean high-speed run remains approximately ten
+minutes despite the increasing limit.
 
 The dark-red screen border is a danger indicator, not an unexplained creature
 or separate anomaly. A short flash means the car struck the shoulder, traffic,

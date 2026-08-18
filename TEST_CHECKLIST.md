@@ -27,7 +27,9 @@ Run this once in the Unity editor and once in the final Windows build.
    `F10`, hold `R` again, and verify the grainy white passenger appears and
    flickers as a separate image layer while its appearance sound plays. The
    mirror must remain dark and must not change with the live camera view.
-   Observe it for about half a second and confirm it retreats. Note that
+   Keep observing it for roughly 1.1 seconds and confirm it fades progressively
+   rather than popping out, while the hands and apparition audio also recede.
+   Note that
    `F10` forces the apparition in place; it does not teleport the vehicle.
 9. Press `F10` again and do not touch `R`. Confirm hands grow inward from the
    screen edges, apparition audio becomes louder, and the driver dies after
@@ -66,7 +68,8 @@ Run this once in the Unity editor and once in the final Windows build.
    plays, and the broken-glass `ENGINE DEAD` failure screen appears.
 5. Restart and press `F8` again. During the active chase, confirm ordinary
    traffic is removed and reflective barricades spawn in only one of the three
-   lane positions, always leaving room to evade.
+   lane positions. Confirm they appear farther ahead, never overlap into an
+   impossible wall, and always leave enough room to evade.
 6. Avoid the barricades and maintain full throttle for roughly 30 seconds.
    Confirm the truck and side mirrors fade away, the threat border clears, and
    ordinary traffic resumes on its 7–12-second schedule.
@@ -74,9 +77,10 @@ Run this once in the Unity editor and once in the final Windows build.
    each hit removes exactly one health bar and cuts speed. On the third hit,
    confirm the car stops, the truck catches it, and the full jumpscare/death
    sequence plays. Each barricade must trigger only one impact.
-8. Confirm the chase track fades in over roughly three seconds and fades out
-   during a successful chase's last three seconds. Listen for clipping or
-   unwanted muting while the engine, quiet radio static,
+8. Confirm the chase track begins at its intended quiet volume without a
+   fade-in, repeats continuously without random volume dips, and starts fading
+   only after the chase has ended. Listen for clipping or unwanted muting while
+   the engine, quiet radio static,
    horn, apparition cue, and truck-chase audio overlap.
 
 ## Prefab override pass
@@ -127,6 +131,10 @@ Run this once in the Unity editor and once in the final Windows build.
 12. Complete the run and confirm both junction choices can reach the cliff,
     that the road-to-cliff transition plays once, and that Enter restarts after
     `NO ROAD BELOW`.
+13. During a full run, confirm the attainable speed begins increasing after
+    about one minute, reaches roughly 112 km/h by the late run, and makes
+    steering harder without causing sudden speed jumps. A clean run should
+    still reach the cliff at roughly ten minutes.
 
 ## Submission pass
 
