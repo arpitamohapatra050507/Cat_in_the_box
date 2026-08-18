@@ -37,7 +37,10 @@ namespace LastPassenger
             GameObject vehicle = new GameObject("Player hearse");
             vehicle.transform.position = new Vector3(0f, 0.18f, 0f);
             VehicleController controller = vehicle.AddComponent<VehicleController>();
-            controller.ConfigureAudio(ProceduralAudio.EngineLoop(), ProceduralAudio.Impact());
+            AudioClip customEngine = Resources.Load<AudioClip>("Audio/CarEngine");
+            controller.ConfigureAudio(
+                customEngine != null ? customEngine : ProceduralAudio.EngineLoop(),
+                ProceduralAudio.Impact());
 
             BuildCabin(vehicle.transform, controller, cabin, trim, instrument, glass);
             Transform body = BuildCoveredBody(vehicle.transform, cloth);

@@ -4,8 +4,11 @@ Run this once in the Unity editor and once in the final Windows build.
 
 ## Fast editor pass
 
-1. Press Play and confirm the road, cabin, dashboard, body, fog, and mirror appear.
-2. Hold `W`; speed should rise smoothly and the engine pitch should increase.
+1. Press Play and confirm the title screen appears, the menu theme plays, and
+   the car engine, wind, radio, dashboard HUD, and mirror remain inactive.
+2. Press Enter. Confirm the theme stops, the driving HUD appears, and the custom
+   engine, wind, and radio static begin. Hold `W`; speed should rise smoothly
+   and the engine pitch should increase without obvious loop clicks.
 3. Tap and hold steering in both directions; it should ramp smoothly rather than
    snapping sideways. Confirm the road perspective yaws as the car turns and
    that the steering wheel rotates with it. Steer into each shoulder; the car
@@ -20,7 +23,8 @@ Run this once in the Unity editor and once in the final Windows build.
    daylight blue.
 7. Press `F11`; verify the temporary success screen appears.
 8. Restart, use `F9`, select the right lane, then use `F10` and `F11`; verify failure.
-9. Press Enter from each ending and confirm the scene restarts cleanly.
+9. Press Enter from each ending and confirm the scene restarts at the title
+   screen with the menu theme playing again.
 10. Toggle `M`; confirm both the radio audio and animated display turn off and on.
 11. Confirm the generated dashboard is readable and the radio display aligns
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
@@ -45,5 +49,7 @@ Run this once in the Unity editor and once in the final Windows build.
 - Build Windows x86-64 with `Prototype.unity` enabled.
 - Test the executable on a second machine.
 - Confirm there are no missing shader, material, audio, or scene warnings.
+- Confirm the three team audio files have documented creator permission and
+  satisfy the jam's AI-generated-asset rule.
 - Preserve `ASSET_PROVENANCE.md` with the submission evidence.
 - Add a content warning only when later narrative material requires one.

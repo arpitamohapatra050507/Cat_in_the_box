@@ -1,8 +1,9 @@
 # The Last Passenger — Unity Prototype
 
 A self-contained first-person driving-horror prototype for Unity 6. The road,
-car interior, covered body, mirror feed, lighting, fog, signs, scenery, and
-audio are generated at runtime. No external art or audio packages are needed.
+car interior, covered body, mirror feed, lighting, fog, signs, and scenery are
+generated at runtime. Team-supplied audio is stored directly in the project;
+no external Unity packages are needed.
 
 ## Open and run
 
@@ -10,7 +11,8 @@ audio are generated at runtime. No external art or audio packages are needed.
    repository's current editor version), or let Unity Hub install that version.
 2. Wait for scripts to compile. The editor creates `Assets/Scenes/Prototype.unity`
    and adds it to Build Settings automatically.
-3. Open that scene if Unity did not do so automatically, then press Play.
+3. Open that scene if Unity did not do so automatically, press Play, then press
+   Enter on the title screen.
 4. To rebuild the scene manually, use **Tools > The Last Passenger > Rebuild Prototype Scene**.
 
 ## Controls
@@ -21,7 +23,7 @@ audio are generated at runtime. No external art or audio packages are needed.
 - Hold right mouse button and move the mouse — look around the cabin
 - Hold `R` — enlarge and inspect the rear-view mirror
 - `M` — toggle the radio
-- `Enter` — restart after an ending
+- `Enter` — start from the title screen or restart after an ending
 - `Escape` — release the mouse or quit a standalone build
 
 Debug shortcuts are available only in the editor or development builds:
@@ -49,7 +51,10 @@ front passenger seat supplies real parallax when looking right. The rear-view
 camera renders a generated dark backseat plate, then reveals an independently
 flickering transparent white-grain apparition during the anomaly. The radio
 display flickers and changes during the same event. The team-supplied static is installed at
-`Assets/Resources/Audio/RadioStatic.wav`.
+`Assets/Resources/Audio/RadioStatic.mp3`. The uploaded engine loop replaces the
+procedural engine when available, and the uploaded menu theme is streamed only
+while the title screen is open. Procedural radio and engine clips remain as
+safe fallbacks.
 
 The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
 provided. The `demo` branch's FBX currently references a texture that was not

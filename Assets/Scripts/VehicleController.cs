@@ -50,6 +50,7 @@ namespace LastPassenger
         public void SetControlsEnabled(bool enabled)
         {
             controlsEnabled = enabled;
+            if (engineSource != null) engineSource.mute = !enabled;
             if (!enabled)
             {
                 speed = Mathf.MoveTowards(speed, 0f, braking * Time.deltaTime);

@@ -1,19 +1,20 @@
 # Asset Provenance
 
-This prototype contains no downloaded stock art, models, music, animations, or
-sound effects.
+This prototype contains no downloaded stock art, models, or animations. Three
+team-supplied audio files are tracked below and still require creator/license
+confirmation before submission.
 
-All visible geometry, materials, fog, interface elements, and audio waveforms
-are generated at runtime by C# source written by OpenAI Codex from the team's
-creative brief. The source code is preserved in `Assets/Scripts/` so judges can
-inspect how each temporary asset was created.
+The procedural geometry, materials, fog, interface elements, and fallback audio
+waveforms are generated at runtime by C# source written by OpenAI Codex from the
+team's creative brief. The source code is preserved in `Assets/Scripts/` so
+judges can inspect how each temporary asset was created.
 
 ## Generated content inventory
 
 - Road modules, lane markings, junction signs, trees, poles, and barriers
 - Hearse dashboard, windshield frame, steering wheel, cabin, and covered body
 - Rear-view mirror render and anomaly states
-- Engine tone, wind ambience, radio static, impact sound, and horror sting
+- Fallback engine and radio loops, wind ambience, impact sound, and horror sting
 - Text interface, route prompt, temporary success screen, and failure screen
 
 ## Before submission
@@ -53,10 +54,15 @@ inspect how each temporary asset was created.
 
 ## Team-supplied audio
 
-- `Assets/Resources/Audio/RadioStatic.wav` — converted from a team-supplied
-  WhatsApp MPEG on 2026-08-18. Source and conversion details are stored in
-  `RadioStatic_SOURCE.md`; confirm the original creator/license before final
-  submission.
+- `Assets/Resources/Audio/RadioStatic.mp3` — 4.86-second radio-noise loop,
+  imported as normalized mono. Details are in `RadioStatic_SOURCE.md`.
+- `Assets/Resources/Audio/CarEngine.mp3` — 17.06-second engine loop, imported as
+  mono and driven by vehicle speed. Details are in `CarEngine_SOURCE.md`.
+- `Assets/Resources/Audio/MenuTheme.mp3` — 192.84-second stereo title theme,
+  streamed to limit memory use. Details are in `MenuTheme_SOURCE.md`.
+
+Confirm the original creator, AI-generation method where applicable, license,
+and event-rule eligibility for all three files before the final submission.
 
 ## Team-created assets pending import
 
