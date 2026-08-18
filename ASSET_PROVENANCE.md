@@ -57,6 +57,10 @@ inspect how each temporary asset was created.
   WhatsApp MPEG on 2026-08-18. Source and conversion details are stored in
   `RadioStatic_SOURCE.md`; confirm the original creator/license before final
   submission.
+- `Assets/Resources/Audio/CarEngine.mp3` — supplied by a team member on
+  2026-08-18 and used as the speed-driven engine loop. Format and source details
+  are stored in `CarEngine_SOURCE.md`; confirm the original creator/license
+  before final submission.
 
 ## Team-created assets pending import
 

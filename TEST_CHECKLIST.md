@@ -5,7 +5,10 @@ Run this once in the Unity editor and once in the final Windows build.
 ## Fast editor pass
 
 1. Press Play and confirm the road, cabin, dashboard, body, fog, and mirror appear.
-2. Hold `W`; speed should rise smoothly and the engine pitch should increase.
+2. Before accelerating, confirm the engine is silent while the radio static is
+   quiet. Hold `W`; the engine pitch and volume should rise smoothly over the
+   still-audible static, without exceeding 50% source volume. Release `W` or
+   brake to a complete halt and confirm the engine returns to silence.
 3. Tap and hold steering in both directions; it should ramp smoothly rather than
    snapping sideways. Confirm the road perspective yaws as the car turns and
    that the steering wheel rotates with it. Steer into each shoulder; the car
@@ -21,7 +24,8 @@ Run this once in the Unity editor and once in the final Windows build.
 7. Press `F11`; verify the temporary success screen appears.
 8. Restart, use `F9`, select the right lane, then use `F10` and `F11`; verify failure.
 9. Press Enter from each ending and confirm the scene restarts cleanly.
-10. Toggle `M`; confirm both the radio audio and animated display turn off and on.
+10. Toggle `M`; confirm the radio audio and animated display turn off and on
+    while the independently mixed engine continues to follow vehicle speed.
 11. Confirm the generated dashboard is readable and the radio display aligns
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
     in the lower portion of the view, slope away from the camera, fill both

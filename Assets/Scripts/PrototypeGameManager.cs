@@ -91,7 +91,8 @@ namespace LastPassenger
             AudioClip customRadioStatic = Resources.Load<AudioClip>("Audio/RadioStatic");
             radioSource.clip = customRadioStatic != null ? customRadioStatic : ProceduralAudio.RadioStatic();
             radioSource.loop = true;
-            radioSource.volume = customRadioStatic != null ? 0.18f : 0.075f;
+            radioSource.spatialBlend = 0f;
+            radioSource.volume = customRadioStatic != null ? 0.03f : 0.025f;
             radioSource.Play();
 
             stingSource = gameObject.AddComponent<AudioSource>();
@@ -170,13 +171,13 @@ namespace LastPassenger
             if (choseLeft)
             {
                 ShowMessage("LEFT ROUTE SELECTED — the radio goes silent.", new Color(0.66f, 0.78f, 0.67f), 6f);
-                radioSource.volume = 0.025f;
+                radioSource.volume = 0.01f;
             }
             else
             {
                 ShowMessage("RIGHT ROUTE SELECTED — something knocks behind you.", new Color(1f, 0.48f, 0.35f), 6f);
                 radioSource.pitch = 0.58f;
-                radioSource.volume = 0.14f;
+                radioSource.volume = 0.04f;
             }
         }
 

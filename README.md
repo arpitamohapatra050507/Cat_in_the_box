@@ -48,8 +48,13 @@ a lowered, widened, slanted dashboard with physical side trim. A procedural
 front passenger seat supplies real parallax when looking right. The rear-view
 camera renders a generated dark backseat plate, then reveals an independently
 flickering transparent white-grain apparition during the anomaly. The radio
-display flickers and changes during the same event. The team-supplied static is installed at
-`Assets/Resources/Audio/RadioStatic.wav`.
+display flickers and changes during the same event. The team-supplied static is
+installed at `Assets/Resources/Audio/RadioStatic.wav` and plays quietly on its
+own 2D audio source. The team-supplied engine at
+`Assets/Resources/Audio/CarEngine.mp3` is layered over it on a separate source:
+its volume rises smoothly from silence while accelerating, reaches at most 50%
+at full speed, and returns to silence when the car stops. Procedural audio is
+used if either custom clip is missing.
 
 The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
 provided. The `demo` branch's FBX currently references a texture that was not
