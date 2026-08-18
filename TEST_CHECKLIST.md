@@ -4,13 +4,14 @@ Run this once in the Unity editor and once in the final Windows build.
 
 ## Fast editor pass
 
-1. Open both `Prototype.unity` and `SampleScene.unity` in separate tests. Press
-   Play and confirm the title screen appears, the menu theme plays, and
+1. Open `MainMenu.unity`, press Play and confirm the title screen appears, the
+   menu theme plays, and
    the car engine, wind, radio, dashboard HUD, and mirror remain inactive.
-2. Press Enter. Confirm the theme stops, the driving HUD appears, and the custom
-   engine, wind, and radio static begin. Hold `W`; speed should rise smoothly
-   and the engine pitch and loudness should increase without obvious loop
-   clicks. At full speed the source volume must never exceed 0.5.
+2. Click **Play**. Confirm `Prototype.unity` becomes the active scene, the theme
+   stops, the driving HUD appears, and the custom engine, wind, and radio static
+   begin. Hold `W`; speed should rise smoothly and the engine pitch and loudness
+   should increase without obvious loop clicks. At full speed the source volume
+   must never exceed 0.5.
 3. Tap and hold steering in both directions; it should ramp smoothly rather than
    snapping sideways. Confirm the road perspective yaws as the car turns and
    that the steering wheel rotates with it. Steer into each shoulder; the car
@@ -25,8 +26,7 @@ Run this once in the Unity editor and once in the final Windows build.
    daylight blue.
 7. Press `F11`; verify the temporary success screen appears.
 8. Restart, use `F9`, select the right lane, then use `F10` and `F11`; verify failure.
-9. Press Enter from each ending and confirm the scene restarts at the title
-   screen with the menu theme playing again.
+9. Press Enter from each ending and confirm `Prototype.unity` restarts directly.
 10. Toggle `M`; confirm both the radio audio and animated display turn off and on.
 11. Confirm the generated dashboard is readable and the radio display aligns
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
@@ -39,6 +39,11 @@ Run this once in the Unity editor and once in the final Windows build.
 13. While accelerating, confirm quiet radio static and the engine can be heard
     simultaneously. Releasing `W` must lower the engine smoothly; toggling `M`
     must mute only the radio, not the engine.
+14. Press Escape during gameplay and confirm `MainMenu.unity` loads and the menu
+    theme restarts. Confirm Escape on the menu quits a standalone build.
+15. Leave all three `RoadGenerator` prefab fields empty and confirm the fallback
+    road and both tree types appear. Test each slot independently with a simple
+    prefab and confirm missing slots continue using their fallback.
 
 ## Full pacing pass
 
@@ -52,7 +57,7 @@ Run this once in the Unity editor and once in the final Windows build.
 
 ## Submission pass
 
-- Build Windows x86-64 with `Prototype.unity` enabled.
+- Build Windows x86-64 with `MainMenu.unity` first and `Prototype.unity` second.
 - Test the executable on a second machine.
 - Confirm there are no missing shader, material, audio, or scene warnings.
 - Confirm the three team audio files have documented creator permission and

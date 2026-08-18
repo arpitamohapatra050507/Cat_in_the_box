@@ -64,6 +64,13 @@ Y rotation, spacing, tint, and the number of dead trees in each road chunk.
 Start around 80% living pine and 20% leafless pine, with more dead trees after
 the junction or during anomalies.
 
+After creating the Unity prefabs, open `Prototype.unity`, select
+**Gameplay Bootstrap**, and assign them to the `RoadGenerator` component's
+**Living Tree Prefab** and **Dead Tree Prefab** fields. Both fields retain their
+procedural fallback when empty. The same component accepts an optional
+80-metre **Road Chunk Prefab**; its origin must be centred at the beginning of
+the segment and its local +Z axis must run down the road.
+
 ## Asset batch 3 — distant forest
 
 Generate a seamless, transparent 2048x512 forest silhouette strip. Place it on

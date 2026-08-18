@@ -9,11 +9,13 @@ no external Unity packages are needed.
 
 1. Add this folder to Unity Hub and open it with Unity `6000.5.8f1` (the
    repository's current editor version), or let Unity Hub install that version.
-2. Wait for scripts to compile. The editor creates `Assets/Scenes/Prototype.unity`
-   and adds it to Build Settings automatically.
-3. Open that scene if Unity did not do so automatically, press Play, then press
-   Enter on the title screen.
-4. To rebuild the scene manually, use **Tools > The Last Passenger > Rebuild Prototype Scene**.
+2. Wait for scripts and assets to import.
+3. Open `Assets/Scenes/MainMenu.unity` and press Play.
+4. Click **Play** to load `Assets/Scenes/Prototype.unity` through
+   `SceneManager.LoadScene`. The menu is build scene 0 and gameplay is scene 1.
+
+The **Tools > The Last Passenger** menu contains shortcuts for opening either
+scene and repairing their Build Settings order.
 
 ## Controls
 
@@ -23,8 +25,8 @@ no external Unity packages are needed.
 - Hold right mouse button and move the mouse — look around the cabin
 - Hold `R` — enlarge and inspect the rear-view mirror
 - `M` — toggle the radio
-- `Enter` — start from the title screen or restart after an ending
-- `Escape` — release the mouse or quit a standalone build
+- `Enter` — start from the menu or restart gameplay after an ending
+- `Escape` — return from gameplay to the main menu; quit from the menu
 
 Debug shortcuts are available only in the editor or development builds:
 
@@ -56,19 +58,35 @@ procedural engine when available, and the uploaded menu theme is streamed only
 while the title screen is open. Procedural radio and engine clips remain as
 safe fallbacks.
 
-The runtime bootstrap disables and untags any camera left in the opened Unity
-scene before creating the driver camera. This prevents `SampleScene`'s default
-camera from rendering over the cockpit. The driver viewpoint is aligned with
-the wheel and keeps its slight downward neutral pitch while free-look is used.
+The gameplay bootstrap exists only in `Prototype.unity`; loading the menu can
+no longer create the road or car accidentally. It disables the placeholder
+scene camera before creating the driver camera. The driver viewpoint is aligned
+with the wheel and keeps its slight downward neutral pitch while free-look is
+used.
 
 Engine and radio are separate 2D audio sources, so they remain layered instead
 of replacing one another. Engine volume rises smoothly from 4% at rest to a
 hard 50% cap at maximum speed; the normalized static sits at 3% during normal
 driving.
 
-The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
-provided. The `demo` branch's FBX currently references a texture that was not
-committed, so the procedural asphalt remains the safe fallback.
+## Replacing road and tree assets
+
+Select **Gameplay Bootstrap** in `Prototype.unity`. Its `RoadGenerator`
+component exposes three serialized prefab fields:
+
+- **Road Chunk Prefab** — an 80-metre segment whose origin is at the beginning,
+  centred on X=0, extending forward along local +Z. Include road, shoulders and
+  markings, but leave roadside trees to the generator.
+- **Living Tree Prefab** — origin at the trunk base.
+- **Dead Tree Prefab** — origin at the trunk base.
+
+Each field is independent. An empty road slot uses the existing procedural
+asphalt, while either empty tree slot uses its corresponding procedural tree.
+Prefab-authored scale is preserved with mild per-instance scaling and random Y
+rotation. The car, camera, dashboard and mirror do not depend on these slots.
+
+The procedural road material can still load
+`Assets/Resources/Road/RoadAlbedo.png` when provided.
 
 The production asset workflow and first three generation batches are described
 in `ASSET_PLAN.md`.
@@ -76,9 +94,10 @@ in `ASSET_PLAN.md`.
 ## Building
 
 Use **File > Build Profiles**, select Windows x86-64, and include
-`Assets/Scenes/Prototype.unity`. The editor bootstrap normally configures this
-for you. The generated materials use this project's Universal Render Pipeline,
-and the controls support its Input System configuration.
+`Assets/Scenes/MainMenu.unity` first and `Assets/Scenes/Prototype.unity` second.
+The editor scene utility repairs this order automatically. The generated
+materials use this project's Universal Render Pipeline, and the controls
+support its Input System configuration.
 
 ## Scope boundaries
 

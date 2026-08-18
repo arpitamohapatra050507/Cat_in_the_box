@@ -1,29 +1,16 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace LastPassenger
 {
     public sealed class LastPassengerBootstrap : MonoBehaviour
     {
-        private static bool started;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneBootstrap()
-        {
-            started = false;
-            SceneManager.sceneLoaded -= CreatePrototype;
-            SceneManager.sceneLoaded += CreatePrototype;
-        }
-
-        private static void CreatePrototype(Scene scene, LoadSceneMode mode)
-        {
-            if (started || Object.FindFirstObjectByType<PrototypeGameManager>() != null) return;
-            started = true;
-            new GameObject("The Last Passenger — Generated Prototype").AddComponent<LastPassengerBootstrap>();
-        }
+        private bool built;
 
         private void Awake()
         {
+            if (built) return;
+            built = true;
+
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
             BuildEnvironment();
@@ -51,8 +38,12 @@ namespace LastPassenger
             MirrorSystem mirror = mirrorObject.AddComponent<MirrorSystem>();
             mirror.Build(vehicle.transform, body);
 
-            GameObject roadObject = new GameObject("Generated repeating road");
-            RoadGenerator road = roadObject.AddComponent<RoadGenerator>();
+            RoadGenerator road = GetComponent<RoadGenerator>();
+            if (road == null)
+            {
+                GameObject roadObject = new GameObject("Generated repeating road");
+                road = roadObject.AddComponent<RoadGenerator>();
+            }
             road.Build(vehicle.transform);
 
             GameObject managerObject = new GameObject("Prototype game state");
@@ -63,6 +54,9 @@ namespace LastPassenger
 
         private static void BuildEnvironment()
         {
+            Light[] sceneLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            for (int i = 0; i < sceneLights.Length; i++) sceneLights[i].enabled = false;
+
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogDensity = 0.018f;
@@ -316,9 +310,5 @@ namespace LastPassenger
             }
         }
 
-        private void OnDestroy()
-        {
-            started = false;
-        }
     }
 }

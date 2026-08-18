@@ -8,7 +8,6 @@ namespace LastPassenger
     {
         public enum RunState
         {
-            Menu,
             Driving,
             JunctionChosen,
             Anomaly,
@@ -26,8 +25,7 @@ namespace LastPassenger
         private AudioSource windSource;
         private AudioSource radioSource;
         private AudioSource stingSource;
-        private AudioSource menuSource;
-        private RunState state = RunState.Menu;
+        private RunState state = RunState.Driving;
         private bool junctionResolved;
         private bool choseLeft;
         private bool radioEnabled = true;
@@ -42,6 +40,7 @@ namespace LastPassenger
         private const float AnomalyDistance = 1080f;
         private const float FailureDistance = 1480f;
         private const float FinishDistance = 2000f;
+        private const string MenuSceneName = "MainMenu";
 
         public RunState State => state;
         public bool RadioEnabled => radioEnabled;
@@ -54,7 +53,7 @@ namespace LastPassenger
             LoadRoadEvents();
 
             BuildAudio();
-            vehicle.SetControlsEnabled(false);
+            ShowMessage("W/S drive  •  A/D steer  •  Hold RMB to look  •  Hold R for mirror", Color.white, 8f);
         }
 
         private void LoadRoadEvents()
@@ -87,6 +86,7 @@ namespace LastPassenger
             windSource.clip = ProceduralAudio.WindLoop();
             windSource.loop = true;
             windSource.volume = 0.16f;
+            windSource.Play();
 
             radioSource = gameObject.AddComponent<AudioSource>();
             AudioClip customRadioStatic = Resources.Load<AudioClip>("Audio/RadioStatic");
@@ -94,30 +94,20 @@ namespace LastPassenger
             radioSource.loop = true;
             radioSource.spatialBlend = 0f;
             radioSource.volume = customRadioStatic != null ? 0.03f : 0.025f;
+            radioSource.Play();
 
             stingSource = gameObject.AddComponent<AudioSource>();
             stingSource.clip = ProceduralAudio.HorrorSting();
             stingSource.volume = 0.55f;
-
-            AudioClip menuTheme = Resources.Load<AudioClip>("Audio/MenuTheme");
-            if (menuTheme != null)
-            {
-                menuSource = gameObject.AddComponent<AudioSource>();
-                menuSource.clip = menuTheme;
-                menuSource.loop = true;
-                menuSource.volume = 0.24f;
-                menuSource.Play();
-            }
         }
 
         private void Update()
         {
             if (vehicle == null || mirror == null) return;
 
-            if (state == RunState.Menu)
+            if (PrototypeInput.CancelPressed)
             {
-                if (PrototypeInput.ConfirmPressed) BeginRun();
-                if (PrototypeInput.CancelPressed) Application.Quit();
+                SceneManager.LoadScene(MenuSceneName);
                 return;
             }
 
@@ -131,7 +121,6 @@ namespace LastPassenger
             if (state == RunState.Success || state == RunState.Failure)
             {
                 if (PrototypeInput.ConfirmPressed) Restart();
-                if (PrototypeInput.CancelPressed) Application.Quit();
                 return;
             }
 
@@ -165,16 +154,6 @@ namespace LastPassenger
 
             vignetteAlpha = Mathf.MoveTowards(vignetteAlpha, state == RunState.Anomaly ? 0.28f : 0.08f, Time.deltaTime * 0.12f);
             DevelopmentDebugShortcuts();
-        }
-
-        private void BeginRun()
-        {
-            state = RunState.Driving;
-            vehicle.SetControlsEnabled(true);
-            if (menuSource != null) menuSource.Stop();
-            windSource.Play();
-            radioSource.Play();
-            ShowMessage("W/S drive  •  A/D steer  •  Hold RMB to look  •  Hold R for mirror", Color.white, 8f);
         }
 
         private void ProcessRoadEvents()
@@ -284,13 +263,6 @@ namespace LastPassenger
         private void OnGUI()
         {
             DrawVignette();
-
-            if (state == RunState.Menu)
-            {
-                DrawMainMenu();
-                return;
-            }
-
             DrawDashboard();
 
             if (!string.IsNullOrEmpty(message) && Time.time <= messageUntil)
@@ -310,42 +282,6 @@ namespace LastPassenger
 
             if (state == RunState.Success) DrawEnding(true);
             if (state == RunState.Failure) DrawEnding(false);
-        }
-
-        private static void DrawMainMenu()
-        {
-            Color previous = GUI.color;
-            GUI.color = new Color(0.004f, 0.008f, 0.007f, 0.9f);
-            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            GUIStyle title = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = Mathf.Clamp(Screen.height / 12, 42, 82),
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(0.72f, 0.76f, 0.69f) }
-            };
-            GUIStyle subtitle = new GUIStyle(title)
-            {
-                fontSize = Mathf.Clamp(Screen.height / 36, 17, 28),
-                fontStyle = FontStyle.Normal,
-                wordWrap = true,
-                normal = { textColor = new Color(0.5f, 0.56f, 0.52f) }
-            };
-            GUIStyle prompt = new GUIStyle(subtitle)
-            {
-                fontSize = Mathf.Clamp(Screen.height / 30, 20, 32),
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(0.76f, 0.67f, 0.48f) }
-            };
-
-            GUI.Label(new Rect(0f, Screen.height * 0.23f, Screen.width, 110f), "THE LAST PASSENGER", title);
-            GUI.Label(new Rect(Screen.width * 0.2f, Screen.height * 0.43f, Screen.width * 0.6f, 80f),
-                "A road should not remember what you put in the back.", subtitle);
-            GUI.Label(new Rect(0f, Screen.height * 0.66f, Screen.width, 50f), "PRESS ENTER TO DRIVE", prompt);
-            GUI.Label(new Rect(0f, Screen.height * 0.78f, Screen.width, 36f), "Escape — quit", subtitle);
-            GUI.color = previous;
         }
 
         private void DrawDashboard()

@@ -150,8 +150,7 @@ namespace LastPassenger
         {
             if (mirrorTexture == null) return;
             if (PrototypeGameManager.Instance != null &&
-                (PrototypeGameManager.Instance.State == PrototypeGameManager.RunState.Menu ||
-                 PrototypeGameManager.Instance.State == PrototypeGameManager.RunState.Success ||
+                (PrototypeGameManager.Instance.State == PrototypeGameManager.RunState.Success ||
                  PrototypeGameManager.Instance.State == PrototypeGameManager.RunState.Failure)) return;
 
             float width = IsExpanded ? Mathf.Min(Screen.width * 0.72f, 900f) : Mathf.Min(Screen.width * 0.34f, 440f);

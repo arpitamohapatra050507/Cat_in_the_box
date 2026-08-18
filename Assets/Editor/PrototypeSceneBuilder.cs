@@ -1,76 +1,41 @@
 #if UNITY_EDITOR
-using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LastPassenger.Editor
 {
     public static class PrototypeSceneBuilder
     {
-        private const string ScenePath = "Assets/Scenes/Prototype.unity";
+        private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
+        private const string GameplayScenePath = "Assets/Scenes/Prototype.unity";
 
         [InitializeOnLoadMethod]
-        private static void ScheduleInitialSceneCreation()
+        private static void ScheduleBuildSettingsCheck()
         {
-            EditorApplication.delayCall += EnsureSceneExists;
+            EditorApplication.delayCall += EnsureBuildSettings;
         }
 
-        [MenuItem("Tools/The Last Passenger/Rebuild Prototype Scene")]
-        public static void RebuildScene()
+        [MenuItem("Tools/The Last Passenger/Open Main Menu Scene")]
+        public static void OpenMainMenuScene()
         {
-            CreateAndSaveScene(openAfterCreation: true);
-            Debug.Log("The Last Passenger prototype scene rebuilt. Press Play to run the generated vertical slice.");
+            EditorSceneManager.OpenScene(MenuScenePath, OpenSceneMode.Single);
         }
 
-        [MenuItem("Tools/The Last Passenger/Open Prototype Scene")]
-        public static void OpenScene()
+        [MenuItem("Tools/The Last Passenger/Open Gameplay Scene")]
+        public static void OpenGameplayScene()
         {
-            EnsureSceneExists();
-            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            EditorSceneManager.OpenScene(GameplayScenePath, OpenSceneMode.Single);
         }
 
-        private static void EnsureSceneExists()
+        [MenuItem("Tools/The Last Passenger/Repair Build Scene Order")]
+        public static void EnsureBuildSettings()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-
-            SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
-            if (sceneAsset == null)
+            EditorBuildSettings.scenes = new[]
             {
-                CreateAndSaveScene(openAfterCreation: true);
-            }
-            else
-            {
-                EnsureBuildSettings();
-            }
-        }
-
-        private static void CreateAndSaveScene(bool openAfterCreation)
-        {
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            GameObject note = new GameObject("Scene generated at runtime — see README");
-            note.transform.position = Vector3.zero;
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            EnsureBuildSettings();
-            AssetDatabase.SaveAssets();
-
-            if (openAfterCreation)
-            {
-                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            }
-        }
-
-        private static void EnsureBuildSettings()
-        {
-            EditorBuildSettingsScene[] existing = EditorBuildSettings.scenes;
-            if (existing.Any(scene => scene.path == ScenePath && scene.enabled)) return;
-
-            EditorBuildSettings.scenes = existing
-                .Where(scene => scene.path != ScenePath)
-                .Concat(new[] { new EditorBuildSettingsScene(ScenePath, true) })
-                .ToArray();
+                new EditorBuildSettingsScene(MenuScenePath, true),
+                new EditorBuildSettingsScene(GameplayScenePath, true)
+            };
         }
     }
 }
