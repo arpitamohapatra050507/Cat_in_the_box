@@ -9,12 +9,15 @@ namespace LastPassenger
         [SerializeField] private float acceleration = 3.4f;
         [SerializeField] private float braking = 7f;
         [SerializeField] private float naturalDrag = 0.8f;
-        [SerializeField] private float steeringSpeed = 4.6f;
+        [SerializeField] private float steeringSpeed = 3.8f;
+        [SerializeField] private float steeringResponse = 2.2f;
+        [SerializeField] private float steeringReturnSpeed = 3f;
         [SerializeField] private float laneLimit = 3.25f;
 
         private AudioSource engineSource;
         private AudioSource impactSource;
         private float speed;
+        private float steeringInput;
         private float edgeCooldown;
         private bool controlsEnabled = true;
 
@@ -75,13 +78,21 @@ namespace LastPassenger
                 speed = Mathf.MoveTowards(speed, 0f, braking * Time.deltaTime);
             }
 
-            float steer = 0f;
-            if (controlsEnabled && PrototypeInput.LeftHeld) steer -= 1f;
-            if (controlsEnabled && PrototypeInput.RightHeld) steer += 1f;
+            float targetSteering = 0f;
+            if (controlsEnabled && PrototypeInput.LeftHeld) targetSteering -= 1f;
+            if (controlsEnabled && PrototypeInput.RightHeld) targetSteering += 1f;
+
+            float steeringChangeSpeed = Mathf.Approximately(targetSteering, 0f)
+                ? steeringReturnSpeed
+                : steeringResponse;
+            steeringInput = Mathf.MoveTowards(
+                steeringInput,
+                targetSteering,
+                steeringChangeSpeed * Time.deltaTime);
 
             Vector3 position = transform.position;
             position.z += speed * Time.deltaTime;
-            position.x += steer * steeringSpeed * Mathf.Lerp(0.35f, 1f, speed / maximumSpeed) * Time.deltaTime;
+            position.x += steeringInput * steeringSpeed * Mathf.Lerp(0.35f, 1f, speed / maximumSpeed) * Time.deltaTime;
 
             float unclampedX = position.x;
             position.x = Mathf.Clamp(position.x, -laneLimit, laneLimit);
@@ -96,8 +107,11 @@ namespace LastPassenger
 
             transform.position = position;
 
-            float lean = -steer * Mathf.Lerp(0f, 2.2f, speed / maximumSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0f, steer * 1.2f, lean), Time.deltaTime * 5f);
+            float lean = -steeringInput * Mathf.Lerp(0f, 2.2f, speed / maximumSpeed);
+            transform.rotation = Quaternion.Lerp(
+                transform.rotation,
+                Quaternion.Euler(0f, steeringInput * 1.2f, lean),
+                Time.deltaTime * 5f);
 
             if (engineSource != null)
             {

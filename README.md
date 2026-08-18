@@ -41,6 +41,9 @@ Road messages are editable without changing C# in
 message, color, and display duration; this is the extension point for later
 radio reports, memories, accusations, and ambiguous story fragments.
 
+The production asset workflow and first three generation batches are described
+in `ASSET_PLAN.md`.
+
 ## Building
 
 Use **File > Build Profiles**, select Windows x86-64, and include

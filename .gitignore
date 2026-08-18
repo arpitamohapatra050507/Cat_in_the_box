@@ -26,6 +26,16 @@
 # Recordings can get excessive in size
 /[Rr]ecordings/
 
+# Local play-test captures. Keep generated art under Assets; only ignore captures.
+/[Ss]creenshots/
+/[Tt]est[Ss]creenshots/
+/[Tt]est [Ss]creenshots/
+/[Tt]ext[Ss]creenshots/
+/[Tt]ext [Ss]creenshots/
+/[Ss]creenshot*.png
+/[Ss]creenshot*.jpg
+/[Ss]creenshot*.jpeg
+
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 

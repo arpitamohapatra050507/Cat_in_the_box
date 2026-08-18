@@ -60,18 +60,28 @@ namespace LastPassenger
                 float side = i % 2 == 0 ? -1f : 1f;
                 float x = side * (6f + (float)random.NextDouble() * 7f);
                 float height = 2.5f + (float)random.NextDouble() * 3.5f;
-                BuildTree(chunk.transform, new Vector3(x, 0f, localZ), height);
+                bool isPine = random.NextDouble() < 0.8;
+                BuildTree(chunk.transform, new Vector3(x, 0f, localZ), height, isPine);
             }
 
             return chunk.transform;
         }
 
-        private void BuildTree(Transform parent, Vector3 position, float height)
+        private void BuildTree(Transform parent, Vector3 position, float height, bool isPine)
         {
-            GameObject tree = RuntimeGeometry.Empty("Generated dead tree", parent, position);
+            GameObject tree = RuntimeGeometry.Empty(
+                isPine ? "Generated pine tree" : "Generated leafless tree",
+                parent,
+                position);
             RuntimeGeometry.Primitive("Trunk", PrimitiveType.Cylinder, tree.transform,
                 new Vector3(0f, height * 0.5f, 0f), new Vector3(0.18f, height * 0.5f, 0.18f), barkMaterial,
                 new Vector3(0f, 0f, Random.Range(-5f, 5f)));
+
+            if (isPine)
+            {
+                BuildPineCrown(tree.transform, height);
+                return;
+            }
 
             for (int i = 0; i < 3; i++)
             {
@@ -80,6 +90,25 @@ namespace LastPassenger
                 RuntimeGeometry.Primitive("Branch", PrimitiveType.Cylinder, tree.transform,
                     new Vector3(direction * 0.45f, y, 0f), new Vector3(0.07f, 0.62f, 0.07f), branchMaterial,
                     new Vector3(0f, 0f, direction * 52f));
+            }
+        }
+
+        private void BuildPineCrown(Transform tree, float height)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                float t = i / 3f;
+                float width = Mathf.Lerp(height * 0.25f, height * 0.09f, t);
+                float crownHeight = Mathf.Lerp(height * 0.24f, height * 0.16f, t);
+                float y = height * Mathf.Lerp(0.43f, 0.82f, t);
+
+                RuntimeGeometry.Primitive(
+                    "Pine foliage tier",
+                    PrimitiveType.Sphere,
+                    tree,
+                    new Vector3(0f, y, 0f),
+                    new Vector3(width, crownHeight, width),
+                    branchMaterial);
             }
         }
 

@@ -32,9 +32,11 @@ namespace LastPassenger
             rearCamera = cameraObject.AddComponent<Camera>();
             rearCamera.fieldOfView = 74f;
             rearCamera.nearClipPlane = 0.05f;
-            rearCamera.farClipPlane = 250f;
+            rearCamera.farClipPlane = 180f;
             rearCamera.depth = -2f;
             rearCamera.allowHDR = false;
+            rearCamera.clearFlags = CameraClearFlags.SolidColor;
+            rearCamera.backgroundColor = new Color(0.004f, 0.007f, 0.009f, 1f);
 
             mirrorTexture = new RenderTexture(640, 256, 16, RenderTextureFormat.ARGB32)
             {
