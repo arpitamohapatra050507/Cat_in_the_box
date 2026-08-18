@@ -82,16 +82,28 @@ namespace LastPassenger
 
         private static Camera BuildMainCamera(Transform vehicle)
         {
+            Camera[] sceneCameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            for (int i = 0; i < sceneCameras.Length; i++)
+            {
+                Camera sceneCamera = sceneCameras[i];
+                sceneCamera.enabled = false;
+                if (sceneCamera.CompareTag("MainCamera")) sceneCamera.tag = "Untagged";
+
+                AudioListener sceneListener = sceneCamera.GetComponent<AudioListener>();
+                if (sceneListener != null) sceneListener.enabled = false;
+            }
+
             GameObject cameraObject = new GameObject("Driver camera");
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(vehicle, false);
-            cameraObject.transform.localPosition = new Vector3(0f, 1.47f, 0.15f);
-            cameraObject.transform.localRotation = Quaternion.identity;
+            cameraObject.transform.localPosition = new Vector3(-0.56f, 1.34f, 0.08f);
+            cameraObject.transform.localRotation = Quaternion.Euler(7f, 0f, 0f);
 
             Camera camera = cameraObject.AddComponent<Camera>();
-            camera.fieldOfView = 72f;
+            camera.fieldOfView = 68f;
             camera.nearClipPlane = 0.04f;
             camera.farClipPlane = 360f;
+            camera.depth = 10f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.004f, 0.007f, 0.009f);
             cameraObject.AddComponent<AudioListener>();

@@ -56,6 +56,16 @@ procedural engine when available, and the uploaded menu theme is streamed only
 while the title screen is open. Procedural radio and engine clips remain as
 safe fallbacks.
 
+The runtime bootstrap disables and untags any camera left in the opened Unity
+scene before creating the driver camera. This prevents `SampleScene`'s default
+camera from rendering over the cockpit. The driver viewpoint is aligned with
+the wheel and keeps its slight downward neutral pitch while free-look is used.
+
+Engine and radio are separate 2D audio sources, so they remain layered instead
+of replacing one another. Engine volume rises smoothly from 4% at rest to a
+hard 50% cap at maximum speed; the normalized static sits at 3% during normal
+driving.
+
 The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
 provided. The `demo` branch's FBX currently references a texture that was not
 committed, so the procedural asphalt remains the safe fallback.
