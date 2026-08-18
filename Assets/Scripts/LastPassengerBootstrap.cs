@@ -41,7 +41,7 @@ namespace LastPassenger
 
             BuildCabin(vehicle.transform, cabin, trim, instrument, glass);
             Transform body = BuildCoveredBody(vehicle.transform, cloth);
-            Camera mainCamera = BuildMainCamera(vehicle.transform);
+            BuildMainCamera(vehicle.transform);
             BuildHeadlights(vehicle.transform);
 
             GameObject mirrorObject = new GameObject("Mirror system");
@@ -56,7 +56,6 @@ namespace LastPassenger
             PrototypeGameManager manager = managerObject.AddComponent<PrototypeGameManager>();
             manager.Configure(controller, mirror);
 
-            mainCamera.transform.LookAt(vehicle.transform.position + new Vector3(0f, 1.35f, 25f));
         }
 
         private static void BuildEnvironment()
@@ -93,6 +92,7 @@ namespace LastPassenger
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.004f, 0.007f, 0.009f);
             cameraObject.AddComponent<AudioListener>();
+            cameraObject.AddComponent<DriverCameraLook>();
             return camera;
         }
 

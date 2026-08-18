@@ -21,6 +21,32 @@ namespace LastPassenger
         public static bool SkipToAnomalyPressed => Pressed(InputAction.SkipToAnomaly);
         public static bool SkipToEndingPressed => Pressed(InputAction.SkipToEnding);
 
+        public static bool CameraLookHeld
+        {
+            get
+            {
+#if ENABLE_INPUT_SYSTEM
+                Mouse mouse = Mouse.current;
+                return mouse != null && mouse.rightButton.isPressed;
+#else
+                return Input.GetMouseButton(1);
+#endif
+            }
+        }
+
+        public static Vector2 CameraLookDelta
+        {
+            get
+            {
+#if ENABLE_INPUT_SYSTEM
+                Mouse mouse = Mouse.current;
+                return mouse != null ? mouse.delta.ReadValue() : Vector2.zero;
+#else
+                return new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * 12f;
+#endif
+            }
+        }
+
         private enum InputAction
         {
             Accelerate,

@@ -18,6 +18,7 @@ audio are generated at runtime. No external art or audio packages are needed.
 - `W` / Up Arrow — accelerate
 - `S` / Down Arrow — brake
 - `A` / `D` — steer within the road
+- Hold right mouse button and move the mouse — look around the cabin
 - Hold `R` — enlarge and inspect the rear-view mirror
 - `M` — toggle the radio
 - `Enter` — restart after an ending

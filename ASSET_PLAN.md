@@ -38,7 +38,10 @@ Generate only two 3D source models:
 Use Meshy or Tripo for image-to-3D after approving front/side concept images.
 In Blender, put each origin at the trunk base, apply transforms, remove hidden
 geometry, reduce material slots, and decimate each tree to roughly 1,500–3,000
-triangles. Export FBX or GLB with one 1024px texture set per tree.
+triangles. Export FBX with one 1024px PNG texture set per tree. Put each export
+in its own subfolder under `Assets/GeneratedAssets/Trees/`; that folder contains
+the first prompt and handoff checklist. GLB can wait until the project has a
+compatible importer.
 
 Unity can turn two models into dozens of apparent variants by changing scale,
 Y rotation, spacing, tint, and the number of dead trees in each road chunk.

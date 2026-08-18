@@ -51,7 +51,7 @@ namespace LastPassenger
             LoadRoadEvents();
 
             BuildAudio();
-            ShowMessage("W accelerate  •  S brake  •  A/D steer  •  Hold R for mirror", Color.white, 8f);
+            ShowMessage("W/S drive  •  A/D steer  •  Hold RMB to look  •  Hold R for mirror", Color.white, 8f);
         }
 
         private void LoadRoadEvents()
