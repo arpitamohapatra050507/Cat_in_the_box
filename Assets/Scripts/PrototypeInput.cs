@@ -17,6 +17,7 @@ namespace LastPassenger
         public static bool RadioPressed => Pressed(InputAction.Radio);
         public static bool ConfirmPressed => Pressed(InputAction.Confirm);
         public static bool CancelPressed => Pressed(InputAction.Cancel);
+        public static bool SkipToTruckPressed => Pressed(InputAction.SkipToTruck);
         public static bool SkipToJunctionPressed => Pressed(InputAction.SkipToJunction);
         public static bool SkipToAnomalyPressed => Pressed(InputAction.SkipToAnomaly);
         public static bool SkipToEndingPressed => Pressed(InputAction.SkipToEnding);
@@ -57,6 +58,7 @@ namespace LastPassenger
             Radio,
             Confirm,
             Cancel,
+            SkipToTruck,
             SkipToJunction,
             SkipToAnomaly,
             SkipToEnding
@@ -101,6 +103,7 @@ namespace LastPassenger
                 case InputAction.Radio: return keyboard.mKey.wasPressedThisFrame;
                 case InputAction.Confirm: return keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
                 case InputAction.Cancel: return keyboard.escapeKey.wasPressedThisFrame;
+                case InputAction.SkipToTruck: return keyboard.f8Key.wasPressedThisFrame;
                 case InputAction.SkipToJunction: return keyboard.f9Key.wasPressedThisFrame;
                 case InputAction.SkipToAnomaly: return keyboard.f10Key.wasPressedThisFrame;
                 case InputAction.SkipToEnding: return keyboard.f11Key.wasPressedThisFrame;
@@ -112,6 +115,7 @@ namespace LastPassenger
                 case InputAction.Radio: return Input.GetKeyDown(KeyCode.M);
                 case InputAction.Confirm: return Input.GetKeyDown(KeyCode.Return);
                 case InputAction.Cancel: return Input.GetKeyDown(KeyCode.Escape);
+                case InputAction.SkipToTruck: return Input.GetKeyDown(KeyCode.F8);
                 case InputAction.SkipToJunction: return Input.GetKeyDown(KeyCode.F9);
                 case InputAction.SkipToAnomaly: return Input.GetKeyDown(KeyCode.F10);
                 case InputAction.SkipToEnding: return Input.GetKeyDown(KeyCode.F11);

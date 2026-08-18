@@ -1,8 +1,9 @@
 # The Last Passenger — Unity Prototype
 
-A self-contained first-person driving-horror prototype for Unity 6. The road,
-car interior, covered body, mirror feed, lighting, fog, signs, scenery, and
-audio are generated at runtime. No external art or audio packages are needed.
+A self-contained first-person driving-horror prototype for Unity 6. The scene
+is assembled at runtime from procedural geometry and the included generated
+image/audio assets, with fallbacks for replaceable content. No external art or
+audio packages are needed.
 
 ## Open and run
 
@@ -13,7 +14,7 @@ audio are generated at runtime. No external art or audio packages are needed.
 3. Open that scene if Unity did not do so automatically, then press Play.
 4. To rebuild the scene manually, use **Tools > The Last Passenger > Rebuild Prototype Scene**.
 
-## Replace the generated road and trees
+## Replace generated environment and hazard assets
 
 Open **Tools > The Last Passenger > Select Prefab Overrides**. Unity selects the
 `Prototype asset configuration — assign prefabs here` object in the Prototype
@@ -22,6 +23,8 @@ scene. Its Inspector contains these optional serialized fields:
 - **Road Chunk Prefab** — replaces every ordinary repeating road chunk.
 - **Pine Tree Prefab** — replaces the common roadside fir trees.
 - **Leafless Tree Prefab** — replaces the occasional bare trees.
+- **Traffic Car Prefab** — replaces both generated oncoming and slower cars.
+- **Barricade Prefab** — replaces the generated chase barricades.
 - **Road Chunk Length** — distance between repeated road-prefab instances;
   leave it at `80` unless the custom chunk has a different length.
 
@@ -33,7 +36,16 @@ centered, and placed on the ground, so arbitrary Meshy export scale is fine.
 A road prefab's root must represent the beginning of the chunk at local
 `(0, 0, 0)`, face forward along local `+Z`, and extend for **Road Chunk Length**
 units. Stop Play Mode before changing a slot, then start it again to rebuild the
-runtime road. Rebuilding the Prototype scene preserves all assigned overrides.
+runtime road. A traffic prefab should also face local `+Z`; it is rotated for
+oncoming traffic as needed. Traffic and barricade prefabs are grounded from
+their visible renderer bounds, and their physical colliders are disabled in
+favor of the prototype's transform-safe swept collision test. Rebuilding the
+Prototype scene preserves all assigned overrides.
+
+Every slot has an independent fallback. Empty traffic and barricade fields use
+generated low-poly models with the AI-generated images in
+`Assets/Resources/Traffic`, just as empty road and tree fields retain their
+procedural versions.
 
 ## Controls
 
@@ -48,16 +60,48 @@ runtime road. Rebuilding the Prototype scene preserves all assigned overrides.
 
 Debug shortcuts are available only in the editor or development builds:
 
+- `F8` — immediately request the truck-chase sequence
 - `F9` — jump near the junction
-- `F10` — jump near the mirror anomaly
+- `F10` — immediately show a rear-seat apparition; it no longer teleports the car
 - `F11` — jump near the ending
 
 ## Prototype flow
 
 The radio warns that "the dead keep left." At the fork, position the car in
-the left or right lane before crossing the decision line. A mirror anomaly
-occurs later on either route. The right route ends in failure; the left route
-reaches the temporary delivery ending.
+the left or right lane before crossing the decision line. The right route ends
+in failure; the left route reaches the temporary delivery ending.
+
+Ordinary road traffic now appears throughout the active run. At most three
+oncoming or slower cars are present, with another spawn attempt every 7–12
+seconds. Their movement and collision use swept X/Z checks rather than
+Rigidbody physics, so a fast oncoming car cannot pass through the
+transform-driven player between frames. One crash removes most of the car's
+speed and warns the player; a second traffic crash within eight seconds causes
+a pile-up failure.
+
+The rear-seat apparition is now a recurring ambient anomaly. Every ten seconds
+there is currently a 50% chance of a roughly 4.5-second appearance, accompanied
+by `Assets/Resources/Audio/Anomalies/GhostAppearance.mp3`. Holding `R` keeps the
+mirror interaction meaningful: observing the figure continuously makes it
+retreat early. These odds are intentionally high for prototype testing and can
+be lowered later.
+
+Once the player has passed the junction and travelled far enough, a horn warns
+of a pursuing truck. The chase then lasts about 12 seconds. Image-based side
+mirrors show the truck gaining or losing ground, while the team-supplied
+`Assets/Resources/Audio/Anomalies/TruckChase.mp3` plays over the existing audio
+mix. Stay above roughly 83% of maximum speed to open the gap. Slowing lets the
+truck close in, and being caught produces a run-down failure. During the chase,
+ordinary traffic is cleared and a single-lane barricade appears every 3.2–4.5
+seconds. Hitting one halves the current speed and lets the truck gain about
+seven metres; surviving the timer makes the truck fade away and ordinary
+traffic resumes.
+
+The dark-red screen border is a danger indicator, not an unexplained creature
+or separate anomaly. A short flash means the car struck the shoulder, traffic,
+or a barricade. During the truck chase it becomes a pulsing proximity warning:
+the stronger and faster it pulses, the closer the truck is. The dashboard also
+shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 
 Road messages are editable without changing C# in
 `Assets/Resources/road_events.json`. Each entry has an ID, trigger distance,
@@ -77,7 +121,8 @@ own 2D audio source. The team-supplied engine at
 `Assets/Resources/Audio/CarEngine.mp3` is layered over it on a separate source:
 its volume rises smoothly from silence while accelerating, reaches at most 50%
 at full speed, and returns to silence when the car stops. Procedural audio is
-used if either custom clip is missing.
+used if either custom clip is missing. The apparition and truck-chase clips are
+loaded separately, allowing the radio, engine, and anomaly sounds to overlap.
 
 When no road prefab is assigned, the generated road material loads
 `Assets/Resources/Road/RoadAlbedo.png` when provided. The `demo` branch's FBX

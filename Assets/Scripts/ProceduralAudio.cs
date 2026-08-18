@@ -101,6 +101,29 @@ namespace LastPassenger
             return BuildClip("Generated anomaly sting", data, false);
         }
 
+        public static AudioClip TruckHorn()
+        {
+            const float seconds = 1.65f;
+            int samples = Mathf.RoundToInt(SampleRate * seconds);
+            float[] data = new float[samples];
+
+            for (int i = 0; i < samples; i++)
+            {
+                float t = i / (float)SampleRate;
+                float normalized = i / (float)samples;
+                float attack = Mathf.Clamp01(normalized / 0.045f);
+                float release = Mathf.Clamp01((1f - normalized) / 0.14f);
+                float envelope = Mathf.Min(attack, release);
+                float wobble = Mathf.Sin(t * Mathf.PI * 2f * 2.1f) * 1.8f;
+                float low = Mathf.Sin(t * Mathf.PI * 2f * (92f + wobble));
+                float second = Mathf.Sin(t * Mathf.PI * 2f * (116f + wobble * 0.6f)) * 0.72f;
+                float grit = Mathf.Sin(t * Mathf.PI * 2f * 232f) * 0.18f;
+                data[i] = (low + second + grit) * envelope * 0.24f;
+            }
+
+            return BuildClip("Generated distant truck horn", data, false);
+        }
+
         private static AudioClip BuildClip(string name, float[] samples, bool loop)
         {
             AudioClip clip = AudioClip.Create(name, samples.Length, 1, SampleRate, false);

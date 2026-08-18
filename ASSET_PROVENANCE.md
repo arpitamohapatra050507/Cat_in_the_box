@@ -1,18 +1,19 @@
 # Asset Provenance
 
-This prototype contains no downloaded stock art, models, music, animations, or
-sound effects.
-
-All visible geometry, materials, fog, interface elements, and audio waveforms
-are generated at runtime by C# source written by OpenAI Codex from the team's
-creative brief. The source code is preserved in `Assets/Scripts/` so judges can
-inspect how each temporary asset was created.
+This prototype contains no downloaded stock-asset package. Temporary visuals
+are either assembled at runtime by C# source written by OpenAI Codex from the
+team's creative brief or generated with Codex's built-in image generator.
+Audio is either synthesized by the runtime C# or supplied by the team and
+listed with its source status below. The runtime source remains in
+`Assets/Scripts/`, and every generated bitmap has a neighboring generation
+record so judges can inspect how the temporary content was made.
 
 ## Generated content inventory
 
 - Road modules, lane markings, junction signs, trees, poles, and barriers
 - Hearse dashboard, windshield frame, steering wheel, cabin, and covered body
 - Image-composited rear-view mirror and anomaly states
+- Image-composited traffic cars, chase truck, side mirrors, and barricades
 - Engine tone, wind ambience, radio static, impact sound, and horror sting
 - Text interface, route prompt, temporary success screen, and failure screen
 
@@ -44,12 +45,32 @@ inspect how each temporary asset was created.
   `DarkSteeringWheel_SOURCE.md`.
 - `Assets/Resources/Mirror/RearCabinBackseat.png` — generated with OpenAI Codex
   built-in image generation on 2026-08-18 as the dark, empty rear-cabin plate
-  used by the live rear-view camera. Its exact prompt and checksum are stored
-  beside it in `RearCabinBackseat_SOURCE.md`.
+  used by the fully image-based rear-view mirror. Its exact prompt and checksum
+  are stored beside it in `RearCabinBackseat_SOURCE.md`.
 - `Assets/Resources/Mirror/WhiteGrainAnomaly.png` — generated with OpenAI Codex
   built-in image generation on 2026-08-18 as a transparent apparition layer.
   Its exact prompt and checksum are stored beside it in
   `WhiteGrainAnomaly_SOURCE.md`.
+- `Assets/Resources/Anomalies/PursuerTruckFront.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as a transparent, front-facing
+  truck layer for the side-mirror chase. Its prompt summary and checksum are
+  stored beside it in `PursuerTruckFront_SOURCE.md`.
+- `Assets/Resources/Anomalies/SideMirrorNightRoad.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as the opaque road plate behind
+  the side-mirror chase. Its prompt summary and checksum are stored beside it
+  in `SideMirrorNightRoad_SOURCE.md`.
+- `Assets/Resources/Traffic/BarricadeReflective.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as a transparent visual layer
+  for chase barricades. Its prompt summary and checksum are stored beside it in
+  `BarricadeReflective_SOURCE.md`.
+- `Assets/Resources/Traffic/OncomingSedanFront.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as the transparent front view
+  of oncoming traffic. Its prompt summary and checksum are stored beside it in
+  `OncomingSedanFront_SOURCE.md`.
+- `Assets/Resources/Traffic/TrafficSedanRear.png` — generated with OpenAI Codex
+  built-in image generation on 2026-08-18 as the transparent rear view of
+  same-direction traffic. Its prompt summary and checksum are stored beside it
+  in `TrafficSedanRear_SOURCE.md`.
 
 ## Team-supplied audio
 
@@ -61,6 +82,17 @@ inspect how each temporary asset was created.
   2026-08-18 and used as the speed-driven engine loop. Format and source details
   are stored in `CarEngine_SOURCE.md`; confirm the original creator/license
   before final submission.
+- `Assets/Resources/Audio/Anomalies/GhostAppearance.mp3` — copied from the
+  team-supplied `sfx/ghost_appearance.mp3` in commit `ead9c19` on 2026-08-18 and
+  used for the rear-seat apparition. Format, loudness, checksum, and source
+  details are stored in `GhostAppearance_SOURCE.md`; confirm the original
+  creator/license before final submission.
+- `Assets/Resources/Audio/Anomalies/TruckChase.mp3` — copied from the
+  team-supplied `music/creature_chase.mp3` in commit `ead9c19` on 2026-08-18 and
+  used during the pursuer-truck sequence. Format, loudness, checksum, and source
+  details are stored in `TruckChase_SOURCE.md`; confirm the original
+  creator/license before final submission. This source is unusually loud, so
+  runtime playback must remain strongly attenuated.
 
 ## Team-created assets pending import
 

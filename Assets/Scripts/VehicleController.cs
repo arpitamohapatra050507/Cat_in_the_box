@@ -35,6 +35,7 @@ namespace LastPassenger
         public float LanePosition => transform.position.x;
         public float SteeringInput => steeringInput;
         public float Heading => heading;
+        public float SpeedRatio => maximumSpeed > 0f ? Mathf.Clamp01(speed / maximumSpeed) : 0f;
 
         public void ConfigureAudio(AudioClip engine, AudioClip impact)
         {
@@ -65,6 +66,18 @@ namespace LastPassenger
             Vector3 position = transform.position;
             position.z = Mathf.Max(position.z, distance);
             transform.position = position;
+        }
+
+        public void ApplyImpact(float retainedSpeed)
+        {
+            speed *= Mathf.Clamp01(retainedSpeed);
+            heading = Mathf.Clamp(
+                heading + Random.Range(-4.5f, 4.5f),
+                -maximumHeading,
+                maximumHeading);
+            visualRoll += Random.Range(-2.2f, 2.2f);
+            edgeCooldown = Mathf.Max(edgeCooldown, 0.3f);
+            impactSource?.Play();
         }
 
         private void Update()
@@ -100,7 +113,7 @@ namespace LastPassenger
                 targetSteering,
                 steeringChangeSpeed * Time.deltaTime);
 
-            float speedRatio = maximumSpeed > 0f ? Mathf.Clamp01(speed / maximumSpeed) : 0f;
+            float speedRatio = SpeedRatio;
             float steeringAuthority = Mathf.Lerp(0.18f, 1f, speedRatio);
             if (Mathf.Abs(steeringInput) > 0.01f)
             {

@@ -1,0 +1,534 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace LastPassenger
+{
+    /// <summary>
+    /// Spawns lightweight road hazards and resolves them without relying on
+    /// Unity physics. The player vehicle is transform-driven, so each hazard
+    /// tests its previous and current relative X/Z positions against a logical
+    /// collision box. This also prevents fast oncoming cars tunnelling through
+    /// the player between frames.
+    /// </summary>
+    public sealed class TrafficHazardManager : MonoBehaviour
+    {
+        private enum HazardKind
+        {
+            OncomingCar,
+            SlowerCar,
+            ChaseBarricade
+        }
+
+        private sealed class Hazard
+        {
+            public GameObject root;
+            public HazardKind kind;
+            public float forwardSpeed;
+            public float collisionHalfWidth;
+            public float collisionHalfLength;
+            public Vector2 previousRelativePosition;
+        }
+
+        private const int MaximumOrdinaryTraffic = 3;
+        private const float LeftLane = -1.55f;
+        private const float RightLane = 1.55f;
+        private const float SpawnIntervalMinimum = 7f;
+        private const float SpawnIntervalMaximum = 12f;
+
+        private readonly List<Hazard> hazards = new List<Hazard>();
+
+        private VehicleController vehicle;
+        private PrototypeGameManager manager;
+        private PrototypeAssetConfiguration assetConfiguration;
+        private float nextTrafficSpawnTime;
+        private bool chaseActive;
+        private bool finalStateCleared;
+        private bool junctionQuietActive;
+        private int lastBarricadeLaneIndex = -1;
+
+        private Material carBodyMaterial;
+        private Material carGlassMaterial;
+        private Material tyreMaterial;
+        private Material headlightMaterial;
+        private Material tailLightMaterial;
+        private Material oncomingImageMaterial;
+        private Material rearImageMaterial;
+        private Material barricadeImageMaterial;
+        private Material barricadeFrameMaterial;
+        private Material barricadeDarkMaterial;
+
+        public event Action BarricadeHit;
+
+        public void Configure(
+            VehicleController vehicleController,
+            PrototypeGameManager gameManager,
+            PrototypeAssetConfiguration config)
+        {
+            ClearAllHazards();
+            vehicle = vehicleController;
+            manager = gameManager;
+            assetConfiguration = config;
+            chaseActive = false;
+            finalStateCleared = false;
+            junctionQuietActive = false;
+            lastBarricadeLaneIndex = -1;
+            ScheduleNextTrafficSpawn();
+            BuildFallbackMaterials();
+        }
+
+        public void SetChaseActive(bool active)
+        {
+            if (chaseActive == active) return;
+
+            chaseActive = active;
+            if (active)
+            {
+                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar);
+            }
+            else
+            {
+                ClearHazards(HazardKind.ChaseBarricade);
+                ScheduleNextTrafficSpawn();
+            }
+        }
+
+        public void SpawnChaseBarricade()
+        {
+            if (!chaseActive || vehicle == null) return;
+
+            float[] lanes = { LeftLane, 0f, RightLane };
+            int laneIndex = UnityEngine.Random.Range(0, lanes.Length);
+            if (laneIndex == lastBarricadeLaneIndex)
+            {
+                laneIndex = (laneIndex + UnityEngine.Random.Range(1, lanes.Length)) % lanes.Length;
+            }
+            lastBarricadeLaneIndex = laneIndex;
+
+            float z = vehicle.transform.position.z + UnityEngine.Random.Range(38f, 48f);
+            GameObject root;
+            float collisionHalfWidth = 1.65f;
+            float collisionHalfLength = 0.85f;
+
+            GameObject barricadePrefab = assetConfiguration != null
+                ? assetConfiguration.BarricadePrefab
+                : null;
+            if (barricadePrefab != null)
+            {
+                root = InstantiateLogicalPrefab(
+                    barricadePrefab,
+                    "Chase barricade",
+                    new Vector3(lanes[laneIndex], 0f, z),
+                    Quaternion.identity);
+                MeasureLogicalCollision(root, 0.7f, 0.45f, out collisionHalfWidth, out collisionHalfLength);
+            }
+            else
+            {
+                root = BuildFallbackBarricade(new Vector3(lanes[laneIndex], 0f, z));
+            }
+
+            AddHazard(root, HazardKind.ChaseBarricade, 0f, collisionHalfWidth, collisionHalfLength);
+        }
+
+        private void Update()
+        {
+            if (vehicle == null || manager == null) return;
+
+            bool runFinished = manager.State == PrototypeGameManager.RunState.Success ||
+                               manager.State == PrototypeGameManager.RunState.Failure;
+            if (runFinished)
+            {
+                if (!finalStateCleared)
+                {
+                    ClearAllHazards();
+                    finalStateCleared = true;
+                }
+                return;
+            }
+
+            finalStateCleared = false;
+            bool junctionQuiet = vehicle.Distance >= 500f && vehicle.Distance <= 720f;
+            if (junctionQuiet && !junctionQuietActive)
+            {
+                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar);
+            }
+            else if (!junctionQuiet && junctionQuietActive)
+            {
+                ScheduleNextTrafficSpawn();
+            }
+            junctionQuietActive = junctionQuiet;
+
+            if (!chaseActive && !junctionQuiet && Time.time >= nextTrafficSpawnTime)
+            {
+                if (CountOrdinaryTraffic() < MaximumOrdinaryTraffic)
+                {
+                    SpawnOrdinaryTraffic();
+                }
+                ScheduleNextTrafficSpawn();
+            }
+
+            UpdateHazards();
+        }
+
+        private void SpawnOrdinaryTraffic()
+        {
+            bool oncoming = UnityEngine.Random.value < 0.58f;
+            float lane = UnityEngine.Random.value < 0.5f ? LeftLane : RightLane;
+            float distanceAhead = oncoming
+                ? UnityEngine.Random.Range(88f, 125f)
+                : UnityEngine.Random.Range(68f, 102f);
+            float z = vehicle.transform.position.z + distanceAhead;
+            float forwardSpeed = oncoming
+                ? -UnityEngine.Random.Range(6.5f, 9.5f)
+                : UnityEngine.Random.Range(3.2f, 5.4f);
+
+            HazardKind kind = oncoming ? HazardKind.OncomingCar : HazardKind.SlowerCar;
+            GameObject root;
+            // Includes the player's logical half-width as well as the image-backed car.
+            // A player straddling the centre line must therefore choose a clear lane.
+            float collisionHalfWidth = 1.72f;
+            float collisionHalfLength = 2.2f;
+            GameObject trafficPrefab = assetConfiguration != null
+                ? assetConfiguration.TrafficCarPrefab
+                : null;
+
+            if (trafficPrefab != null)
+            {
+                Quaternion rotation = oncoming
+                    ? Quaternion.Euler(0f, 180f, 0f)
+                    : Quaternion.identity;
+                root = InstantiateLogicalPrefab(
+                    trafficPrefab,
+                    oncoming ? "Oncoming traffic" : "Slower traffic",
+                    new Vector3(lane, 0f, z),
+                    rotation);
+                MeasureLogicalCollision(root, 0.65f, 0.7f, out collisionHalfWidth, out collisionHalfLength);
+            }
+            else
+            {
+                root = BuildFallbackCar(new Vector3(lane, 0f, z), oncoming);
+            }
+
+            AddHazard(root, kind, forwardSpeed, collisionHalfWidth, collisionHalfLength);
+        }
+
+        private void AddHazard(
+            GameObject root,
+            HazardKind kind,
+            float forwardSpeed,
+            float collisionHalfWidth,
+            float collisionHalfLength)
+        {
+            Vector3 relative = root.transform.position - vehicle.transform.position;
+            hazards.Add(new Hazard
+            {
+                root = root,
+                kind = kind,
+                forwardSpeed = forwardSpeed,
+                collisionHalfWidth = collisionHalfWidth,
+                collisionHalfLength = collisionHalfLength,
+                previousRelativePosition = new Vector2(relative.x, relative.z)
+            });
+        }
+
+        private void UpdateHazards()
+        {
+            for (int i = hazards.Count - 1; i >= 0; i--)
+            {
+                Hazard hazard = hazards[i];
+                if (hazard.root == null)
+                {
+                    hazards.RemoveAt(i);
+                    continue;
+                }
+
+                Vector3 position = hazard.root.transform.position;
+                position.z += hazard.forwardSpeed * Time.deltaTime;
+                hazard.root.transform.position = position;
+
+                Vector3 relative3D = position - vehicle.transform.position;
+                Vector2 currentRelative = new Vector2(relative3D.x, relative3D.z);
+                bool collided = SegmentIntersectsBox(
+                    hazard.previousRelativePosition,
+                    currentRelative,
+                    hazard.collisionHalfWidth,
+                    hazard.collisionHalfLength);
+
+                if (collided)
+                {
+                    ResolveCollision(hazard);
+                    Destroy(hazard.root);
+                    hazards.RemoveAt(i);
+                    continue;
+                }
+
+                hazard.previousRelativePosition = currentRelative;
+                if (currentRelative.y < -28f || currentRelative.y > 175f)
+                {
+                    Destroy(hazard.root);
+                    hazards.RemoveAt(i);
+                }
+            }
+        }
+
+        private void ResolveCollision(Hazard hazard)
+        {
+            if (hazard.kind == HazardKind.ChaseBarricade)
+            {
+                vehicle.ApplyImpact(0.5f);
+                manager.NotifyBarricadeCollision();
+                BarricadeHit?.Invoke();
+                return;
+            }
+
+            vehicle.ApplyImpact(0.28f);
+            manager.NotifyTrafficCollision();
+        }
+
+        private GameObject BuildFallbackCar(Vector3 position, bool oncoming)
+        {
+            GameObject root = RuntimeGeometry.Empty(
+                oncoming ? "Generated oncoming traffic" : "Generated slower traffic",
+                transform,
+                position);
+
+            RuntimeGeometry.Primitive("Car body", PrimitiveType.Cube, root.transform,
+                new Vector3(0f, 0.58f, 0f), new Vector3(1.72f, 0.62f, 3.25f), carBodyMaterial);
+            RuntimeGeometry.Primitive("Car cabin", PrimitiveType.Cube, root.transform,
+                new Vector3(0f, 1.02f, 0.12f), new Vector3(1.42f, 0.48f, 1.62f), carGlassMaterial);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                for (int end = -1; end <= 1; end += 2)
+                {
+                    RuntimeGeometry.Primitive("Tyre", PrimitiveType.Cylinder, root.transform,
+                        new Vector3(side * 0.87f, 0.32f, end * 1.05f),
+                        new Vector3(0.2f, 0.11f, 0.2f), tyreMaterial,
+                        new Vector3(0f, 0f, 90f));
+                }
+            }
+
+            Material lampMaterial = oncoming ? headlightMaterial : tailLightMaterial;
+            RuntimeGeometry.Primitive(oncoming ? "Left headlamp" : "Left tail lamp", PrimitiveType.Cube, root.transform,
+                new Vector3(-0.53f, 0.62f, -1.64f), new Vector3(0.34f, 0.18f, 0.06f), lampMaterial);
+            RuntimeGeometry.Primitive(oncoming ? "Right headlamp" : "Right tail lamp", PrimitiveType.Cube, root.transform,
+                new Vector3(0.53f, 0.62f, -1.64f), new Vector3(0.34f, 0.18f, 0.06f), lampMaterial);
+
+            Material imageMaterial = oncoming ? oncomingImageMaterial : rearImageMaterial;
+            if (imageMaterial != null)
+            {
+                RuntimeGeometry.TexturedQuad(
+                    oncoming ? "Oncoming car image" : "Traffic car rear image",
+                    root.transform,
+                    new Vector3(0f, 0.91f, -1.685f),
+                    new Vector2(2.15f, 1.44f),
+                    imageMaterial);
+            }
+
+            return root;
+        }
+
+        private GameObject BuildFallbackBarricade(Vector3 position)
+        {
+            GameObject root = RuntimeGeometry.Empty("Generated chase barricade", transform, position);
+
+            RuntimeGeometry.Primitive("Barricade backing", PrimitiveType.Cube, root.transform,
+                new Vector3(0f, 0.94f, 0f), new Vector3(2.16f, 1.08f, 0.12f), barricadeDarkMaterial);
+            RuntimeGeometry.Primitive("Left frame post", PrimitiveType.Cube, root.transform,
+                new Vector3(-1.04f, 0.72f, 0.02f), new Vector3(0.09f, 1.44f, 0.1f), barricadeFrameMaterial);
+            RuntimeGeometry.Primitive("Right frame post", PrimitiveType.Cube, root.transform,
+                new Vector3(1.04f, 0.72f, 0.02f), new Vector3(0.09f, 1.44f, 0.1f), barricadeFrameMaterial);
+            RuntimeGeometry.Primitive("Top frame rail", PrimitiveType.Cube, root.transform,
+                new Vector3(0f, 1.48f, 0.02f), new Vector3(2.18f, 0.09f, 0.1f), barricadeFrameMaterial);
+            RuntimeGeometry.Primitive("Bottom frame rail", PrimitiveType.Cube, root.transform,
+                new Vector3(0f, 0.42f, 0.02f), new Vector3(2.18f, 0.09f, 0.1f), barricadeFrameMaterial);
+
+            RuntimeGeometry.Primitive("Left support foot", PrimitiveType.Cube, root.transform,
+                new Vector3(-0.9f, 0.09f, 0f), new Vector3(0.72f, 0.11f, 0.5f), barricadeFrameMaterial);
+            RuntimeGeometry.Primitive("Right support foot", PrimitiveType.Cube, root.transform,
+                new Vector3(0.9f, 0.09f, 0f), new Vector3(0.72f, 0.11f, 0.5f), barricadeFrameMaterial);
+
+            if (barricadeImageMaterial != null)
+            {
+                RuntimeGeometry.TexturedQuad("Reflective barricade image", root.transform,
+                    new Vector3(0f, 0.95f, -0.071f), new Vector2(2.05f, 1.0f), barricadeImageMaterial);
+            }
+
+            return root;
+        }
+
+        private GameObject InstantiateLogicalPrefab(
+            GameObject prefab,
+            string instanceName,
+            Vector3 position,
+            Quaternion rotation)
+        {
+            GameObject instance = Instantiate(prefab, position, rotation, transform);
+            instance.name = instanceName;
+
+            Collider[] colliders = instance.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = false;
+
+            Rigidbody[] rigidbodies = instance.GetComponentsInChildren<Rigidbody>(true);
+            for (int i = 0; i < rigidbodies.Length; i++)
+            {
+                rigidbodies[i].isKinematic = true;
+                rigidbodies[i].useGravity = false;
+            }
+
+            GroundPrefab(instance);
+            return instance;
+        }
+
+        private static void GroundPrefab(GameObject instance)
+        {
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return;
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            Vector3 position = instance.transform.position;
+            position.y -= bounds.min.y;
+            instance.transform.position = position;
+        }
+
+        private static void MeasureLogicalCollision(
+            GameObject root,
+            float playerHalfWidth,
+            float playerHalfLength,
+            out float collisionHalfWidth,
+            out float collisionHalfLength)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0)
+            {
+                collisionHalfWidth = 1.35f;
+                collisionHalfLength = 2.2f;
+                return;
+            }
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            collisionHalfWidth = Mathf.Clamp(bounds.extents.x + playerHalfWidth, 0.95f, 2.65f);
+            collisionHalfLength = Mathf.Clamp(bounds.extents.z + playerHalfLength, 0.65f, 4.8f);
+        }
+
+        private static bool SegmentIntersectsBox(
+            Vector2 start,
+            Vector2 end,
+            float halfWidth,
+            float halfLength)
+        {
+            float minimumTime = 0f;
+            float maximumTime = 1f;
+            Vector2 movement = end - start;
+
+            return ClipSegmentAxis(start.x, movement.x, -halfWidth, halfWidth, ref minimumTime, ref maximumTime) &&
+                   ClipSegmentAxis(start.y, movement.y, -halfLength, halfLength, ref minimumTime, ref maximumTime);
+        }
+
+        private static bool ClipSegmentAxis(
+            float origin,
+            float movement,
+            float minimum,
+            float maximum,
+            ref float minimumTime,
+            ref float maximumTime)
+        {
+            if (Mathf.Abs(movement) < 0.00001f)
+            {
+                return origin >= minimum && origin <= maximum;
+            }
+
+            float first = (minimum - origin) / movement;
+            float second = (maximum - origin) / movement;
+            if (first > second)
+            {
+                float swap = first;
+                first = second;
+                second = swap;
+            }
+
+            minimumTime = Mathf.Max(minimumTime, first);
+            maximumTime = Mathf.Min(maximumTime, second);
+            return minimumTime <= maximumTime;
+        }
+
+        private int CountOrdinaryTraffic()
+        {
+            int count = 0;
+            for (int i = 0; i < hazards.Count; i++)
+            {
+                if (hazards[i].kind != HazardKind.ChaseBarricade) count++;
+            }
+            return count;
+        }
+
+        private void ScheduleNextTrafficSpawn()
+        {
+            nextTrafficSpawnTime = Time.time + UnityEngine.Random.Range(
+                SpawnIntervalMinimum,
+                SpawnIntervalMaximum);
+        }
+
+        private void ClearHazards(params HazardKind[] kinds)
+        {
+            for (int i = hazards.Count - 1; i >= 0; i--)
+            {
+                bool shouldClear = false;
+                for (int kindIndex = 0; kindIndex < kinds.Length; kindIndex++)
+                {
+                    if (hazards[i].kind == kinds[kindIndex])
+                    {
+                        shouldClear = true;
+                        break;
+                    }
+                }
+
+                if (!shouldClear) continue;
+                if (hazards[i].root != null) Destroy(hazards[i].root);
+                hazards.RemoveAt(i);
+            }
+        }
+
+        private void ClearAllHazards()
+        {
+            for (int i = 0; i < hazards.Count; i++)
+            {
+                if (hazards[i].root != null) Destroy(hazards[i].root);
+            }
+            hazards.Clear();
+        }
+
+        private void BuildFallbackMaterials()
+        {
+            if (carBodyMaterial != null) return;
+
+            carBodyMaterial = RuntimeGeometry.Material("Traffic paint", new Color(0.055f, 0.07f, 0.075f), 0.32f, 0.45f);
+            carGlassMaterial = RuntimeGeometry.Material("Traffic dark glass", new Color(0.018f, 0.028f, 0.036f), 0.08f, 0.72f);
+            tyreMaterial = RuntimeGeometry.Material("Traffic tyre", new Color(0.008f, 0.008f, 0.009f), 0f, 0.08f);
+            headlightMaterial = RuntimeGeometry.Material("Oncoming headlights", new Color(0.78f, 0.84f, 0.68f), 0f, 0.5f, true);
+            tailLightMaterial = RuntimeGeometry.Material("Traffic tail lights", new Color(0.55f, 0.015f, 0.008f), 0f, 0.4f, true);
+            barricadeFrameMaterial = RuntimeGeometry.Material("Barricade reflective frame", new Color(0.8f, 0.24f, 0.025f), 0.08f, 0.28f, true);
+            barricadeDarkMaterial = RuntimeGeometry.Material("Barricade backing", new Color(0.035f, 0.027f, 0.022f), 0f, 0.12f);
+
+            Texture2D oncomingTexture = Resources.Load<Texture2D>("Traffic/OncomingSedanFront");
+            Texture2D rearTexture = Resources.Load<Texture2D>("Traffic/TrafficSedanRear");
+            Texture2D barricadeTexture = Resources.Load<Texture2D>("Traffic/BarricadeReflective");
+            if (oncomingTexture != null)
+            {
+                oncomingImageMaterial = RuntimeGeometry.TexturedMaterial("Oncoming sedan image", oncomingTexture, true);
+            }
+            if (rearTexture != null)
+            {
+                rearImageMaterial = RuntimeGeometry.TexturedMaterial("Traffic sedan rear image", rearTexture, true);
+            }
+            if (barricadeTexture != null)
+            {
+                barricadeImageMaterial = RuntimeGeometry.TexturedMaterial("Reflective barricade image", barricadeTexture, true);
+            }
+        }
+    }
+}

@@ -15,6 +15,12 @@ namespace LastPassenger
         [Tooltip("Used for the occasional bare roadside trees. Leave empty for generated leafless trees.")]
         [SerializeField] private GameObject leaflessTreePrefab;
 
+        [Tooltip("Optional 3D replacement for ordinary traffic. Its root should face forward along +Z. Leave empty for generated image billboards.")]
+        [SerializeField] private GameObject trafficCarPrefab;
+
+        [Tooltip("Optional 3D replacement for chase barricades. Leave empty for the generated framed barricade.")]
+        [SerializeField] private GameObject barricadePrefab;
+
         [Header("Road prefab dimensions")]
         [Tooltip("The forward length of one road prefab in Unity units. Keep this at 80 for the current generated road.")]
         [SerializeField, Min(10f)] private float roadChunkLength = 80f;
@@ -22,6 +28,8 @@ namespace LastPassenger
         public GameObject RoadChunkPrefab => roadChunkPrefab;
         public GameObject PineTreePrefab => pineTreePrefab;
         public GameObject LeaflessTreePrefab => leaflessTreePrefab;
+        public GameObject TrafficCarPrefab => trafficCarPrefab;
+        public GameObject BarricadePrefab => barricadePrefab;
         public float RoadChunkLength => Mathf.Max(10f, roadChunkLength);
 
 #if UNITY_EDITOR
@@ -29,11 +37,15 @@ namespace LastPassenger
             GameObject roadPrefab,
             GameObject pinePrefab,
             GameObject leaflessPrefab,
+            GameObject trafficPrefab,
+            GameObject chaseBarricadePrefab,
             float chunkLength)
         {
             roadChunkPrefab = roadPrefab;
             pineTreePrefab = pinePrefab;
             leaflessTreePrefab = leaflessPrefab;
+            trafficCarPrefab = trafficPrefab;
+            barricadePrefab = chaseBarricadePrefab;
             roadChunkLength = Mathf.Max(10f, chunkLength);
         }
 #endif

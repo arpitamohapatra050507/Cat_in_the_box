@@ -10,7 +10,6 @@ namespace LastPassenger
         {
             Driving,
             JunctionChosen,
-            Anomaly,
             Success,
             Failure
         }
@@ -22,6 +21,7 @@ namespace LastPassenger
 
         private VehicleController vehicle;
         private MirrorSystem mirror;
+        private AnomalyDirector anomalyDirector;
         private AudioSource windSource;
         private AudioSource radioSource;
         private AudioSource stingSource;
@@ -29,20 +29,29 @@ namespace LastPassenger
         private bool junctionResolved;
         private bool choseLeft;
         private bool radioEnabled = true;
-        private bool acknowledgedMirror;
         private string message = string.Empty;
         private Color messageColor = Color.white;
         private float messageUntil;
         private float vignetteAlpha;
+        private float threatLevel;
+        private float impactFlash;
+        private float lastTrafficCollisionTime = -100f;
+        private string failureTitle = "THE PASSENGER ARRIVED";
+        private string failureDescription = "You chose the quarry. Something else finished the journey.";
 
         private const float JunctionWarningDistance = 540f;
         private const float JunctionDistance = 650f;
-        private const float AnomalyDistance = 1080f;
         private const float FailureDistance = 1480f;
         private const float FinishDistance = 2000f;
 
         public RunState State => state;
         public bool RadioEnabled => radioEnabled;
+        public bool IsGameplayActive => state != RunState.Success && state != RunState.Failure;
+        public float ThreatLevel => threatLevel;
+        public bool AmbientAnomalyActive => mirror != null && mirror.ApparitionVisible;
+        public bool TruckChaseAllowed =>
+            IsGameplayActive && junctionResolved && vehicle != null &&
+            vehicle.Distance >= 780f && Time.timeSinceLevelLoad >= 45f;
 
         public void Configure(VehicleController controller, MirrorSystem mirrorSystem)
         {
@@ -53,6 +62,11 @@ namespace LastPassenger
 
             BuildAudio();
             ShowMessage("W/S drive  •  A/D steer  •  Hold RMB to look  •  Hold R for mirror", Color.white, 8f);
+        }
+
+        public void AttachAnomalyDirector(AnomalyDirector director)
+        {
+            anomalyDirector = director;
         }
 
         private void LoadRoadEvents()
@@ -125,18 +139,6 @@ namespace LastPassenger
                 ResolveJunction();
             }
 
-            if (junctionResolved && state == RunState.JunctionChosen && vehicle.Distance >= AnomalyDistance)
-            {
-                TriggerAnomaly();
-            }
-
-            if (state == RunState.Anomaly && mirror.WasObservedAfterAnomaly && !acknowledgedMirror)
-            {
-                acknowledgedMirror = true;
-                ShowMessage(choseLeft ? "The shape settles beneath the sheet." : "The rear seat is no longer empty.",
-                    choseLeft ? new Color(0.72f, 0.8f, 0.72f) : new Color(1f, 0.33f, 0.28f), 6f);
-            }
-
             if (!choseLeft && junctionResolved && vehicle.Distance >= FailureDistance)
             {
                 FailRun();
@@ -146,7 +148,14 @@ namespace LastPassenger
                 CompleteRun();
             }
 
-            vignetteAlpha = Mathf.MoveTowards(vignetteAlpha, state == RunState.Anomaly ? 0.28f : 0.08f, Time.deltaTime * 0.12f);
+            impactFlash = Mathf.MoveTowards(impactFlash, 0f, Time.deltaTime * 0.9f);
+            float dangerPulse = threatLevel > 0f
+                ? threatLevel * (0.2f + (Mathf.Sin(Time.time * Mathf.Lerp(4f, 11f, threatLevel)) * 0.5f + 0.5f) * 0.12f)
+                : 0f;
+            vignetteAlpha = Mathf.MoveTowards(
+                vignetteAlpha,
+                Mathf.Max(impactFlash, dangerPulse),
+                Time.deltaTime * 1.7f);
             DevelopmentDebugShortcuts();
         }
 
@@ -181,14 +190,6 @@ namespace LastPassenger
             }
         }
 
-        private void TriggerAnomaly()
-        {
-            state = RunState.Anomaly;
-            mirror.TriggerAnomaly(!choseLeft);
-            stingSource.Play();
-            ShowMessage("Something moved behind you. Hold R and look.", new Color(1f, 0.38f, 0.32f), 8f);
-        }
-
         private void CompleteRun()
         {
             state = RunState.Success;
@@ -200,6 +201,7 @@ namespace LastPassenger
 
         private void FailRun()
         {
+            if (state == RunState.Failure || state == RunState.Success) return;
             state = RunState.Failure;
             vehicle.SetControlsEnabled(false);
             stingSource.pitch = 0.55f;
@@ -209,10 +211,63 @@ namespace LastPassenger
 
         public void NotifyRoadImpact()
         {
-            if (state == RunState.Driving || state == RunState.JunctionChosen || state == RunState.Anomaly)
+            if (IsGameplayActive)
             {
                 ShowMessage("The shoulder drags at the tyres.", new Color(0.86f, 0.66f, 0.5f), 1.4f);
+                impactFlash = Mathf.Max(impactFlash, 0.12f);
             }
+        }
+
+        public void NotifyTrafficCollision()
+        {
+            if (!IsGameplayActive) return;
+
+            impactFlash = Mathf.Max(impactFlash, 0.32f);
+            bool repeatedCollision = Time.time - lastTrafficCollisionTime <= 8f;
+            lastTrafficCollisionTime = Time.time;
+            if (repeatedCollision)
+            {
+                failureTitle = "PILE-UP";
+                failureDescription = "The second impact folds the road around you.";
+                FailRun();
+                return;
+            }
+
+            ShowMessage(
+                "METAL ON METAL — another hit will finish the car.",
+                new Color(1f, 0.42f, 0.26f),
+                3f);
+        }
+
+        public void NotifyBarricadeCollision()
+        {
+            if (!IsGameplayActive) return;
+            impactFlash = Mathf.Max(impactFlash, 0.26f);
+            ShowMessage(
+                "The barricade tears speed from the car.",
+                new Color(1f, 0.38f, 0.22f),
+                2.2f);
+        }
+
+        public void SetThreatLevel(float level)
+        {
+            threatLevel = Mathf.Clamp01(level);
+        }
+
+        public void ShowGameplayMessage(string text, Color color, float seconds)
+        {
+            if (!IsGameplayActive) return;
+            ShowMessage(text, color, seconds);
+        }
+
+        public void FailFromHazard(string description)
+        {
+            if (!IsGameplayActive) return;
+            failureTitle = "RUN DOWN";
+            failureDescription = description;
+            threatLevel = 1f;
+            impactFlash = 0.42f;
+            FailRun();
         }
 
         private void ShowMessage(string text, Color color, float seconds)
@@ -232,16 +287,9 @@ namespace LastPassenger
         private void DevelopmentDebugShortcuts()
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (PrototypeInput.SkipToTruckPressed) anomalyDirector?.ForceTruckChase();
             if (PrototypeInput.SkipToJunctionPressed) vehicle.TeleportForward(JunctionWarningDistance);
-            if (PrototypeInput.SkipToAnomalyPressed)
-            {
-                if (!junctionResolved)
-                {
-                    vehicle.TeleportForward(JunctionDistance);
-                    ResolveJunction();
-                }
-                vehicle.TeleportForward(AnomalyDistance);
-            }
+            if (PrototypeInput.SkipToAnomalyPressed) anomalyDirector?.ForceApparition();
             if (PrototypeInput.SkipToEndingPressed)
             {
                 if (!junctionResolved)
@@ -291,6 +339,19 @@ namespace LastPassenger
             GUI.Label(new Rect(22f, Screen.height - 74f, 300f, 26f), $"SPEED  {vehicle.Speed * 7.2f:000} km/h", style);
             GUI.Label(new Rect(22f, Screen.height - 48f, 300f, 26f), radioEnabled ? "RADIO  87.3 — SIGNAL WEAK" : "RADIO  OFF", style);
 
+            if (threatLevel > 0.08f)
+            {
+                GUIStyle dangerStyle = new GUIStyle(style)
+                {
+                    fontSize = 18,
+                    normal = { textColor = new Color(1f, 0.28f, 0.2f) }
+                };
+                GUI.Label(
+                    new Rect(Screen.width - 330f, Screen.height - 62f, 310f, 30f),
+                    "DANGER BEHIND — KEEP SPEED",
+                    dangerStyle);
+            }
+
             if (!junctionResolved && vehicle.Distance >= JunctionWarningDistance)
             {
                 GUIStyle forkStyle = new GUIStyle(style)
@@ -338,10 +399,10 @@ namespace LastPassenger
                 normal = { textColor = new Color(0.78f, 0.78f, 0.74f) }
             };
 
-            GUI.Label(new Rect(0f, Screen.height * 0.27f, Screen.width, 90f), success ? "TEMPORARY DELIVERY" : "THE PASSENGER ARRIVED", title);
+            GUI.Label(new Rect(0f, Screen.height * 0.27f, Screen.width, 90f), success ? "TEMPORARY DELIVERY" : failureTitle, title);
             GUI.Label(new Rect(Screen.width * 0.18f, Screen.height * 0.45f, Screen.width * 0.64f, 100f),
                 success ? "The road releases you. The final story and ending remain deliberately unresolved."
-                        : "You chose the quarry. Something else finished the journey.", body);
+                        : failureDescription, body);
             GUI.Label(new Rect(0f, Screen.height * 0.7f, Screen.width, 40f), "Press Enter to restart", body);
             GUI.color = previous;
         }
@@ -352,6 +413,11 @@ namespace LastPassenger
             GUI.color = new Color(0.015f, 0.02f, 0.018f, 0.82f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = previous;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
     }
 }

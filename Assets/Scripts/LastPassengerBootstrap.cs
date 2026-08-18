@@ -61,6 +61,14 @@ namespace LastPassenger
             PrototypeGameManager manager = managerObject.AddComponent<PrototypeGameManager>();
             manager.Configure(controller, mirror);
 
+            GameObject trafficObject = new GameObject("Traffic and road hazards");
+            TrafficHazardManager traffic = trafficObject.AddComponent<TrafficHazardManager>();
+            traffic.Configure(controller, manager, assetConfiguration);
+
+            GameObject anomalyObject = new GameObject("Anomaly director");
+            AnomalyDirector anomalyDirector = anomalyObject.AddComponent<AnomalyDirector>();
+            anomalyDirector.Configure(controller, mirror, traffic, manager);
+            manager.AttachAnomalyDirector(anomalyDirector);
         }
 
         private static void BuildEnvironment()
