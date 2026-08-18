@@ -20,7 +20,9 @@ Run this once in the Unity editor and once in the final Windows build.
 9. Press Enter from each ending and confirm the scene restarts cleanly.
 10. Toggle `M`; confirm both the radio audio and animated display turn off and on.
 11. Confirm the generated dashboard is readable and the radio display aligns
-    with its blank screen at 1280x720 and 1920x1080.
+    with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
+    in the lower portion of the view, slope away from the camera, and never
+    cover the road horizon. Confirm the wheel has clean transparent edges.
 
 ## Full pacing pass
 

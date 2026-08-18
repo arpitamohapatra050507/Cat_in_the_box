@@ -43,9 +43,10 @@ message, color, and display duration; this is the extension point for later
 radio reports, memories, accusations, and ambiguous story fragments.
 
 Steering now rotates the vehicle and moves it along its heading instead of
-sliding it sideways. The wheel follows steering input, while the radio display
-flickers and changes during the anomaly. A custom static loop placed at
-`Assets/Resources/Audio/RadioStatic.wav` is loaded automatically.
+sliding it sideways. A transparent 2D wheel follows steering input in front of
+a lowered, slanted dashboard, while the radio display flickers and changes
+during the anomaly. The team-supplied static is installed at
+`Assets/Resources/Audio/RadioStatic.wav`.
 
 The road material similarly loads `Assets/Resources/Road/RoadAlbedo.png` when
 provided. The `demo` branch's FBX currently references a texture that was not

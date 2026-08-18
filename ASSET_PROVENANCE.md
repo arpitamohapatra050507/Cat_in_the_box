@@ -38,6 +38,17 @@ inspect how each temporary asset was created.
   Codex built-in image generation on 2026-08-18 and used as the in-world
   dashboard fascia. Its exact prompt is stored beside it in
   `DarkDashboardFascia_SOURCE.md`.
+- `Assets/Resources/Dashboard/DarkSteeringWheel.png` — generated with OpenAI
+  Codex built-in image generation on 2026-08-18 as a transparent, separately
+  animated steering-wheel sprite. Its exact prompt is stored beside it in
+  `DarkSteeringWheel_SOURCE.md`.
+
+## Team-supplied audio
+
+- `Assets/Resources/Audio/RadioStatic.wav` — converted from a team-supplied
+  WhatsApp MPEG on 2026-08-18. Source and conversion details are stored in
+  `RadioStatic_SOURCE.md`; confirm the original creator/license before final
+  submission.
 
 ## Team-created assets pending import
 

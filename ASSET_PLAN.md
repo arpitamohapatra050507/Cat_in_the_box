@@ -19,8 +19,10 @@ choose one, and iterate from it instead of mixing unrelated generator styles.
 
 The first dashboard fascia is now generated at
 `Assets/Resources/Dashboard/DarkDashboardFascia.png`. It is mapped to an
-in-world quad so camera-look still has parallax. The steering wheel and radio
-display remain separate procedural objects and animate independently.
+in-world, lowered, slanted quad so camera-look still has parallax. The old
+blocky dashboard support was removed. The steering wheel is a transparent 2D
+sprite that rotates independently, while the radio display remains a separate
+animated object.
 
 Keep the procedural cabin as a structural fallback. Validate the panel at 16:9
 and 16:10 resolutions before replacing more of the cabin geometry.

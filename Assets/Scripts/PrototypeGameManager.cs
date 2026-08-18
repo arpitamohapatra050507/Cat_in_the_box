@@ -91,7 +91,7 @@ namespace LastPassenger
             AudioClip customRadioStatic = Resources.Load<AudioClip>("Audio/RadioStatic");
             radioSource.clip = customRadioStatic != null ? customRadioStatic : ProceduralAudio.RadioStatic();
             radioSource.loop = true;
-            radioSource.volume = 0.075f;
+            radioSource.volume = customRadioStatic != null ? 0.18f : 0.075f;
             radioSource.Play();
 
             stingSource = gameObject.AddComponent<AudioSource>();
