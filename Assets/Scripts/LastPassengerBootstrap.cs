@@ -138,7 +138,7 @@ namespace LastPassenger
             GameObject dashboardRoot = RuntimeGeometry.Empty(
                 "Lowered slanted dashboard",
                 parent,
-                new Vector3(0f, 0.54f, 1.24f));
+                new Vector3(0f, 0.66f, 1.24f));
             dashboardRoot.transform.localRotation = Quaternion.Euler(21f, 0f, 0f);
 
             RuntimeGeometry.Primitive(
@@ -206,7 +206,7 @@ namespace LastPassenger
             GameObject wheel = RuntimeGeometry.TexturedQuad(
                 "Animated 2D steering wheel",
                 parent,
-                new Vector3(-0.56f, 0.54f, 0.86f),
+                new Vector3(-0.56f, 0.68f, 0.88f),
                 new Vector2(0.74f, 0.74f),
                 wheelMaterial);
 
