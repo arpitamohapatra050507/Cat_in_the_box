@@ -6,7 +6,7 @@ namespace LastPassenger
     public sealed class AnomalyDirector : MonoBehaviour
     {
         [Header("Rear-seat apparition")]
-        [SerializeField] private float apparitionCheckInterval = 20f;
+        [SerializeField] private float apparitionCheckInterval = 15f;
         [SerializeField, Range(0f, 1f)] private float apparitionChance = 0.5f;
         [SerializeField] private float apparitionKillDelay = 3f;
         [SerializeField, Range(0f, 1f)] private float ghostStartingVolume = 0.16f;

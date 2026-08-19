@@ -144,6 +144,15 @@ namespace LastPassenger
             AddHazard(root, HazardKind.ChaseBarricade, 0f, collisionHalfWidth, collisionHalfLength);
         }
 
+        public void ForceRoadFigure()
+        {
+            if (vehicle == null || manager == null || !manager.IsGameplayActive || chaseActive) return;
+
+            ClearHazards(HazardKind.RoadFigure);
+            SpawnRoadFigure();
+            ScheduleNextRoadFigure();
+        }
+
         private bool HasBarricadeNear(float worldZ, float minimumSpacing)
         {
             for (int i = 0; i < hazards.Count; i++)
@@ -161,6 +170,11 @@ namespace LastPassenger
         private void Update()
         {
             if (vehicle == null || manager == null) return;
+
+            if (PrototypeInput.SkipToRoadFigurePressed)
+            {
+                ForceRoadFigure();
+            }
 
             bool runFinished = !manager.IsGameplayActive;
             if (runFinished)

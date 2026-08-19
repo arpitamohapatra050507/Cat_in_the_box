@@ -83,6 +83,7 @@ Temporary event-test shortcuts are available in both editor and standalone build
 
 - `T` — immediately request the truck-chase sequence
 - `G` — immediately show a rear-seat apparition
+- `H` — immediately place the tall road figure ahead of the car
 - `Y` — jump to the cliff-ending trigger
 
 The legacy function-key shortcuts remain available as aliases:
@@ -111,7 +112,7 @@ headlights, and tail lights. The previous tapered low-poly sedan and its
 generated image skins remain available as a last-resort fallback if the cleaned
 model cannot be loaded.
 
-The rear-seat apparition checks once every 20 seconds with a 50% chance. Its
+The rear-seat apparition checks once every 15 seconds with a 50% chance. Its
 danger meter rises from zero to three seconds while ignored. Holding `R` turns
 that same meter backwards at the same rate: looking after 2.75 seconds therefore
 takes 2.75 seconds of uninterrupted observation to clear it. The apparition,

@@ -20,6 +20,7 @@ namespace LastPassenger
         public static bool SkipToTruckPressed => Pressed(InputAction.SkipToTruck);
         public static bool SkipToJunctionPressed => Pressed(InputAction.SkipToJunction);
         public static bool SkipToAnomalyPressed => Pressed(InputAction.SkipToAnomaly);
+        public static bool SkipToRoadFigurePressed => Pressed(InputAction.SkipToRoadFigure);
         public static bool SkipToEndingPressed => Pressed(InputAction.SkipToEnding);
 
         public static bool CameraLookHeld
@@ -61,6 +62,7 @@ namespace LastPassenger
             SkipToTruck,
             SkipToJunction,
             SkipToAnomaly,
+            SkipToRoadFigure,
             SkipToEnding
         }
 
@@ -106,6 +108,7 @@ namespace LastPassenger
                 case InputAction.SkipToTruck: return keyboard.f8Key.wasPressedThisFrame || keyboard.tKey.wasPressedThisFrame;
                 case InputAction.SkipToJunction: return keyboard.f9Key.wasPressedThisFrame;
                 case InputAction.SkipToAnomaly: return keyboard.f10Key.wasPressedThisFrame || keyboard.gKey.wasPressedThisFrame;
+                case InputAction.SkipToRoadFigure: return keyboard.hKey.wasPressedThisFrame;
                 case InputAction.SkipToEnding: return keyboard.f11Key.wasPressedThisFrame || keyboard.yKey.wasPressedThisFrame;
                 default: return false;
             }
@@ -118,6 +121,7 @@ namespace LastPassenger
                 case InputAction.SkipToTruck: return Input.GetKeyDown(KeyCode.F8) || Input.GetKeyDown(KeyCode.T);
                 case InputAction.SkipToJunction: return Input.GetKeyDown(KeyCode.F9);
                 case InputAction.SkipToAnomaly: return Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.G);
+                case InputAction.SkipToRoadFigure: return Input.GetKeyDown(KeyCode.H);
                 case InputAction.SkipToEnding: return Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.Y);
                 default: return false;
             }

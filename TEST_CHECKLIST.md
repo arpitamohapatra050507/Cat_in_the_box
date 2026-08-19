@@ -42,21 +42,23 @@ Run this once in the Unity editor and once in the final Windows build.
    screen edges, apparition audio becomes louder, and the driver dies after
    about three seconds. Repeat once and verify holding `R` is the only way to
    interrupt the threat.
-11. Without using `G`, continue driving through several 20-second checks. An
-   apparition has a 50% chance on each check, so a missed interval is valid and
-   two apparitions must never overlap.
-12. Press `Y`; verify the car drives into the cliff sequence and reaches the
-   `NO ROAD BELOW` ending after the short fall.
-13. Press Enter from each ending and confirm the scene restarts cleanly.
-14. Toggle `M`; confirm the radio audio and animated display turn off and on
+11. Without using `G`, continue driving through several 15-second checks. An
+    apparition has a 50% chance on each check, so a missed interval is valid and
+    two apparitions must never overlap.
+12. Press `H`; confirm the tall black road figure appears ahead immediately,
+    remains non-solid, and vanishes when the car passes through it.
+13. Press `Y`; verify the car drives into the cliff sequence and reaches the
+    `NO ROAD BELOW` ending after the short fall.
+14. Press Enter from each ending and confirm the scene restarts cleanly.
+15. Toggle `M`; confirm the radio audio and animated display turn off and on
     while the independently mixed engine continues to follow vehicle speed.
-15. Confirm the generated dashboard is readable and the radio display aligns
+16. Confirm the generated dashboard is readable and the radio display aligns
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
     in the lower portion of the view, slope away from the camera, fill both
     lower side edges, and never cover the road horizon. Confirm the wheel has
     clean transparent edges with no black or opaque rectangular quad. Repeat
     this check in the standalone Windows build, not only Play Mode.
-16. Look right and confirm the front passenger seat has visible cushion,
+17. Look right and confirm the front passenger seat has visible cushion,
     backrest, headrest, and parallax without blocking the forward road view.
 
 ## Truck-chase pass
