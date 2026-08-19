@@ -42,9 +42,11 @@ record so judges can inspect how the temporary content was made.
   stored in `RoadAlbedo_SOURCE.md`.
 - `Assets/Resources/Forest/DarkFirBillboard.png` — generated with OpenAI Codex
   built-in image generation on 2026-08-19 by editing the existing generated fir
-  reference into a transparent, near-black background tree. Runtime code batches
-  multiple crossed cards into one distant-forest mesh per road chunk. Its exact
-  prompt and checksum are stored beside it in `DarkFirBillboard_SOURCE.md`.
+  reference into a transparent, near-black background tree. It is retained for
+  provenance but no longer loaded at runtime because its cyan rim and background
+  read too brightly in standalone builds. The distant forest now uses batched,
+  texture-free procedural silhouettes. Its exact prompt and checksum remain
+  stored beside it in `DarkFirBillboard_SOURCE.md`.
 - `Assets/Resources/Dashboard/DarkDashboardFascia.png` — generated with OpenAI
   Codex built-in image generation on 2026-08-18 and used as the in-world
   dashboard fascia. Its exact prompt is stored beside it in

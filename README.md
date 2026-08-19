@@ -151,17 +151,17 @@ The road now uses headlight-dominant night lighting rather than relying on a
 screen overlay: ambient and moon illumination are effectively black, while two
 strong focused warm spotlights reveal the lane and a short wide beam fills the
 area immediately in front of the car. Asphalt, soil, bark, and nearby foliage
-remain almost unreadable outside those beams. Distant forest cards use a
-build-safe Unlit transparent material with a very dark neutral tint; this keeps
-their cyan source artwork from glowing while the headlight-reactive procedural
-trees supply the visible foreground. The headlights are attached to the car
-and intentionally do not follow the mouse yet.
+remain almost unreadable outside those beams. The cyan distant-tree image is no
+longer loaded. The background forest is now a texture-free mesh of stacked pine
+silhouettes using a nearly black Lit material, while the detailed procedural or
+custom-prefab trees supply the visible foreground. The headlights are attached
+to the car and intentionally do not follow the mouse yet.
 
 Each recycled road chunk contains 16 near-field procedural 3D trees unless a
 serialized pine or leafless override is supplied. Behind them are 36 generated
-distant firs. Those far trees are crossed transparent
-cards combined into one mesh and one renderer per chunk, so the forest looks
-dense without creating hundreds of separate background renderers.
+distant fir silhouettes. Their crossed triangular geometry is combined into
+one mesh and one renderer per chunk, so the forest looks dense without loading
+the old cyan texture or creating hundreds of background renderers.
 
 Road messages are editable without changing C# in
 `Assets/Resources/road_events.json`. Each entry has an ID, trigger distance,
@@ -202,9 +202,10 @@ Use **File > Build Profiles**, select Windows x86-64, and include
 `Assets/Scenes/Prototype.unity`. The editor bootstrap normally configures this
 for you. The generated materials use this project's Universal Render Pipeline.
 URP Lit and Unlit are explicitly retained in Graphics Settings because runtime
-geometry resolves them by name; this prevents shader stripping from producing
-null materials in a standalone build. The controls support the Input System
-configuration.
+geometry resolves them by name. Transparent image layers use the dedicated
+`LastPassenger/TransparentTexture` shader, which is both loaded from Resources
+and explicitly retained in Graphics Settings so standalone builds cannot strip
+its alpha-blending pass. The controls support the Input System configuration.
 
 ## Scope boundaries
 

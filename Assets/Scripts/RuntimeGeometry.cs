@@ -39,7 +39,14 @@ namespace LastPassenger
             Color tint,
             bool transparent = false)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            Shader shader = transparent
+                ? Resources.Load<Shader>("Shaders/TransparentTexture")
+                : null;
+            if (shader == null && transparent)
+            {
+                shader = Shader.Find("LastPassenger/TransparentTexture");
+            }
+            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (shader == null) shader = Shader.Find("Unlit/Texture");
             if (shader == null)
             {
