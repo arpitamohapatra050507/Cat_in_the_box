@@ -38,13 +38,24 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            // The first cleaned team road/tree imports had incompatible axes in
-            // Unity. Treat those known assignments as empty so older scene
-            // configurations also return to the stable procedural fallbacks.
+            // The experimental cleaned team road had an incompatible axis in
+            // Unity. Keep its exact old assignments on the stable procedural
+            // fallback, but accept every explicitly assigned tree prefab.
             if (HasKnownBrokenRoadAxis(roadChunkPrefab)) roadChunkPrefab = null;
-            if (HasKnownBrokenTreeAxis(pineTreePrefab)) pineTreePrefab = null;
 
-            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.006f, 0.007f, 0.008f), 0.05f, 0.34f);
+            roadMaterial = RuntimeGeometry.Material(
+                "Rough generated asphalt",
+                new Color(0.28f, 0.275f, 0.27f),
+                metallic: 0f,
+                smoothness: 0.055f);
+            if (roadMaterial != null)
+            {
+                if (roadMaterial.HasProperty("_SpecularHighlights"))
+                {
+                    roadMaterial.SetFloat("_SpecularHighlights", 0f);
+                }
+                roadMaterial.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            }
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
             lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.86f, 0.86f, 0.82f), 0f, 0.12f);
@@ -250,15 +261,6 @@ namespace LastPassenger
             if (prefab == null) return false;
             return prefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase) ||
                    prefab.name.Equals("RoadTemplateTestVisual", System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool HasKnownBrokenTreeAxis(GameObject prefab)
-        {
-            if (prefab == null) return false;
-            return prefab.name.Equals(
-                       "Evergreen_Geometry_0801193826_texture",
-                       System.StringComparison.OrdinalIgnoreCase) ||
-                   prefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
         }
 
         private void BuildPineCrown(Transform tree, float height)

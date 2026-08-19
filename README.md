@@ -54,10 +54,10 @@ do not need their Traffic Car field repaired by hand.
 If that resource is unavailable, traffic falls back again to the generated
 low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
 pine, leafless-tree, and barricade fields use the generated road, generated
-trees, and generated barricade respectively. The first cleaned copies of the
-team road and evergreen imported with incompatible axes. Existing Inspector
-references to those exact assets are therefore treated as empty and safely
-fall back instead of placing sideways geometry across the camera.
+trees, and generated barricade respectively. The experimental cleaned team
+road remains blocked because of its incompatible axis. Tree overrides are not
+blocked by asset name: explicitly assigning the team's working tree prefab (or
+any later Meshy tree) always uses that prefab.
 
 All instantiated traffic overrides are first created beneath an inactive
 quarantine object, then treated as visuals before activation: inherited
@@ -185,7 +185,11 @@ used if either custom clip is missing. The apparition and truck-chase clips are
 loaded separately, allowing the radio, engine, and anomaly sounds to overlap.
 
 When no road prefab is assigned, the prototype uses its original procedural
-8-by-80 road. Its broken centre stripes now use neutral white lane paint. The
+8-by-80 road. `Assets/Resources/Road/RoadAlbedo.png` supplies a generated,
+top-down dark asphalt surface, tiled once across the width and ten times down
+each chunk. The material is non-metallic with very low smoothness, preventing
+grey aggregate and repaired patches from producing broad headlight glare. Its
+broken centre stripes remain separate neutral-white geometry. The
 experimental cleaned road remains under `Assets/Resources/Models/Road` for a
 future axis-corrected import, but it is deliberately not loaded by default.
 

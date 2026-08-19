@@ -98,9 +98,12 @@ Run this once in the Unity editor and once in the final Windows build.
 2. Leave all five prefab fields empty, enter Play Mode, and confirm the stable
    procedural 8-by-80 road, procedural pine/leafless trees, cleaned Frost
    traffic cars, and framed reflective barricades appear. No road or tree mesh
-   may lie sideways across the camera.
-3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
-   common trees while the procedural default road and leafless trees remain.
+   may lie sideways across the camera. Confirm the generated asphalt texture
+   tiles without obvious gaps and its grey details stay rough rather than
+   reflecting large white headlight patches.
+3. Assign the team's previously working pine prefab, restart Play Mode, and
+   confirm it replaces the common trees while the procedural default road and
+   leafless trees remain. Its asset name must not make the override fall back.
 4. Assign a road prefab with the correct length, restart Play Mode, and confirm
    all ordinary chunks use it, remain gap-free, and continue recycling as the
    car advances.
@@ -135,6 +138,7 @@ Run this once in the Unity editor and once in the final Windows build.
     two long headlight cones and short wide fill reveal lane paint, traffic, and
     barricades before their collision boxes reach the player. There should be a
     visible light-to-dark boundary on the asphalt rather than uniform brightness.
+    The asphalt should show fine aggregate without looking metallic or mirror-wet.
 11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
     forest of transparent fir silhouettes. Look for rectangular image edges,
     excessive brightness, gaps in the distant wall, or visible billboard pivots.
