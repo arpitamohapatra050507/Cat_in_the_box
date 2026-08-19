@@ -224,9 +224,12 @@ namespace LastPassenger
             GameObject configuredTrafficPrefab = assetConfiguration != null
                 ? assetConfiguration.TrafficCarPrefab
                 : null;
-            GameObject trafficPrefab = configuredTrafficPrefab != null
-                ? configuredTrafficPrefab
-                : defaultTrafficModel;
+            bool oldWholeSceneFrostAsset = configuredTrafficPrefab != null &&
+                configuredTrafficPrefab.name.Equals("FrostCar", StringComparison.OrdinalIgnoreCase);
+            bool useBuiltInTrafficModel = configuredTrafficPrefab == null || oldWholeSceneFrostAsset;
+            GameObject trafficPrefab = useBuiltInTrafficModel && defaultTrafficModel != null
+                ? defaultTrafficModel
+                : configuredTrafficPrefab;
 
             if (trafficPrefab != null)
             {
@@ -238,7 +241,7 @@ namespace LastPassenger
                     oncoming ? "Oncoming traffic" : "Slower traffic",
                     new Vector3(lane, 0f, z),
                     rotation);
-                if (configuredTrafficPrefab == null)
+                if (trafficPrefab == defaultTrafficModel)
                 {
                     ApplyBuiltInTrafficMaterials(root, oncoming);
                 }

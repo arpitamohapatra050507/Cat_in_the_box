@@ -47,6 +47,9 @@ clean model-only extraction at
 `Assets/Resources/Models/Traffic/FrostCarVisual.fbx`. The source racing-scene
 FBX contained its own cameras, lights, UI, effects, and control setup, so only
 its body, doors, windows, and wheel meshes are present in the runtime copy.
+An existing Inspector assignment pointing at the original asset named
+`FrostCar` is redirected to this clean copy automatically, so old local scenes
+do not need their Traffic Car field repaired by hand.
 If that resource is unavailable, traffic falls back again to the generated
 low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
 tree, and barricade fields retain their existing generated versions.
