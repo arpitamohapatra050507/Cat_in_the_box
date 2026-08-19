@@ -73,9 +73,16 @@ namespace LastPassenger
 
         public void ForceTruckChase()
         {
-            if (!CanRunGameplayAnomaly() || truckSequenceRunning || apparitionThreatActive) return;
+            if (!CanRunGameplayAnomaly() || truckSequenceRunning) return;
             truckChaseCompleted = false;
             truckSequenceRequested = true;
+        }
+
+        public void SetAmbientPacing(float checkSeconds, float chance)
+        {
+            apparitionCheckInterval = Mathf.Clamp(checkSeconds, 8f, 30f);
+            apparitionChance = Mathf.Clamp(chance, 0.25f, 0.7f);
+            apparitionCheckTimer = Mathf.Min(apparitionCheckTimer, apparitionCheckInterval);
         }
 
         private void BuildAudio()

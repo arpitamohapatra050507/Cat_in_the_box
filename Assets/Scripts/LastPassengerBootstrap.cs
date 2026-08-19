@@ -26,6 +26,7 @@ namespace LastPassenger
         {
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
+            DisableExistingLights();
             BuildEnvironment();
 
             Material cabin = RuntimeGeometry.Material("Hearse interior", new Color(0.025f, 0.028f, 0.026f), 0.1f, 0.18f);
@@ -64,6 +65,7 @@ namespace LastPassenger
             GameObject trafficObject = new GameObject("Traffic and road hazards");
             TrafficHazardManager traffic = trafficObject.AddComponent<TrafficHazardManager>();
             traffic.Configure(controller, manager, assetConfiguration);
+            manager.AttachTrafficManager(traffic);
 
             GameObject anomalyObject = new GameObject("Anomaly director");
             AnomalyDirector anomalyDirector = anomalyObject.AddComponent<AnomalyDirector>();
@@ -75,19 +77,26 @@ namespace LastPassenger
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.019f;
-            RenderSettings.fogColor = new Color(0.0001f, 0.00015f, 0.00018f);
+            RenderSettings.fogDensity = 0.027f;
+            RenderSettings.fogColor = Color.black;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.00012f, 0.00016f, 0.0002f);
+            RenderSettings.ambientLight = Color.black;
+            RenderSettings.ambientIntensity = 0f;
+            RenderSettings.reflectionIntensity = 0f;
+            RenderSettings.subtractiveShadowColor = Color.black;
             RenderSettings.skybox = null;
+        }
 
-            GameObject moonObject = new GameObject("Cold moon light");
-            Light moon = moonObject.AddComponent<Light>();
-            moon.type = LightType.Directional;
-            moon.color = new Color(0.11f, 0.16f, 0.22f);
-            moon.intensity = 0.0035f;
-            moon.shadows = LightShadows.Soft;
-            moonObject.transform.rotation = Quaternion.Euler(36f, -28f, 0f);
+        private static void DisableExistingLights()
+        {
+            // Prototype lighting is runtime-owned. Disabling scene-authored
+            // lights here prevents an accidentally saved moon or template sun
+            // from making player builds brighter than Play Mode.
+            Light[] existingLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            for (int i = 0; i < existingLights.Length; i++)
+            {
+                existingLights[i].enabled = false;
+            }
         }
 
         private static Camera BuildMainCamera(Transform vehicle)
@@ -102,8 +111,9 @@ namespace LastPassenger
             camera.fieldOfView = 72f;
             camera.nearClipPlane = 0.04f;
             camera.farClipPlane = 360f;
+            camera.allowHDR = false;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.0001f, 0.00015f, 0.0002f);
+            camera.backgroundColor = Color.black;
             cameraObject.AddComponent<AudioListener>();
             cameraObject.AddComponent<DriverCameraLook>();
             return camera;
@@ -305,10 +315,10 @@ namespace LastPassenger
 
                 Light light = lightObject.AddComponent<Light>();
                 light.type = LightType.Spot;
-                light.range = 128f;
-                light.spotAngle = 40f;
-                light.innerSpotAngle = 31f;
-                light.intensity = 46f;
+                light.range = 112f;
+                light.spotAngle = 36f;
+                light.innerSpotAngle = 27f;
+                light.intensity = 42f;
                 light.color = new Color(1f, 0.9f, 0.72f);
                 light.shadows = LightShadows.Soft;
                 light.shadowStrength = 0.86f;
@@ -321,10 +331,10 @@ namespace LastPassenger
             fillObject.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
             Light fill = fillObject.AddComponent<Light>();
             fill.type = LightType.Spot;
-            fill.range = 50f;
-            fill.spotAngle = 68f;
-            fill.innerSpotAngle = 48f;
-            fill.intensity = 13f;
+            fill.range = 34f;
+            fill.spotAngle = 54f;
+            fill.innerSpotAngle = 38f;
+            fill.intensity = 6f;
             fill.color = new Color(0.88f, 0.79f, 0.64f);
             fill.shadows = LightShadows.None;
         }

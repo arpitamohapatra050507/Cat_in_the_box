@@ -89,16 +89,16 @@ Temporary event-test shortcuts are available in both editor and standalone build
 The legacy function-key shortcuts remain available as aliases:
 
 - `F8` — immediately request the truck-chase sequence
-- `F9` — jump near the junction
+- `F9` — jump to the next anomaly checkpoint
 - `F10` — immediately show a rear-seat apparition; it no longer teleports the car
 - `F11` — jump near the ending
 
 ## Prototype flow
 
-The radio warns that "the dead keep left." At the fork, position the car in
-the left or right lane before crossing the decision line. Both routes continue
-into the full prototype run; at sustained maximum speed, the road reaches its
-cliff ending at roughly ten minutes. Slower driving naturally takes longer.
+The road is one continuous route: the unused fake fork and choice have been
+removed. Four equal-distance checkpoints at 20%, 40%, 60%, and 80% gradually
+tighten anomaly pacing. At sustained maximum speed, the cliff ending arrives
+at roughly five minutes; slower driving naturally takes longer.
 
 Ordinary road traffic appears throughout the active run. At most three
 oncoming or slower cars are present, with another spawn attempt every 7–12
@@ -112,7 +112,8 @@ headlights, and tail lights. The previous tapered low-poly sedan and its
 generated image skins remain available as a last-resort fallback if the cleaned
 model cannot be loaded.
 
-The rear-seat apparition checks once every 15 seconds with a 50% chance. Its
+The rear-seat apparition begins with a 14-second/50% roll and becomes slightly
+more frequent at later checkpoints, capped at 11 seconds/60%. Its
 danger meter rises from zero to three seconds while ignored. Holding `R` turns
 that same meter backwards at the same rate: looking after 2.75 seconds therefore
 takes 2.75 seconds of uninterrupted observation to clear it. The apparition,
@@ -121,8 +122,7 @@ before zero makes the danger climb again; reaching three seconds while not
 draining it kills the driver. Missed probability rolls do not accumulate or
 overlap later checks.
 
-Once the player has passed the junction and travelled far enough, a horn warns
-of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
+At checkpoint II, a horn warns of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
 show the truck gaining or losing ground. Its mirror image now starts larger and
 grows to 182% of the mirror height at maximum proximity, making the pursuer
 feel closer. The team-supplied
@@ -140,17 +140,15 @@ speed. At zero bars, or if the truck closes the gap, the engine dies, the truck
 slams into the screen, and broken glass frames the death menu. Surviving the
 timer fades the truck away and resumes ordinary traffic.
 
-At approximately two-minute randomized intervals, a featureless black figure
-can appear in the headlight beam. It has no collision penalty and vanishes when
-the player drives through it. It is an atmospheric fake-out, not another health
-system.
+The harmless black road figure starts at a randomized 95–120 second interval
+and can appear more often after checkpoints. It vanishes when the player drives
+through it. `Scary1` and `Scary2` are quiet checkpoint one-shots over the mix.
 
 The player's available top speed rises smoothly from 18 to 23.5 world units
 per second, beginning after the first minute and reaching its maximum around
-the nine-minute mark. Faster late-run driving makes steering and obstacle
+the five-minute finale. Faster late-run driving makes steering and obstacle
 avoidance more demanding; impacts still remove actual speed. The cliff is at
-distance 12200 so a clean high-speed run remains approximately ten minutes
-despite the increased speed range.
+distance 6000 so a clean high-speed run remains approximately five minutes.
 
 The dark-red screen border is a danger indicator, not an unexplained creature
 or separate anomaly. A short flash means the car struck the shoulder, traffic,
@@ -158,17 +156,12 @@ or a barricade. During the truck chase it becomes a pulsing proximity warning:
 the stronger and faster it pulses, the closer the truck is. The dashboard also
 shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 
-The road uses headlight-dominant night lighting: ambient and moon illumination
-are effectively black, while two strong focused warm spotlights reveal the
-lane and a short wide beam fills the area immediately in front of the car. A
-build-safe uniform darkness veil plus the radial vignette keeps the same
-exposure in standalone players without depending on a stripped shader or a
-scene-local post-processing profile. Asphalt, soil, bark, and nearby foliage
-remain almost unreadable outside those beams. The cyan distant-tree image is no
-longer loaded. The background forest is now a texture-free mesh of stacked pine
-silhouettes using a nearly black Lit material, while the detailed procedural or
-custom-prefab trees supply the visible foreground. The headlights are attached
-to the car and intentionally do not follow the mouse yet.
+The road is headlight-only: startup disables scene-authored lights, removes the
+moon, forces black ambient/reflections/fog, and disables HDR on the driving
+camera. Only the car's focused headlight spots plus its short wide near-field
+beam remain. A build-safe darkness veil and radial vignette add exposure
+control; this is not dependent on a custom darkness shader. Asphalt, soil,
+bark, and foliage are almost unreadable outside the beams.
 
 Each recycled road chunk contains 16 near-field 3D trees. Pines use the
 build-packaged reduced team model unless a serialized override is supplied;
@@ -181,6 +174,11 @@ Road messages are editable without changing C# in
 `Assets/Resources/road_events.json`. Each entry has an ID, trigger distance,
 message, color, and display duration; this is the extension point for later
 radio reports, memories, accusations, and ambiguous story fragments.
+
+Checkpoint pacing, checkpoint audio, and immediate checkpoint actions are
+editable in `Assets/Resources/anomaly_checkpoints.json`. See
+[`ANOMALY_AUTHORING.md`](ANOMALY_AUTHORING.md) for exact fields, valid actions,
+audio paths, code ownership, and test keys.
 
 Steering now rotates the vehicle and moves it along its heading instead of
 sliding it sideways. A transparent 2D wheel follows steering input in front of

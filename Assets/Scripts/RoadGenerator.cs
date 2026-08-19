@@ -22,7 +22,6 @@ namespace LastPassenger
         private Material dirtMaterial;
         private Material barkMaterial;
         private Material branchMaterial;
-        private Material reflectorMaterial;
         private Material farForestMaterial;
         private Material packagedPineMaterial;
         private bool usingPackagedPine;
@@ -57,7 +56,7 @@ namespace LastPassenger
 
             roadMaterial = RuntimeGeometry.Material(
                 "Rough generated asphalt",
-                new Color(0.28f, 0.275f, 0.27f),
+                new Color(0.105f, 0.102f, 0.1f),
                 metallic: 0f,
                 smoothness: 0.055f);
             if (roadMaterial != null)
@@ -70,14 +69,13 @@ namespace LastPassenger
             }
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
-            lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.86f, 0.86f, 0.82f), 0f, 0.12f);
-            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.0008f, 0.0011f, 0.0009f));
-            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.008f, 0.005f, 0.004f));
-            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0015f, 0.003f, 0.002f));
-            reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
+            lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.68f, 0.68f, 0.64f), 0f, 0.08f);
+            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.00025f, 0.00032f, 0.00027f));
+            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.003f, 0.002f, 0.0015f));
+            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0005f, 0.001f, 0.0007f));
             farForestMaterial = RuntimeGeometry.Material(
                 "Batched distant pine silhouettes",
-                new Color(0.0045f, 0.0055f, 0.0048f),
+                new Color(0.0015f, 0.0018f, 0.0016f),
                 metallic: 0f,
                 smoothness: 0f);
             if (farForestMaterial != null && farForestMaterial.HasProperty("_Cull"))
@@ -89,7 +87,7 @@ namespace LastPassenger
             {
                 packagedPineMaterial = RuntimeGeometry.Material(
                     "Packaged team pine night material",
-                    new Color(0.13f, 0.15f, 0.12f, 1f),
+                    new Color(0.055f, 0.064f, 0.052f, 1f),
                     metallic: 0f,
                     smoothness: 0.04f);
                 RuntimeGeometry.ApplyTexture(packagedPineMaterial, packagedPineTexture, Vector2.one);
@@ -99,8 +97,6 @@ namespace LastPassenger
             {
                 chunks.Add(CreateChunk(i, i * chunkLength));
             }
-
-            BuildJunction(650f);
         }
 
         private Transform CreateChunk(int index, float z)
@@ -322,42 +318,6 @@ namespace LastPassenger
                     new Vector3(width, crownHeight, width),
                     branchMaterial);
             }
-        }
-
-        private void BuildJunction(float z)
-        {
-            GameObject junction = RuntimeGeometry.Empty("Junction decision gate", transform, new Vector3(0f, 0f, z));
-
-            RuntimeGeometry.Primitive("Left gate post", PrimitiveType.Cube, junction.transform,
-                new Vector3(-2.1f, 0.8f, 0f), new Vector3(0.18f, 1.6f, 0.18f), reflectorMaterial);
-            RuntimeGeometry.Primitive("Right gate post", PrimitiveType.Cube, junction.transform,
-                new Vector3(2.1f, 0.8f, 0f), new Vector3(0.18f, 1.6f, 0.18f), reflectorMaterial);
-
-            BuildArrowSign(junction.transform, -2.3f, "LEFT — CREMATORIUM", -1f);
-            BuildArrowSign(junction.transform, 2.3f, "RIGHT — OLD QUARRY", 1f);
-
-            for (int i = 0; i < 10; i++)
-            {
-                float t = i / 9f;
-                float zOffset = 8f + t * 42f;
-                float spread = t * 4.2f;
-                RuntimeGeometry.Primitive("Left fork reflector", PrimitiveType.Cube, junction.transform,
-                    new Vector3(-spread, 0.04f, zOffset), new Vector3(0.08f, 0.025f, 3f), lineMaterial,
-                    new Vector3(0f, -8f, 0f));
-                RuntimeGeometry.Primitive("Right fork reflector", PrimitiveType.Cube, junction.transform,
-                    new Vector3(spread, 0.04f, zOffset), new Vector3(0.08f, 0.025f, 3f), lineMaterial,
-                    new Vector3(0f, 8f, 0f));
-            }
-        }
-
-        private void BuildArrowSign(Transform parent, float x, string label, float direction)
-        {
-            GameObject sign = RuntimeGeometry.Empty(label, parent, new Vector3(x, 0f, -8f));
-            RuntimeGeometry.Primitive("Post", PrimitiveType.Cube, sign.transform,
-                new Vector3(0f, 1.25f, 0f), new Vector3(0.12f, 2.5f, 0.12f), barkMaterial);
-            RuntimeGeometry.Primitive(label, PrimitiveType.Cube, sign.transform,
-                new Vector3(0f, 2.25f, 0f), new Vector3(1.45f, 0.58f, 0.12f), lineMaterial,
-                new Vector3(0f, direction * 7f, 0f));
         }
 
         private void Update()

@@ -9,17 +9,10 @@
     },
     {
       "id": "radio-clue",
-      "triggerDistance": 430.0,
-      "message": "RADIO: ...the dead always keep to the left...",
+      "triggerDistance": 700.0,
+      "message": "RADIO: ...the vehicle has not stopped since midnight...",
       "messageColor": { "r": 0.62, "g": 0.78, "b": 0.68, "a": 1.0 },
-      "displaySeconds": 8.0
-    },
-    {
-      "id": "junction",
-      "triggerDistance": 540.0,
-      "message": "FORK AHEAD — choose a lane before the reflective posts.",
-      "messageColor": { "r": 0.9, "g": 0.75, "b": 0.42, "a": 1.0 },
-      "displaySeconds": 8.0
+      "displaySeconds": 7.0
     }
   ]
 }

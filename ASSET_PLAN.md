@@ -62,7 +62,7 @@ compatible importer.
 Unity can turn two models into dozens of apparent variants by changing scale,
 Y rotation, spacing, tint, and the number of dead trees in each road chunk.
 Start around 80% living pine and 20% leafless pine, with more dead trees after
-the junction or during anomalies.
+later checkpoints or during anomalies.
 
 ## Asset batch 3 — distant forest
 

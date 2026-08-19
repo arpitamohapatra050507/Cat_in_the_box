@@ -9,7 +9,6 @@ namespace LastPassenger
         public enum RunState
         {
             Driving,
-            JunctionChosen,
             CliffEnding,
             Success,
             Failure
@@ -18,17 +17,21 @@ namespace LastPassenger
         public static PrototypeGameManager Instance { get; private set; }
 
         private readonly List<RoadEventDefinition> roadEvents = new List<RoadEventDefinition>();
+        private readonly List<AnomalyCheckpointDefinition> anomalyCheckpoints =
+            new List<AnomalyCheckpointDefinition>();
         private readonly HashSet<string> triggeredEvents = new HashSet<string>();
 
         private VehicleController vehicle;
         private MirrorSystem mirror;
         private AnomalyDirector anomalyDirector;
+        private TrafficHazardManager trafficManager;
         private AudioSource windSource;
         private AudioSource radioSource;
         private AudioSource stingSource;
+        private AudioSource checkpointScareSource;
         private RunState state = RunState.Driving;
-        private bool junctionResolved;
-        private bool choseLeft;
+        private int nextCheckpointIndex;
+        private int checkpointLevel;
         private bool radioEnabled = true;
         private string message = string.Empty;
         private Color messageColor = Color.white;
@@ -46,25 +49,24 @@ namespace LastPassenger
         private Texture2D cliffEndingTexture;
         private float cliffEndingStartedAt;
 
-        private const float JunctionWarningDistance = 540f;
-        private const float JunctionDistance = 650f;
-        private const float FinishDistance = 12200f;
+        private const float FinishDistance = 6000f;
         private const float CliffEndingDuration = 3.5f;
 
         public RunState State => state;
         public bool RadioEnabled => radioEnabled;
-        public bool IsGameplayActive => state == RunState.Driving || state == RunState.JunctionChosen;
+        public bool IsGameplayActive => state == RunState.Driving;
         public float ThreatLevel => threatLevel;
+        public int CheckpointLevel => checkpointLevel;
         public bool AmbientAnomalyActive => mirror != null && mirror.ApparitionVisible;
         public bool TruckChaseAllowed =>
-            IsGameplayActive && junctionResolved && vehicle != null &&
-            vehicle.Distance >= 780f && Time.timeSinceLevelLoad >= 45f;
+            IsGameplayActive && checkpointLevel >= 2 && vehicle != null;
 
         public void Configure(VehicleController controller, MirrorSystem mirrorSystem)
         {
             vehicle = controller;
             mirror = mirrorSystem;
             LoadRoadEvents();
+            LoadAnomalyCheckpoints();
             BuildAudio();
             BuildScreenAssets();
             ShowMessage("W/S drive  •  A/D steer  •  Hold RMB to look  •  Hold R for mirror", Color.white, 8f);
@@ -73,6 +75,11 @@ namespace LastPassenger
         public void AttachAnomalyDirector(AnomalyDirector director)
         {
             anomalyDirector = director;
+        }
+
+        public void AttachTrafficManager(TrafficHazardManager manager)
+        {
+            trafficManager = manager;
         }
 
         private void Awake()
@@ -92,10 +99,55 @@ namespace LastPassenger
             if (roadEvents.Count > 0) return;
             roadEvents.Add(new RoadEventDefinition("intro", 10f,
                 "The quarry closes before dawn. Keep the cargo out of sight.", new Color(0.75f, 0.78f, 0.72f), 7f));
-            roadEvents.Add(new RoadEventDefinition("radio-clue", 430f,
-                "RADIO: ...the dead always keep to the left...", new Color(0.62f, 0.78f, 0.68f), 8f));
-            roadEvents.Add(new RoadEventDefinition("junction", JunctionWarningDistance,
-                "FORK AHEAD — choose a lane before the reflective posts.", new Color(0.9f, 0.75f, 0.42f), 8f));
+            roadEvents.Add(new RoadEventDefinition("radio-clue", 700f,
+                "RADIO: ...the vehicle has not stopped since midnight...", new Color(0.62f, 0.78f, 0.68f), 7f));
+        }
+
+        private void LoadAnomalyCheckpoints()
+        {
+            TextAsset configuration = Resources.Load<TextAsset>("anomaly_checkpoints");
+            if (configuration != null)
+            {
+                AnomalyCheckpointCollection parsed =
+                    JsonUtility.FromJson<AnomalyCheckpointCollection>(configuration.text);
+                if (parsed != null && parsed.checkpoints != null)
+                {
+                    anomalyCheckpoints.AddRange(parsed.checkpoints);
+                }
+            }
+
+            anomalyCheckpoints.RemoveAll(checkpoint => checkpoint == null);
+            anomalyCheckpoints.Sort((left, right) => left.progress.CompareTo(right.progress));
+            if (anomalyCheckpoints.Count > 0) return;
+
+            anomalyCheckpoints.Add(CreateFallbackCheckpoint("checkpoint-1", 0.2f, 14f, 0.5f, 95f, 120f, "roadFigure"));
+            anomalyCheckpoints.Add(CreateFallbackCheckpoint("checkpoint-2", 0.4f, 13f, 0.52f, 85f, 110f, "truck"));
+            anomalyCheckpoints.Add(CreateFallbackCheckpoint("checkpoint-3", 0.6f, 12f, 0.56f, 75f, 100f, "roadFigure"));
+            anomalyCheckpoints.Add(CreateFallbackCheckpoint("checkpoint-4", 0.8f, 11f, 0.6f, 65f, 90f, "apparition"));
+        }
+
+        private static AnomalyCheckpointDefinition CreateFallbackCheckpoint(
+            string id,
+            float progress,
+            float apparitionSeconds,
+            float apparitionChance,
+            float figureMinimum,
+            float figureMaximum,
+            string action)
+        {
+            return new AnomalyCheckpointDefinition
+            {
+                id = id,
+                progress = progress,
+                message = id.ToUpperInvariant().Replace('-', ' '),
+                messageColor = new Color(0.78f, 0.62f, 0.55f),
+                displaySeconds = 4f,
+                apparitionCheckSeconds = apparitionSeconds,
+                apparitionChance = apparitionChance,
+                roadFigureMinimumSeconds = figureMinimum,
+                roadFigureMaximumSeconds = figureMaximum,
+                action = action
+            };
         }
 
         private void BuildAudio()
@@ -117,6 +169,11 @@ namespace LastPassenger
             stingSource = gameObject.AddComponent<AudioSource>();
             stingSource.clip = ProceduralAudio.HorrorSting();
             stingSource.volume = 0.55f;
+
+            checkpointScareSource = gameObject.AddComponent<AudioSource>();
+            checkpointScareSource.playOnAwake = false;
+            checkpointScareSource.loop = false;
+            checkpointScareSource.spatialBlend = 0f;
         }
 
         private void BuildScreenAssets()
@@ -153,8 +210,8 @@ namespace LastPassenger
             }
 
             ProcessRoadEvents();
-            if (!junctionResolved && vehicle.Distance >= JunctionDistance) ResolveJunction();
-            if (junctionResolved && vehicle.Distance >= FinishDistance) BeginCliffEnding();
+            ProcessAnomalyCheckpoints();
+            if (vehicle.Distance >= FinishDistance) BeginCliffEnding();
 
             impactFlash = Mathf.MoveTowards(impactFlash, 0f, Time.deltaTime * 0.9f);
             float dangerPulse = threatLevel > 0f
@@ -179,22 +236,60 @@ namespace LastPassenger
             }
         }
 
-        private void ResolveJunction()
+        private void ProcessAnomalyCheckpoints()
         {
-            junctionResolved = true;
-            choseLeft = vehicle.LanePosition < 0f;
-            state = RunState.JunctionChosen;
+            while (nextCheckpointIndex < anomalyCheckpoints.Count)
+            {
+                AnomalyCheckpointDefinition checkpoint = anomalyCheckpoints[nextCheckpointIndex];
+                float triggerDistance = FinishDistance * Mathf.Clamp(checkpoint.progress, 0.05f, 0.95f);
+                if (vehicle.Distance < triggerDistance) return;
 
-            if (choseLeft)
-            {
-                ShowMessage("LEFT ROUTE SELECTED — the radio goes silent.", new Color(0.66f, 0.78f, 0.67f), 6f);
-                radioSource.volume = 0.01f;
+                nextCheckpointIndex++;
+                checkpointLevel = nextCheckpointIndex;
+                TriggerCheckpoint(checkpoint);
             }
-            else
+        }
+
+        private void TriggerCheckpoint(AnomalyCheckpointDefinition checkpoint)
+        {
+            anomalyDirector?.SetAmbientPacing(
+                checkpoint.apparitionCheckSeconds,
+                checkpoint.apparitionChance);
+            trafficManager?.SetRoadFigurePacing(
+                checkpoint.roadFigureMinimumSeconds,
+                checkpoint.roadFigureMaximumSeconds);
+
+            if (!string.IsNullOrWhiteSpace(checkpoint.message))
             {
-                ShowMessage("RIGHT ROUTE SELECTED — something knocks behind you.", new Color(1f, 0.48f, 0.35f), 6f);
-                radioSource.pitch = 0.58f;
-                radioSource.volume = 0.04f;
+                ShowMessage(
+                    checkpoint.message,
+                    checkpoint.messageColor,
+                    Mathf.Max(1f, checkpoint.displaySeconds));
+            }
+
+            if (!string.IsNullOrWhiteSpace(checkpoint.audioResource))
+            {
+                AudioClip clip = Resources.Load<AudioClip>(checkpoint.audioResource);
+                if (clip != null && checkpointScareSource != null)
+                {
+                    checkpointScareSource.PlayOneShot(clip, Mathf.Clamp01(checkpoint.audioVolume));
+                }
+            }
+
+            string action = string.IsNullOrWhiteSpace(checkpoint.action)
+                ? "none"
+                : checkpoint.action.Trim().ToLowerInvariant();
+            switch (action)
+            {
+                case "roadfigure":
+                    trafficManager?.ForceRoadFigure();
+                    break;
+                case "apparition":
+                    anomalyDirector?.ForceApparition();
+                    break;
+                case "truck":
+                    anomalyDirector?.ForceTruckChase();
+                    break;
             }
         }
 
@@ -335,17 +430,19 @@ namespace LastPassenger
         private void EventTestShortcuts()
         {
             if (PrototypeInput.SkipToTruckPressed) anomalyDirector?.ForceTruckChase();
-            if (PrototypeInput.SkipToJunctionPressed) vehicle.TeleportForward(JunctionWarningDistance);
+            if (PrototypeInput.SkipToCheckpointPressed) TeleportToNextCheckpoint();
             if (PrototypeInput.SkipToAnomalyPressed) anomalyDirector?.ForceApparition();
             if (PrototypeInput.SkipToEndingPressed)
             {
-                if (!junctionResolved)
-                {
-                    vehicle.TeleportForward(JunctionDistance);
-                    ResolveJunction();
-                }
                 vehicle.TeleportForward(FinishDistance);
             }
+        }
+
+        private void TeleportToNextCheckpoint()
+        {
+            if (nextCheckpointIndex >= anomalyCheckpoints.Count) return;
+            float progress = Mathf.Clamp(anomalyCheckpoints[nextCheckpointIndex].progress, 0.05f, 0.95f);
+            vehicle.TeleportForward(FinishDistance * progress);
         }
 
         private void OnGUI()
@@ -399,17 +496,6 @@ namespace LastPassenger
                     "DANGER BEHIND — KEEP SPEED", dangerStyle);
             }
 
-            if (!junctionResolved && vehicle.Distance >= JunctionWarningDistance)
-            {
-                GUIStyle forkStyle = new GUIStyle(style)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 19,
-                    normal = { textColor = new Color(0.95f, 0.76f, 0.35f) }
-                };
-                GUI.Label(new Rect(Screen.width * 0.3f, Screen.height * 0.64f, Screen.width * 0.4f, 30f),
-                    vehicle.LanePosition < 0f ? "SELECTING LEFT" : "SELECTING RIGHT", forkStyle);
-            }
         }
 
         private void DrawChaseHealth()
@@ -445,7 +531,7 @@ namespace LastPassenger
             // scene-local post-processing profile. The radial pass below then
             // closes down peripheral visibility while headlights retain the
             // brightest values in the centre of the road.
-            GUI.color = new Color(0f, 0.003f, 0.006f, 0.28f);
+            GUI.color = new Color(0f, 0.002f, 0.004f, 0.4f);
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
 
             GUI.color = new Color(1f, 1f, 1f, 0.94f);

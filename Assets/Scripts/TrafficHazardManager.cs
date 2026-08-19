@@ -46,9 +46,10 @@ namespace LastPassenger
         private GameObject defaultTrafficModel;
         private float nextTrafficSpawnTime;
         private float nextRoadFigureTime;
+        private float roadFigureMinimumSeconds = 105f;
+        private float roadFigureMaximumSeconds = 135f;
         private bool chaseActive;
         private bool finalStateCleared;
-        private bool junctionQuietActive;
         private int lastBarricadeLaneIndex = -1;
 
         private Material carBodyMaterial;
@@ -80,7 +81,6 @@ namespace LastPassenger
             defaultTrafficModel = Resources.Load<GameObject>("Models/Traffic/FrostCarVisual");
             chaseActive = false;
             finalStateCleared = false;
-            junctionQuietActive = false;
             lastBarricadeLaneIndex = -1;
             ScheduleNextTrafficSpawn();
             ScheduleNextRoadFigure();
@@ -153,6 +153,23 @@ namespace LastPassenger
             ScheduleNextRoadFigure();
         }
 
+        public void SetRoadFigurePacing(float minimumSeconds, float maximumSeconds)
+        {
+            roadFigureMinimumSeconds = Mathf.Clamp(
+                Mathf.Min(minimumSeconds, maximumSeconds),
+                45f,
+                180f);
+            roadFigureMaximumSeconds = Mathf.Clamp(
+                Mathf.Max(minimumSeconds, maximumSeconds),
+                roadFigureMinimumSeconds,
+                210f);
+            nextRoadFigureTime = Mathf.Min(
+                nextRoadFigureTime,
+                Time.time + UnityEngine.Random.Range(
+                    roadFigureMinimumSeconds,
+                    roadFigureMaximumSeconds));
+        }
+
         private bool HasBarricadeNear(float worldZ, float minimumSpacing)
         {
             for (int i = 0; i < hazards.Count; i++)
@@ -188,18 +205,7 @@ namespace LastPassenger
             }
 
             finalStateCleared = false;
-            bool junctionQuiet = vehicle.Distance >= 500f && vehicle.Distance <= 720f;
-            if (junctionQuiet && !junctionQuietActive)
-            {
-                ClearHazards(HazardKind.OncomingCar, HazardKind.SlowerCar, HazardKind.RoadFigure);
-            }
-            else if (!junctionQuiet && junctionQuietActive)
-            {
-                ScheduleNextTrafficSpawn();
-            }
-            junctionQuietActive = junctionQuiet;
-
-            if (!chaseActive && !junctionQuiet && Time.time >= nextTrafficSpawnTime)
+            if (!chaseActive && Time.time >= nextTrafficSpawnTime)
             {
                 if (CountOrdinaryTraffic() < MaximumOrdinaryTraffic)
                 {
@@ -208,7 +214,7 @@ namespace LastPassenger
                 ScheduleNextTrafficSpawn();
             }
 
-            if (!chaseActive && !junctionQuiet && Time.time >= nextRoadFigureTime)
+            if (!chaseActive && Time.time >= nextRoadFigureTime)
             {
                 SpawnRoadFigure();
                 ScheduleNextRoadFigure();
@@ -675,7 +681,9 @@ namespace LastPassenger
 
         private void ScheduleNextRoadFigure()
         {
-            nextRoadFigureTime = Time.time + UnityEngine.Random.Range(105f, 135f);
+            nextRoadFigureTime = Time.time + UnityEngine.Random.Range(
+                roadFigureMinimumSeconds,
+                roadFigureMaximumSeconds);
         }
 
         private void ClearHazards(params HazardKind[] kinds)

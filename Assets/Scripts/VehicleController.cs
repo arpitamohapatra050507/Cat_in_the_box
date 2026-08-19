@@ -8,7 +8,7 @@ namespace LastPassenger
         [SerializeField] private float maximumSpeed = 18f;
         [SerializeField] private float lateRunMaximumSpeed = 23.5f;
         [SerializeField] private float speedRampStartsAfter = 60f;
-        [SerializeField] private float speedRampDuration = 480f;
+        [SerializeField] private float speedRampDuration = 240f;
         [SerializeField] private float acceleration = 3.4f;
         [SerializeField] private float braking = 7f;
         [SerializeField] private float naturalDrag = 0.8f;

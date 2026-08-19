@@ -1,0 +1,60 @@
+{
+  "checkpoints": [
+    {
+      "id": "checkpoint-1",
+      "progress": 0.2,
+      "message": "CHECKPOINT I — Something crosses the headlights without casting a shadow.",
+      "messageColor": { "r": 0.72, "g": 0.76, "b": 0.72, "a": 1.0 },
+      "displaySeconds": 5.0,
+      "audioResource": "Audio/Anomalies/Scary1",
+      "audioVolume": 0.22,
+      "apparitionCheckSeconds": 14.0,
+      "apparitionChance": 0.5,
+      "roadFigureMinimumSeconds": 95.0,
+      "roadFigureMaximumSeconds": 120.0,
+      "action": "roadFigure"
+    },
+    {
+      "id": "checkpoint-2",
+      "progress": 0.4,
+      "message": "CHECKPOINT II — Headlights gather in the mirror.",
+      "messageColor": { "r": 0.88, "g": 0.62, "b": 0.42, "a": 1.0 },
+      "displaySeconds": 5.0,
+      "audioResource": "Audio/Anomalies/Scary2",
+      "audioVolume": 0.3,
+      "apparitionCheckSeconds": 13.0,
+      "apparitionChance": 0.52,
+      "roadFigureMinimumSeconds": 85.0,
+      "roadFigureMaximumSeconds": 110.0,
+      "action": "truck"
+    },
+    {
+      "id": "checkpoint-3",
+      "progress": 0.6,
+      "message": "CHECKPOINT III — The passenger-side lock clicks by itself.",
+      "messageColor": { "r": 0.78, "g": 0.58, "b": 0.52, "a": 1.0 },
+      "displaySeconds": 5.0,
+      "audioResource": "Audio/Anomalies/Scary1",
+      "audioVolume": 0.24,
+      "apparitionCheckSeconds": 12.0,
+      "apparitionChance": 0.56,
+      "roadFigureMinimumSeconds": 75.0,
+      "roadFigureMaximumSeconds": 100.0,
+      "action": "roadFigure"
+    },
+    {
+      "id": "checkpoint-4",
+      "progress": 0.8,
+      "message": "CHECKPOINT IV — The road has stopped counting miles.",
+      "messageColor": { "r": 0.9, "g": 0.42, "b": 0.38, "a": 1.0 },
+      "displaySeconds": 5.0,
+      "audioResource": "Audio/Anomalies/Scary2",
+      "audioVolume": 0.32,
+      "apparitionCheckSeconds": 11.0,
+      "apparitionChance": 0.6,
+      "roadFigureMinimumSeconds": 65.0,
+      "roadFigureMaximumSeconds": 90.0,
+      "action": "apparition"
+    }
+  ]
+}

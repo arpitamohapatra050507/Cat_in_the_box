@@ -25,7 +25,8 @@ Run this once in the Unity editor and once in the final Windows build.
 7. Intentionally hit one traffic car. Confirm the impact sound and red border
    flash, then an immediate `HEAD-ON` failure with a broken-glass overlay.
    Restart before continuing.
-8. Press `F9`; verify the fork prompt appears and select the left lane.
+8. Press `F9`; verify the next checkpoint fires once. There must be no fork
+   props, route-selection prompt, or road split.
 9. Before `G`, hold `R` and confirm the fixed generated empty-backseat image
    fills the mirror with no live car geometry or white figure visible. Press
    `G`, hold `R` again, and verify the grainy white passenger appears and
@@ -124,14 +125,13 @@ Run this once in the Unity editor and once in the final Windows build.
 
 ## Full pacing pass
 
-1. Start without debug shortcuts and complete either route.
-2. Record total completion time; target roughly ten minutes at sustained full
+1. Start without debug shortcuts and complete the continuous route.
+2. Record total completion time; target roughly five minutes at sustained full
    speed, with slower runs taking longer.
-3. Confirm the clue "the dead always keep to the left" appears before the fork.
-4. Confirm the junction has no road gaps and the repeating chunks never expose empty space.
-5. Confirm the truck chase triggers naturally only after the junction, after
-   reaching roughly 780 distance units, and after at least 45 seconds in the
-   level. Complete it at full throttle without debug shortcuts.
+3. Confirm four checkpoints occur at about 20%, 40%, 60%, and 80% of the road.
+4. Confirm there are no fork props, route prompts, or gaps in repeating chunks.
+5. Confirm the truck chase triggers naturally at checkpoint II. Complete it at
+   full throttle without debug shortcuts.
 6. Confirm the mirror remains readable at the intended build resolution and
    the apparition's transparent edges do not show a rectangular background.
 7. Confirm ordinary traffic and chase barricades do not visibly float, overlap
@@ -153,14 +153,13 @@ Run this once in the Unity editor and once in the final Windows build.
 12. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
     can appear around a randomized two-minute interval and vanishes harmlessly
     when driven through.
-13. Complete the run and confirm both junction choices can reach the cliff,
-    that the road-to-cliff transition plays once, and that Enter restarts after
+13. Complete the run and confirm the road-to-cliff transition plays once and Enter restarts after
     `NO ROAD BELOW`.
 14. During a full run, confirm the attainable speed begins near 130 km/h,
     starts increasing after about one minute, reaches roughly 169 km/h by the
     late run, and makes
     steering harder without causing sudden speed jumps. A clean run should
-    still reach the cliff at roughly ten minutes.
+    still reach the cliff at roughly five minutes.
 
 ## Submission pass
 

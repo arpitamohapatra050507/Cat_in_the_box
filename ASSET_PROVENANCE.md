@@ -128,6 +128,11 @@ record so judges can inspect how the temporary content was made.
   details are stored in `TruckChase_SOURCE.md`; confirm the original
   creator/license before final submission. This source is unusually loud, so
   runtime playback must remain strongly attenuated.
+- `Assets/Resources/Audio/Anomalies/Scary1.mp3` and `Scary2.mp3` — copied from
+  the team-supplied `sfx/scary_noises/` folder in commit `62bcb42` on
+  2026-08-19 and used as restrained checkpoint stings. Their format, measured
+  levels, checksums, and source status are stored in `Scary1_SOURCE.md` and
+  `Scary2_SOURCE.md`; confirm the original creator/license before submission.
 
 ## Team-created or supplied assets
 
