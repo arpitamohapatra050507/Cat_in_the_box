@@ -30,6 +30,15 @@ namespace LastPassenger
 
         public static Material TexturedMaterial(string name, Texture texture, bool transparent = false)
         {
+            return TexturedMaterial(name, texture, Color.white, transparent);
+        }
+
+        public static Material TexturedMaterial(
+            string name,
+            Texture texture,
+            Color tint,
+            bool transparent = false)
+        {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (shader == null) shader = Shader.Find("Unlit/Texture");
             if (shader == null)
@@ -37,51 +46,10 @@ namespace LastPassenger
                 Debug.LogError("The runtime Unlit shader is missing. Keep URP/Unlit in Graphics Settings > Always Included Shaders.");
                 return null;
             }
-            Material material = new Material(shader) { name = name, color = Color.white, mainTexture = texture };
-
-            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
-            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", Color.white);
-
-            if (transparent)
-            {
-                material.SetOverrideTag("RenderType", "Transparent");
-                if (material.HasProperty("_Surface")) material.SetFloat("_Surface", 1f);
-                if (material.HasProperty("_Blend")) material.SetFloat("_Blend", 0f);
-                if (material.HasProperty("_SrcBlend"))
-                {
-                    material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                }
-                if (material.HasProperty("_DstBlend"))
-                {
-                    material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                }
-                if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 0f);
-                if (material.HasProperty("_Cull")) material.SetFloat("_Cull", 0f);
-                material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            }
-
-            return material;
-        }
-
-        public static Material TexturedLitMaterial(
-            string name,
-            Texture texture,
-            Color tint,
-            bool transparent = false)
-        {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null)
-            {
-                Debug.LogError("The runtime Lit shader is missing. Keep URP/Lit in Graphics Settings > Always Included Shaders.");
-                return null;
-            }
-
             Material material = new Material(shader) { name = name, color = tint, mainTexture = texture };
+
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", tint);
-            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.08f);
 
             if (transparent)
             {

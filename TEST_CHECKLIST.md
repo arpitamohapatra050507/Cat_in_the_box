@@ -95,11 +95,12 @@ Run this once in the Unity editor and once in the final Windows build.
 1. Use **Tools > The Last Passenger > Select Prefab Overrides** and confirm the
    scene configuration object exposes Road Chunk, Pine Tree, Leafless Tree,
    Traffic Car, Barricade, and Road Chunk Length fields.
-2. Leave all five prefab fields empty, enter Play Mode, and confirm the cleaned
-   8-by-80 team road, optimized team evergreen, generated leafless trees,
-   cleaned Frost traffic cars, and framed reflective barricades appear.
+2. Leave all five prefab fields empty, enter Play Mode, and confirm the stable
+   procedural 8-by-80 road, procedural pine/leafless trees, cleaned Frost
+   traffic cars, and framed reflective barricades appear. No road or tree mesh
+   may lie sideways across the camera.
 3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
-   common trees while the cleaned default road and generated leafless trees remain.
+   common trees while the procedural default road and leafless trees remain.
 4. Assign a road prefab with the correct length, restart Play Mode, and confirm
    all ordinary chunks use it, remain gap-free, and continue recycling as the
    car advances.
@@ -108,9 +109,9 @@ Run this once in the Unity editor and once in the final Windows build.
    works even if the prefab contains colliders or rigidbodies.
 6. Assign a barricade prefab, press `F8`, and confirm spawned chase obstacles
    use it and are grounded correctly.
-7. Remove the prefab assignments and confirm the cleaned default road,
-   optimized evergreen, Frost traffic model, and remaining procedural/image
-   fallbacks return independently.
+7. Remove the prefab assignments and confirm the procedural road and trees,
+   Frost traffic model, and remaining procedural/image fallbacks return
+   independently.
 8. Use **Rebuild Prototype Scene** and confirm assigned overrides are preserved.
 
 ## Full pacing pass
@@ -137,8 +138,8 @@ Run this once in the Unity editor and once in the final Windows build.
 11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
     forest of transparent fir silhouettes. Look for rectangular image edges,
     excessive brightness, gaps in the distant wall, or visible billboard pivots.
-    The far cards must be nearly black outside the headlights rather than
-    globally glowing blue-green.
+    The far cards must be neutral near-black rather than globally glowing cyan
+    or blue-green.
 12. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
     can appear around a randomized two-minute interval and vanishes harmlessly
     when driven through.

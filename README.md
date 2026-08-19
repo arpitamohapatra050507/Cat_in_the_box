@@ -28,11 +28,10 @@ scene. Its Inspector contains these optional serialized fields:
 - **Road Chunk Length** — distance between repeated road-prefab instances;
   leave it at `80` unless the custom chunk has a different length.
 
-Each field falls back independently. With no assignments, the road uses the
-cleaned, normalized team road and pine slots use the optimized team evergreen;
-leafless trees and barricades retain their procedural fallbacks. Assigning only
-a Meshy fir replaces those default evergreens without affecting anything else.
-Custom trees are automatically scaled to the randomized target height,
+Each field falls back independently. With no assignments, the road and both
+tree types use the stable procedural versions. Assigning only a Meshy fir
+replaces the procedural pines without affecting anything else. Custom trees
+are automatically scaled to the randomized target height,
 centered, and placed on the ground, so arbitrary Meshy export scale is fine.
 
 A road prefab's root must represent the beginning of the chunk at local
@@ -54,11 +53,11 @@ An existing Inspector assignment pointing at the original asset named
 do not need their Traffic Car field repaired by hand.
 If that resource is unavailable, traffic falls back again to the generated
 low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
-pine, leafless-tree, and barricade fields use the cleaned team road, optimized
-evergreen, generated bare tree, and generated barricade respectively. Existing
-Inspector references named `RoadTemplate` or `Evergreen...` are redirected to
-the cleaned runtime copies so old scene assignments cannot reintroduce the
-oversized roadside scene or 145,000-polygon source tree.
+pine, leafless-tree, and barricade fields use the generated road, generated
+trees, and generated barricade respectively. The first cleaned copies of the
+team road and evergreen imported with incompatible axes. Existing Inspector
+references to those exact assets are therefore treated as empty and safely
+fall back instead of placing sideways geometry across the camera.
 
 All instantiated traffic overrides are first created beneath an inactive
 quarantine object, then treated as visuals before activation: inherited
@@ -151,16 +150,16 @@ shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 The road now uses headlight-dominant night lighting rather than relying on a
 screen overlay: ambient and moon illumination are effectively black, while two
 strong focused warm spotlights reveal the lane and a short wide beam fills the
-area immediately in front of the car. Asphalt, soil, bark, and foliage remain
-almost unreadable outside those beams. Distant forest cards use a Lit material,
-so they no longer glow cyan from an Unlit shader and respond to the same night
-lighting. The headlights are attached to the car and intentionally do not
-follow the mouse yet.
+area immediately in front of the car. Asphalt, soil, bark, and nearby foliage
+remain almost unreadable outside those beams. Distant forest cards use a
+build-safe Unlit transparent material with a very dark neutral tint; this keeps
+their cyan source artwork from glowing while the headlight-reactive procedural
+trees supply the visible foreground. The headlights are attached to the car
+and intentionally do not follow the mouse yet.
 
-Each recycled road chunk contains 16 near-field 3D trees. The default pine is a
-2,892-polygon optimized copy of the team's evergreen source; serialized pine or
-leafless overrides still take priority, with procedural geometry as the final
-fallback. Behind them are 36 generated distant firs. Those far trees are crossed transparent
+Each recycled road chunk contains 16 near-field procedural 3D trees unless a
+serialized pine or leafless override is supplied. Behind them are 36 generated
+distant firs. Those far trees are crossed transparent
 cards combined into one mesh and one renderer per chunk, so the forest looks
 dense without creating hundreds of separate background renderers.
 
@@ -185,12 +184,10 @@ at full speed, and returns to silence when the car stops. Procedural audio is
 used if either custom clip is missing. The apparition and truck-chase clips are
 loaded separately, allowing the radio, engine, and anomaly sounds to overlap.
 
-When no road prefab is assigned, the prototype loads
-`Assets/Resources/Models/Road/RoadTemplateTestVisual.fbx`: a cleaned copy of the
-team road normalized to exactly 8 by 80 world units. Its material slots are
-remapped at runtime to the prototype's dark asphalt, lane paint, and rail
-materials, so the missing legacy `Color_Grid.png` is not required. Procedural
-road geometry remains the final fallback if that resource cannot load.
+When no road prefab is assigned, the prototype uses its original procedural
+8-by-80 road. Its broken centre stripes now use neutral white lane paint. The
+experimental cleaned road remains under `Assets/Resources/Models/Road` for a
+future axis-corrected import, but it is deliberately not loaded by default.
 
 The production asset workflow and first three generation batches are described
 in `ASSET_PLAN.md`.

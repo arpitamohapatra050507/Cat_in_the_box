@@ -16,10 +16,6 @@ namespace LastPassenger
         private GameObject roadChunkPrefab;
         private GameObject pineTreePrefab;
         private GameObject leaflessTreePrefab;
-        private GameObject defaultRoadChunkPrefab;
-        private GameObject defaultPineTreePrefab;
-        private bool usingDefaultRoad;
-        private bool usingDefaultPine;
         private float chunkLength = DefaultChunkLength;
         private Material roadMaterial;
         private Material lineMaterial;
@@ -28,8 +24,6 @@ namespace LastPassenger
         private Material branchMaterial;
         private Material reflectorMaterial;
         private Material farForestMaterial;
-        private Material railingMaterial;
-        private Material defaultPineMaterial;
 
         public void Build(
             Transform vehicleTransform,
@@ -44,43 +38,30 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            defaultRoadChunkPrefab = Resources.Load<GameObject>("Models/Road/RoadTemplateTestVisual");
-            defaultPineTreePrefab = Resources.Load<GameObject>("Models/Trees/EvergreenOptimized");
-            usingDefaultRoad = roadChunkPrefab == null ||
-                roadChunkPrefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase);
-            usingDefaultPine = pineTreePrefab == null ||
-                pineTreePrefab.name.Equals(
-                    "Evergreen_Geometry_0801193826_texture",
-                    System.StringComparison.OrdinalIgnoreCase) ||
-                pineTreePrefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
-            if (usingDefaultRoad && defaultRoadChunkPrefab != null) roadChunkPrefab = defaultRoadChunkPrefab;
-            if (usingDefaultPine && defaultPineTreePrefab != null) pineTreePrefab = defaultPineTreePrefab;
+            // The first cleaned team road/tree imports had incompatible axes in
+            // Unity. Treat those known assignments as empty so older scene
+            // configurations also return to the stable procedural fallbacks.
+            if (HasKnownBrokenRoadAxis(roadChunkPrefab)) roadChunkPrefab = null;
+            if (HasKnownBrokenTreeAxis(pineTreePrefab)) pineTreePrefab = null;
 
             roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.006f, 0.007f, 0.008f), 0.05f, 0.34f);
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
-            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.24f, 0.21f, 0.1f), 0f, 0.08f);
+            lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.86f, 0.86f, 0.82f), 0f, 0.12f);
             dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.0008f, 0.0011f, 0.0009f));
             barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.008f, 0.005f, 0.004f));
             branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0015f, 0.003f, 0.002f));
-            railingMaterial = RuntimeGeometry.Material("Road railing", new Color(0.018f, 0.02f, 0.021f), 0.7f, 0.28f);
             reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
             Texture2D farForestTexture = Resources.Load<Texture2D>("Forest/DarkFirBillboard");
             if (farForestTexture != null)
             {
-                farForestMaterial = RuntimeGeometry.TexturedLitMaterial(
+                farForestMaterial = RuntimeGeometry.TexturedMaterial(
                     "Batched distant fir silhouettes",
                     farForestTexture,
-                    new Color(0.22f, 0.25f, 0.24f, 1f),
+                    // Counter the source image's cyan-heavy highlights while
+                    // keeping distant cards just above black.
+                    new Color(0.075f, 0.038f, 0.034f, 1f),
                     transparent: true);
-            }
-            Texture2D defaultPineTexture = Resources.Load<Texture2D>("Models/Trees/EvergreenTexture");
-            if (defaultPineTexture != null)
-            {
-                defaultPineMaterial = RuntimeGeometry.TexturedLitMaterial(
-                    "Optimized evergreen night material",
-                    defaultPineTexture,
-                    new Color(0.16f, 0.19f, 0.14f, 1f));
             }
 
             for (int i = 0; i < ChunkCount; i++)
@@ -101,7 +82,6 @@ namespace LastPassenger
                 customRoad.name = $"Custom road chunk {index:00}";
                 customRoad.transform.localPosition = Vector3.zero;
                 customRoad.transform.localRotation = Quaternion.identity;
-                if (usingDefaultRoad) ApplyDefaultRoadMaterials(customRoad);
             }
             else
             {
@@ -212,11 +192,7 @@ namespace LastPassenger
             GameObject treePrefab = isPine ? pineTreePrefab : leaflessTreePrefab;
             if (treePrefab != null)
             {
-                GameObject instance = BuildPrefabTree(tree.transform, treePrefab, height);
-                if (usingDefaultPine && isPine && defaultPineMaterial != null && instance != null)
-                {
-                    ApplyMaterial(instance, defaultPineMaterial);
-                }
+                BuildPrefabTree(tree.transform, treePrefab, height);
                 return;
             }
 
@@ -240,7 +216,7 @@ namespace LastPassenger
             }
         }
 
-        private static GameObject BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
+        private static void BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
         {
             GameObject instance = Instantiate(prefab, parent);
             instance.name = $"Custom {prefab.name}";
@@ -249,11 +225,11 @@ namespace LastPassenger
             instance.transform.localScale = Vector3.one;
 
             Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return instance;
+            if (renderers.Length == 0) return;
 
             Bounds bounds = renderers[0].bounds;
             for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            if (bounds.size.y <= 0.001f) return instance;
+            if (bounds.size.y <= 0.001f) return;
 
             float uniformScale = targetHeight / bounds.size.y;
             instance.transform.localScale = Vector3.one * uniformScale;
@@ -267,33 +243,22 @@ namespace LastPassenger
                 desiredBase.x - bounds.center.x,
                 desiredBase.y - bounds.min.y,
                 desiredBase.z - bounds.center.z);
-            return instance;
         }
 
-        private void ApplyDefaultRoadMaterials(GameObject road)
+        private static bool HasKnownBrokenRoadAxis(GameObject prefab)
         {
-            Renderer[] renderers = road.GetComponentsInChildren<Renderer>(true);
-            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
-            {
-                Material[] imported = renderers[rendererIndex].sharedMaterials;
-                Material[] replacements = new Material[imported.Length];
-                for (int materialIndex = 0; materialIndex < imported.Length; materialIndex++)
-                {
-                    string materialName = imported[materialIndex] != null
-                        ? imported[materialIndex].name.ToLowerInvariant()
-                        : string.Empty;
-                    replacements[materialIndex] = materialName.Contains("strip")
-                        ? lineMaterial
-                        : materialName.Contains("railing") ? railingMaterial : roadMaterial;
-                }
-                renderers[rendererIndex].sharedMaterials = replacements;
-            }
+            if (prefab == null) return false;
+            return prefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase) ||
+                   prefab.name.Equals("RoadTemplateTestVisual", System.StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void ApplyMaterial(GameObject root, Material material)
+        private static bool HasKnownBrokenTreeAxis(GameObject prefab)
         {
-            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
-            for (int i = 0; i < renderers.Length; i++) renderers[i].sharedMaterial = material;
+            if (prefab == null) return false;
+            return prefab.name.Equals(
+                       "Evergreen_Geometry_0801193826_texture",
+                       System.StringComparison.OrdinalIgnoreCase) ||
+                   prefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
         }
 
         private void BuildPineCrown(Transform tree, float height)
