@@ -439,7 +439,16 @@ namespace LastPassenger
         {
             if (nightVignetteTexture == null || state == RunState.Success) return;
             Color previous = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, 0.9f);
+
+            // This uniform veil uses Unity's built-in white texture, so it is
+            // available in standalone players without a shader variant or a
+            // scene-local post-processing profile. The radial pass below then
+            // closes down peripheral visibility while headlights retain the
+            // brightest values in the centre of the road.
+            GUI.color = new Color(0f, 0.003f, 0.006f, 0.28f);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+
+            GUI.color = new Color(1f, 1f, 1f, 0.94f);
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), nightVignetteTexture, ScaleMode.StretchToFill, true);
             GUI.color = previous;
         }

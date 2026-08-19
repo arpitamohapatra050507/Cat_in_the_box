@@ -28,10 +28,11 @@ scene. Its Inspector contains these optional serialized fields:
 - **Road Chunk Length** — distance between repeated road-prefab instances;
   leave it at `80` unless the custom chunk has a different length.
 
-Each field falls back independently. With no assignments, the road and both
-tree types use the stable procedural versions. Assigning only a Meshy fir
-replaces the procedural pines without affecting anything else. Custom trees
-are automatically scaled to the randomized target height,
+Each field falls back independently. With no assignments, the road and
+leafless trees use the stable procedural versions, while common pines load the
+build-packaged reduced team tree. Assigning only a Meshy fir replaces those
+packaged pines without affecting anything else. Custom trees are automatically
+scaled to the randomized target height,
 centered, and placed on the ground, so arbitrary Meshy export scale is fine.
 
 A road prefab's root must represent the beginning of the chunk at local
@@ -52,10 +53,11 @@ An existing Inspector assignment pointing at the original asset named
 `FrostCar` is redirected to this clean copy automatically, so old local scenes
 do not need their Traffic Car field repaired by hand.
 If that resource is unavailable, traffic falls back again to the generated
-low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
-pine, leafless-tree, and barricade fields use the generated road, generated
-trees, and generated barricade respectively. The experimental cleaned team
-road remains blocked because of its incompatible axis. Tree overrides are not
+low-poly car and AI-generated images in `Assets/Resources/Traffic`. An empty
+Pine Tree field loads `Assets/Resources/Models/Trees/TeamPineRuntime.fbx` and
+its packaged texture; empty road, leafless-tree, and barricade fields use the
+generated versions. The experimental cleaned team road remains blocked because
+of its incompatible axis. Tree overrides are not
 blocked by asset name: explicitly assigning the team's working tree prefab (or
 any later Meshy tree) always uses that prefab.
 
@@ -155,18 +157,21 @@ or a barricade. During the truck chase it becomes a pulsing proximity warning:
 the stronger and faster it pulses, the closer the truck is. The dashboard also
 shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 
-The road now uses headlight-dominant night lighting rather than relying on a
-screen overlay: ambient and moon illumination are effectively black, while two
-strong focused warm spotlights reveal the lane and a short wide beam fills the
-area immediately in front of the car. Asphalt, soil, bark, and nearby foliage
+The road uses headlight-dominant night lighting: ambient and moon illumination
+are effectively black, while two strong focused warm spotlights reveal the
+lane and a short wide beam fills the area immediately in front of the car. A
+build-safe uniform darkness veil plus the radial vignette keeps the same
+exposure in standalone players without depending on a stripped shader or a
+scene-local post-processing profile. Asphalt, soil, bark, and nearby foliage
 remain almost unreadable outside those beams. The cyan distant-tree image is no
 longer loaded. The background forest is now a texture-free mesh of stacked pine
 silhouettes using a nearly black Lit material, while the detailed procedural or
 custom-prefab trees supply the visible foreground. The headlights are attached
 to the car and intentionally do not follow the mouse yet.
 
-Each recycled road chunk contains 16 near-field procedural 3D trees unless a
-serialized pine or leafless override is supplied. Behind them are 36 generated
+Each recycled road chunk contains 16 near-field 3D trees. Pines use the
+build-packaged reduced team model unless a serialized override is supplied;
+leafless trees retain their procedural fallback. Behind them are 36 generated
 distant fir silhouettes. Their crossed triangular geometry is combined into
 one mesh and one renderer per chunk, so the forest looks dense without loading
 the old cyan texture or creating hundreds of background renderers.
@@ -206,9 +211,11 @@ in `ASSET_PLAN.md`.
 
 ## Building
 
-Use **File > Build Profiles**, select Windows x86-64, and include
-`Assets/Scenes/Prototype.unity`. The editor bootstrap normally configures this
-for you. The generated materials use this project's Universal Render Pipeline.
+Use **File > Build Profiles** and select Windows x86-64. A generated local
+`Assets/Scenes/Prototype.unity` can be included after running the editor scene
+builder; the committed `SampleScene.unity` is also a valid build entry because
+the runtime bootstrap creates the prototype systems itself. The generated
+materials use this project's Universal Render Pipeline.
 URP Lit and Unlit are explicitly retained in Graphics Settings because runtime
 geometry resolves them by name. Transparent image layers use the dedicated
 `LastPassenger/TransparentTexture` shader, which is both loaded from Resources

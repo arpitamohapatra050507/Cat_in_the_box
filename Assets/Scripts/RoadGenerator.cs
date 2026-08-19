@@ -24,6 +24,8 @@ namespace LastPassenger
         private Material branchMaterial;
         private Material reflectorMaterial;
         private Material farForestMaterial;
+        private Material packagedPineMaterial;
+        private bool usingPackagedPine;
 
         public void Build(
             Transform vehicleTransform,
@@ -42,6 +44,16 @@ namespace LastPassenger
             // Unity. Keep its exact old assignments on the stable procedural
             // fallback, but accept every explicitly assigned tree prefab.
             if (HasKnownBrokenRoadAxis(roadChunkPrefab)) roadChunkPrefab = null;
+
+            // The generated Prototype scene is intentionally not required by
+            // standalone builds. If it does not provide an Inspector override,
+            // load the reduced team tree from Resources so Unity includes the
+            // model and its texture as explicit player-build dependencies.
+            if (pineTreePrefab == null)
+            {
+                pineTreePrefab = Resources.Load<GameObject>("Models/Trees/TeamPineRuntime");
+                usingPackagedPine = pineTreePrefab != null;
+            }
 
             roadMaterial = RuntimeGeometry.Material(
                 "Rough generated asphalt",
@@ -71,6 +83,16 @@ namespace LastPassenger
             if (farForestMaterial != null && farForestMaterial.HasProperty("_Cull"))
             {
                 farForestMaterial.SetFloat("_Cull", 0f);
+            }
+            Texture2D packagedPineTexture = Resources.Load<Texture2D>("Models/Trees/EvergreenTexture");
+            if (usingPackagedPine && packagedPineTexture != null)
+            {
+                packagedPineMaterial = RuntimeGeometry.Material(
+                    "Packaged team pine night material",
+                    new Color(0.13f, 0.15f, 0.12f, 1f),
+                    metallic: 0f,
+                    smoothness: 0.04f);
+                RuntimeGeometry.ApplyTexture(packagedPineMaterial, packagedPineTexture, Vector2.one);
             }
 
             for (int i = 0; i < ChunkCount; i++)
@@ -209,7 +231,11 @@ namespace LastPassenger
             GameObject treePrefab = isPine ? pineTreePrefab : leaflessTreePrefab;
             if (treePrefab != null)
             {
-                BuildPrefabTree(tree.transform, treePrefab, height);
+                GameObject instance = BuildPrefabTree(tree.transform, treePrefab, height);
+                if (isPine && usingPackagedPine && instance != null && packagedPineMaterial != null)
+                {
+                    ApplyMaterial(instance, packagedPineMaterial);
+                }
                 return;
             }
 
@@ -233,7 +259,7 @@ namespace LastPassenger
             }
         }
 
-        private static void BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
+        private static GameObject BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
         {
             GameObject instance = Instantiate(prefab, parent);
             instance.name = $"Custom {prefab.name}";
@@ -242,11 +268,11 @@ namespace LastPassenger
             instance.transform.localScale = Vector3.one;
 
             Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return;
+            if (renderers.Length == 0) return instance;
 
             Bounds bounds = renderers[0].bounds;
             for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            if (bounds.size.y <= 0.001f) return;
+            if (bounds.size.y <= 0.001f) return instance;
 
             float uniformScale = targetHeight / bounds.size.y;
             instance.transform.localScale = Vector3.one * uniformScale;
@@ -260,6 +286,16 @@ namespace LastPassenger
                 desiredBase.x - bounds.center.x,
                 desiredBase.y - bounds.min.y,
                 desiredBase.z - bounds.center.z);
+            return instance;
+        }
+
+        private static void ApplyMaterial(GameObject root, Material material)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                renderers[i].sharedMaterial = material;
+            }
         }
 
         private static bool HasKnownBrokenRoadAxis(GameObject prefab)

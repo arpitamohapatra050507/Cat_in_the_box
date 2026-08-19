@@ -162,3 +162,12 @@ record so judges can inspect how the temporary content was made.
   tree-prefab assignments are still honored without a name-based block.
   Confirm the original authorship/license and AI-only-rule eligibility before
   submission.
+
+- `Assets/Resources/Models/Trees/TeamPineRuntime.fbx` — build-packaged copy of
+  the team's reduced `Assets/Models/tree.fbx` from commit `13a0cf3`. Runtime
+  code loads it only when no Pine Tree Prefab override is assigned, then applies
+  the packaged `EvergreenTexture.png` using a dark headlight-reactive material.
+  This explicit Resources dependency prevents standalone builds that start from
+  `SampleScene` from silently dropping back to procedural cone trees. Source and
+  runtime checksums are recorded in `TeamPineRuntime_SOURCE.md`. Confirm the
+  original authorship/license and AI-only-rule eligibility before submission.

@@ -98,9 +98,9 @@ Run this once in the Unity editor and once in the final Windows build.
    scene configuration object exposes Road Chunk, Pine Tree, Leafless Tree,
    Traffic Car, Barricade, and Road Chunk Length fields.
 2. Leave all five prefab fields empty, enter Play Mode, and confirm the stable
-   procedural 8-by-80 road, procedural pine/leafless trees, cleaned Frost
-   traffic cars, and framed reflective barricades appear. No road or tree mesh
-   may lie sideways across the camera. Confirm the generated asphalt texture
+   procedural 8-by-80 road, build-packaged detailed team pines, procedural
+   leafless trees, cleaned Frost traffic cars, and framed reflective barricades
+   appear. No road or tree mesh may lie sideways across the camera. Confirm the generated asphalt texture
    tiles without obvious gaps and its grey details stay rough rather than
    reflecting large white headlight patches.
 3. Assign the team's previously working pine prefab, restart Play Mode, and
@@ -114,9 +114,10 @@ Run this once in the Unity editor and once in the final Windows build.
    works even if the prefab contains colliders or rigidbodies.
 6. Assign a barricade prefab, press `T`, and confirm spawned chase obstacles
    use it and are grounded correctly.
-7. Remove the prefab assignments and confirm the procedural road and trees,
-   Frost traffic model, and remaining procedural/image fallbacks return
-   independently.
+7. Remove the prefab assignments and confirm the procedural road, packaged team
+   pines, procedural leafless trees, Frost traffic model, and remaining
+   procedural/image fallbacks return independently. Repeat this in a standalone
+   build and confirm the pine model and texture are still present.
 8. Use **Rebuild Prototype Scene** and confirm assigned overrides are preserved.
 
 ## Full pacing pass
@@ -141,6 +142,8 @@ Run this once in the Unity editor and once in the final Windows build.
     barricades before their collision boxes reach the player. There should be a
     visible light-to-dark boundary on the asphalt rather than uniform brightness.
     The asphalt should show fine aggregate without looking metallic or mirror-wet.
+    Compare Play Mode and the standalone build; the uniform darkness veil and
+    radial vignette should have the same exposure in both.
 11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
     forest of texture-free, crossed pine silhouettes. The old detailed cyan
     tree image and its rectangular glow must never appear. Look for excessive
