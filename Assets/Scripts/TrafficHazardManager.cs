@@ -43,6 +43,7 @@ namespace LastPassenger
         private VehicleController vehicle;
         private PrototypeGameManager manager;
         private PrototypeAssetConfiguration assetConfiguration;
+        private GameObject defaultTrafficModel;
         private float nextTrafficSpawnTime;
         private float nextRoadFigureTime;
         private bool chaseActive;
@@ -76,6 +77,7 @@ namespace LastPassenger
             vehicle = vehicleController;
             manager = gameManager;
             assetConfiguration = config;
+            defaultTrafficModel = Resources.Load<GameObject>("Models/Traffic/FrostCarVisual");
             chaseActive = false;
             finalStateCleared = false;
             junctionQuietActive = false;
@@ -219,9 +221,12 @@ namespace LastPassenger
             // A player straddling the centre line must therefore choose a clear lane.
             float collisionHalfWidth = 1.72f;
             float collisionHalfLength = 2.2f;
-            GameObject trafficPrefab = assetConfiguration != null
+            GameObject configuredTrafficPrefab = assetConfiguration != null
                 ? assetConfiguration.TrafficCarPrefab
                 : null;
+            GameObject trafficPrefab = configuredTrafficPrefab != null
+                ? configuredTrafficPrefab
+                : defaultTrafficModel;
 
             if (trafficPrefab != null)
             {
@@ -233,6 +238,10 @@ namespace LastPassenger
                     oncoming ? "Oncoming traffic" : "Slower traffic",
                     new Vector3(lane, 0f, z),
                     rotation);
+                if (configuredTrafficPrefab == null)
+                {
+                    ApplyBuiltInTrafficMaterials(root, oncoming);
+                }
                 MeasureLogicalCollision(root, 0.65f, 0.7f, out collisionHalfWidth, out collisionHalfLength);
             }
             else
@@ -480,8 +489,23 @@ namespace LastPassenger
             Vector3 position,
             Quaternion rotation)
         {
-            GameObject instance = Instantiate(prefab, position, rotation, transform);
+            GameObject quarantine = new GameObject("Inactive prefab quarantine");
+            quarantine.transform.SetParent(transform, false);
+            quarantine.SetActive(false);
+            GameObject instance = Instantiate(prefab, position, rotation, quarantine.transform);
             instance.name = instanceName;
+
+            // Traffic prefabs are visual ingredients only. Old racing prefabs may
+            // contain player controllers, cameras, audio listeners, lights, or UI
+            // behaviours that must never take ownership of this prototype.
+            Behaviour[] behaviours = instance.GetComponentsInChildren<Behaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++) behaviours[i].enabled = false;
+
+            ParticleSystem[] particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                particleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
 
             Collider[] colliders = instance.GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = false;
@@ -493,8 +517,49 @@ namespace LastPassenger
                 rigidbodies[i].useGravity = false;
             }
 
+            instance.transform.SetParent(transform, true);
+            instance.SetActive(true);
+            Destroy(quarantine);
             GroundPrefab(instance);
             return instance;
+        }
+
+        private void ApplyBuiltInTrafficMaterials(GameObject instance, bool oncoming)
+        {
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+            {
+                Renderer renderer = renderers[rendererIndex];
+                Material[] imported = renderer.sharedMaterials;
+                Material[] replacements = new Material[imported.Length];
+                bool isWheel = renderer.name.ToLowerInvariant().Contains("wheel");
+
+                for (int materialIndex = 0; materialIndex < imported.Length; materialIndex++)
+                {
+                    string importedName = imported[materialIndex] != null
+                        ? imported[materialIndex].name.ToLowerInvariant()
+                        : string.Empty;
+
+                    if (isWheel)
+                    {
+                        replacements[materialIndex] = tyreMaterial;
+                    }
+                    else if (importedName.Contains("window"))
+                    {
+                        replacements[materialIndex] = carGlassMaterial;
+                    }
+                    else if (importedName.Contains("light"))
+                    {
+                        replacements[materialIndex] = oncoming ? headlightMaterial : tailLightMaterial;
+                    }
+                    else
+                    {
+                        replacements[materialIndex] = carBodyMaterial;
+                    }
+                }
+
+                renderer.sharedMaterials = replacements;
+            }
         }
 
         private static void GroundPrefab(GameObject instance)

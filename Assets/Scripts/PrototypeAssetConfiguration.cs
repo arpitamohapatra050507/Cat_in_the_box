@@ -15,7 +15,7 @@ namespace LastPassenger
         [Tooltip("Used for the occasional bare roadside trees. Leave empty for generated leafless trees.")]
         [SerializeField] private GameObject leaflessTreePrefab;
 
-        [Tooltip("Optional 3D replacement for ordinary traffic. Its root should face forward along +Z. Leave empty for generated image billboards.")]
+        [Tooltip("Optional 3D replacement for ordinary traffic. Its root should face forward along +Z. Leave empty for the cleaned team-supplied Frost car model.")]
         [SerializeField] private GameObject trafficCarPrefab;
 
         [Tooltip("Optional 3D replacement for chase barricades. Leave empty for the generated framed barricade.")]

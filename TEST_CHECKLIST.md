@@ -16,13 +16,17 @@ Run this once in the Unity editor and once in the final Windows build.
 4. Hold the right mouse button and look left, right, up, and down. The view must
    remain within the cabin and return smoothly to the road when released.
 5. Let the game run for at least 20–30 seconds. Confirm oncoming and slower
-   traffic appear in either road lane, move in the correct direction, and can
-   be steered around. No more than three traffic cars should coexist.
-6. Intentionally hit one traffic car. Confirm the impact sound and red border
+   traffic use the full Frost car mesh, appear in either road lane, move in the
+   correct direction, and can be steered around. The model must be grounded,
+   correctly scaled, face the direction it travels, and show no magenta
+   materials. No more than three traffic cars should coexist.
+6. Confirm spawning traffic never switches to a third-person camera, creates a
+   second audio listener, displays racing UI, or accepts player input.
+7. Intentionally hit one traffic car. Confirm the impact sound and red border
    flash, then an immediate `HEAD-ON` failure with a broken-glass overlay.
    Restart before continuing.
-7. Press `F9`; verify the fork prompt appears and select the left lane.
-8. Before `F10`, hold `R` and confirm the fixed generated empty-backseat image
+8. Press `F9`; verify the fork prompt appears and select the left lane.
+9. Before `F10`, hold `R` and confirm the fixed generated empty-backseat image
    fills the mirror with no live car geometry or white figure visible. Press
    `F10`, hold `R` again, and verify the grainy white passenger appears and
    flickers as a separate image layer while its appearance sound plays. The
@@ -31,24 +35,24 @@ Run this once in the Unity editor and once in the final Windows build.
    rather than popping out, while the hands and apparition audio also recede.
    Note that
    `F10` forces the apparition in place; it does not teleport the vehicle.
-9. Press `F10` again and do not touch `R`. Confirm hands grow inward from the
+10. Press `F10` again and do not touch `R`. Confirm hands grow inward from the
    screen edges, apparition audio becomes louder, and the driver dies after
    about three seconds. Repeat once and verify holding `R` is the only way to
    interrupt the threat.
-10. Without using `F10`, continue driving through several 30-second checks. An
+11. Without using `F10`, continue driving through several 30-second checks. An
    apparition has a 50% chance on each check, so a missed interval is valid and
    two apparitions must never overlap.
-11. Press `F11`; verify the car drives into the cliff sequence and reaches the
+12. Press `F11`; verify the car drives into the cliff sequence and reaches the
    `NO ROAD BELOW` ending after the short fall.
-12. Press Enter from each ending and confirm the scene restarts cleanly.
-13. Toggle `M`; confirm the radio audio and animated display turn off and on
+13. Press Enter from each ending and confirm the scene restarts cleanly.
+14. Toggle `M`; confirm the radio audio and animated display turn off and on
     while the independently mixed engine continues to follow vehicle speed.
-14. Confirm the generated dashboard is readable and the radio display aligns
+15. Confirm the generated dashboard is readable and the radio display aligns
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
     in the lower portion of the view, slope away from the camera, fill both
     lower side edges, and never cover the road horizon. Confirm the wheel has
     clean transparent edges.
-15. Look right and confirm the front passenger seat has visible cushion,
+16. Look right and confirm the front passenger seat has visible cushion,
     backrest, headrest, and parallax without blocking the forward road view.
 
 ## Truck-chase pass
@@ -89,7 +93,7 @@ Run this once in the Unity editor and once in the final Windows build.
    scene configuration object exposes Road Chunk, Pine Tree, Leafless Tree,
    Traffic Car, Barricade, and Road Chunk Length fields.
 2. Leave all five prefab fields empty, enter Play Mode, and confirm the current
-   generated road, both generated tree types, image-backed traffic cars, and
+   generated road, both generated tree types, cleaned Frost traffic cars, and
    framed reflective barricades still appear.
 3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
    common trees while the generated road and leafless trees remain.
@@ -101,8 +105,8 @@ Run this once in the Unity editor and once in the final Windows build.
    works even if the prefab contains colliders or rigidbodies.
 6. Assign a barricade prefab, press `F8`, and confirm spawned chase obstacles
    use it and are grounded correctly.
-7. Remove the prefab assignments and confirm every procedural/image fallback
-   returns independently.
+7. Remove the prefab assignments and confirm the default Frost traffic model
+   returns while the other procedural/image fallbacks return independently.
 8. Use **Rebuild Prototype Scene** and confirm assigned overrides are preserved.
 
 ## Full pacing pass

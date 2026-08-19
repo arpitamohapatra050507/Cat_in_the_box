@@ -122,7 +122,16 @@ record so judges can inspect how the temporary content was made.
   creator/license before final submission. This source is unusually loud, so
   runtime playback must remain strongly attenuated.
 
-## Team-created assets pending import
+## Team-created or supplied assets
+
+- `Assets/Models/FrostCar.fbx` — team-supplied export from an older racing
+  project, originally uploaded to the `demo` branch in commit `5504d70`.
+  It contained the whole old scene. A Blender-cleaned model-only derivative is
+  used at `Assets/Resources/Models/Traffic/FrostCarVisual.fbx`; the extraction
+  details and both checksums are stored in
+  `FrostCarVisual_SOURCE.md`. Confirm its original authorship/license and that
+  this older, apparently non-AI model is eligible under the jam's AI-only asset
+  rule before submission.
 
 - The `demo` branch contains `Assets/Models/RoadTemplate.fbx`, credited by the
   team as an older custom racing-game asset. Its referenced `Color_Grid.png`

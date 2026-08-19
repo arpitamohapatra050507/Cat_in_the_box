@@ -23,7 +23,7 @@ scene. Its Inspector contains these optional serialized fields:
 - **Road Chunk Prefab** — replaces every ordinary repeating road chunk.
 - **Pine Tree Prefab** — replaces the common roadside fir trees.
 - **Leafless Tree Prefab** — replaces the occasional bare trees.
-- **Traffic Car Prefab** — replaces both generated oncoming and slower cars.
+- **Traffic Car Prefab** — replaces both default Frost-model oncoming and slower cars.
 - **Barricade Prefab** — replaces the generated chase barricades.
 - **Road Chunk Length** — distance between repeated road-prefab instances;
   leave it at `80` unless the custom chunk has a different length.
@@ -42,10 +42,21 @@ their visible renderer bounds, and their physical colliders are disabled in
 favor of the prototype's transform-safe swept collision test. Rebuilding the
 Prototype scene preserves all assigned overrides.
 
-Every slot has an independent fallback. Empty traffic and barricade fields use
-generated low-poly models with the AI-generated images in
-`Assets/Resources/Traffic`, just as empty road and tree fields retain their
-procedural versions.
+Every slot has an independent fallback. An empty Traffic Car field loads the
+clean model-only extraction at
+`Assets/Resources/Models/Traffic/FrostCarVisual.fbx`. The source racing-scene
+FBX contained its own cameras, lights, UI, effects, and control setup, so only
+its body, doors, windows, and wheel meshes are present in the runtime copy.
+If that resource is unavailable, traffic falls back again to the generated
+low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
+tree, and barricade fields retain their existing generated versions.
+
+All instantiated traffic overrides are first created beneath an inactive
+quarantine object, then treated as visuals before activation: inherited
+`Behaviour` components are disabled, particle effects are stopped, colliders
+are disabled, and rigidbodies are made kinematic. Consequently, an old racing
+prefab cannot run its player controller, camera, audio listener, or physics even
+for its first frame.
 
 ## Controls
 
@@ -77,10 +88,12 @@ oncoming or slower cars are present, with another spawn attempt every 7–12
 seconds. Their movement and collision use swept X/Z checks rather than
 Rigidbody physics, so a fast oncoming car cannot pass through the
 transform-driven player between frames. Any collision with another car is
-immediately fatal. The fallback remains cheap to render, but its basic 3D hull
-is now a tapered low-poly sedan with a sloped cabin, roof, bumpers, full-sized
-wheels, and visible hubs. Generated front/rear, mirrored side-profile, and
-overhead skins sit tightly over that volume instead of covering a cube.
+immediately fatal. With no Inspector override, ordinary traffic uses the
+model-only Frost car extracted from the team's old racing scene. Its imported
+materials are remapped to the prototype's night-safe URP paint, windows, tyres,
+headlights, and tail lights. The previous tapered low-poly sedan and its
+generated image skins remain available as a last-resort fallback if the cleaned
+model cannot be loaded.
 
 The rear-seat apparition checks once every 30 seconds with a 50% chance. When
 it appears, the player has three seconds to hold `R` and face it in the
