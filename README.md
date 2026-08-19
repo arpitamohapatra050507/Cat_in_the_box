@@ -77,7 +77,13 @@ for its first frame.
 - `Enter` — restart after an ending
 - `Escape` — release the mouse or quit a standalone build
 
-Debug shortcuts are available only in the editor or development builds:
+Temporary event-test shortcuts are available in both editor and standalone builds:
+
+- `T` — immediately request the truck-chase sequence
+- `G` — immediately show a rear-seat apparition
+- `Y` — jump to the cliff-ending trigger
+
+The legacy function-key shortcuts remain available as aliases:
 
 - `F8` — immediately request the truck-chase sequence
 - `F9` — jump near the junction
@@ -103,7 +109,7 @@ headlights, and tail lights. The previous tapered low-poly sedan and its
 generated image skins remain available as a last-resort fallback if the cleaned
 model cannot be loaded.
 
-The rear-seat apparition checks once every 30 seconds with a 50% chance. Its
+The rear-seat apparition checks once every 20 seconds with a 50% chance. Its
 danger meter rises from zero to three seconds while ignored. Holding `R` turns
 that same meter backwards at the same rate: looking after 2.75 seconds therefore
 takes 2.75 seconds of uninterrupted observation to clear it. The apparition,
@@ -114,7 +120,9 @@ overlap later checks.
 
 Once the player has passed the junction and travelled far enough, a horn warns
 of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
-show the truck gaining or losing ground, while the team-supplied
+show the truck gaining or losing ground. Its mirror image now starts larger and
+grows to 182% of the mirror height at maximum proximity, making the pursuer
+feel closer. The team-supplied
 `Assets/Resources/Audio/Anomalies/TruckChase.mp3` plays over the existing audio
 mix. The loud source is capped at 5% playback volume, begins immediately,
 repeats its audible section at constant volume, and fades only after the chase
@@ -134,12 +142,12 @@ can appear in the headlight beam. It has no collision penalty and vanishes when
 the player drives through it. It is an atmospheric fake-out, not another health
 system.
 
-The player's available top speed rises smoothly from 10 to 15.5 world units
+The player's available top speed rises smoothly from 18 to 23.5 world units
 per second, beginning after the first minute and reaching its maximum around
 the nine-minute mark. Faster late-run driving makes steering and obstacle
-avoidance more demanding; impacts still remove actual speed. The cliff was
-moved to distance 7500 so a clean high-speed run remains approximately ten
-minutes despite the increasing limit.
+avoidance more demanding; impacts still remove actual speed. The cliff is at
+distance 12200 so a clean high-speed run remains approximately ten minutes
+despite the increased speed range.
 
 The dark-red screen border is a danger indicator, not an unexplained creature
 or separate anomaly. A short flash means the car struck the shoulder, traffic,

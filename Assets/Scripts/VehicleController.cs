@@ -5,8 +5,8 @@ namespace LastPassenger
     public sealed class VehicleController : MonoBehaviour
     {
         [Header("Lane driving")]
-        [SerializeField] private float maximumSpeed = 10f;
-        [SerializeField] private float lateRunMaximumSpeed = 15.5f;
+        [SerializeField] private float maximumSpeed = 18f;
+        [SerializeField] private float lateRunMaximumSpeed = 23.5f;
         [SerializeField] private float speedRampStartsAfter = 60f;
         [SerializeField] private float speedRampDuration = 480f;
         [SerializeField] private float acceleration = 3.4f;

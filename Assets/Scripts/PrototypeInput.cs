@@ -103,10 +103,10 @@ namespace LastPassenger
                 case InputAction.Radio: return keyboard.mKey.wasPressedThisFrame;
                 case InputAction.Confirm: return keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
                 case InputAction.Cancel: return keyboard.escapeKey.wasPressedThisFrame;
-                case InputAction.SkipToTruck: return keyboard.f8Key.wasPressedThisFrame;
+                case InputAction.SkipToTruck: return keyboard.f8Key.wasPressedThisFrame || keyboard.tKey.wasPressedThisFrame;
                 case InputAction.SkipToJunction: return keyboard.f9Key.wasPressedThisFrame;
-                case InputAction.SkipToAnomaly: return keyboard.f10Key.wasPressedThisFrame;
-                case InputAction.SkipToEnding: return keyboard.f11Key.wasPressedThisFrame;
+                case InputAction.SkipToAnomaly: return keyboard.f10Key.wasPressedThisFrame || keyboard.gKey.wasPressedThisFrame;
+                case InputAction.SkipToEnding: return keyboard.f11Key.wasPressedThisFrame || keyboard.yKey.wasPressedThisFrame;
                 default: return false;
             }
 #else
@@ -115,10 +115,10 @@ namespace LastPassenger
                 case InputAction.Radio: return Input.GetKeyDown(KeyCode.M);
                 case InputAction.Confirm: return Input.GetKeyDown(KeyCode.Return);
                 case InputAction.Cancel: return Input.GetKeyDown(KeyCode.Escape);
-                case InputAction.SkipToTruck: return Input.GetKeyDown(KeyCode.F8);
+                case InputAction.SkipToTruck: return Input.GetKeyDown(KeyCode.F8) || Input.GetKeyDown(KeyCode.T);
                 case InputAction.SkipToJunction: return Input.GetKeyDown(KeyCode.F9);
-                case InputAction.SkipToAnomaly: return Input.GetKeyDown(KeyCode.F10);
-                case InputAction.SkipToEnding: return Input.GetKeyDown(KeyCode.F11);
+                case InputAction.SkipToAnomaly: return Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.G);
+                case InputAction.SkipToEnding: return Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.Y);
                 default: return false;
             }
 #endif

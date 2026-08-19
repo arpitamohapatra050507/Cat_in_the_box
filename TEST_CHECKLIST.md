@@ -26,26 +26,26 @@ Run this once in the Unity editor and once in the final Windows build.
    flash, then an immediate `HEAD-ON` failure with a broken-glass overlay.
    Restart before continuing.
 8. Press `F9`; verify the fork prompt appears and select the left lane.
-9. Before `F10`, hold `R` and confirm the fixed generated empty-backseat image
+9. Before `G`, hold `R` and confirm the fixed generated empty-backseat image
    fills the mirror with no live car geometry or white figure visible. Press
-   `F10`, hold `R` again, and verify the grainy white passenger appears and
+   `G`, hold `R` again, and verify the grainy white passenger appears and
    flickers as a separate image layer while its appearance sound plays. The
    mirror must remain dark and must not change with the live camera view.
    Wait about 2.5 seconds before holding `R`, then keep observing it. Confirm
    the apparition, hands, and audio reverse and fade progressively over about
    the same 2.5 seconds rather than popping out or killing the driver. Note that
-   `F10` forces the apparition in place; it does not teleport the vehicle.
-10. Press `F10` again, let danger rise for about two seconds, hold `R` for only
+   `G` forces the apparition in place; it does not teleport the vehicle.
+10. Press `G` again, let danger rise for about two seconds, hold `R` for only
    one second, then release it. Confirm the fading reverses and danger begins
-   climbing from its reduced value. Press `F10` once more and do not touch `R`.
+   climbing from its reduced value. Press `G` once more and do not touch `R`.
    Confirm hands grow inward from the
    screen edges, apparition audio becomes louder, and the driver dies after
    about three seconds. Repeat once and verify holding `R` is the only way to
    interrupt the threat.
-11. Without using `F10`, continue driving through several 30-second checks. An
+11. Without using `G`, continue driving through several 20-second checks. An
    apparition has a 50% chance on each check, so a missed interval is valid and
    two apparitions must never overlap.
-12. Press `F11`; verify the car drives into the cliff sequence and reaches the
+12. Press `Y`; verify the car drives into the cliff sequence and reaches the
    `NO ROAD BELOW` ending after the short fall.
 13. Press Enter from each ending and confirm the scene restarts cleanly.
 14. Toggle `M`; confirm the radio audio and animated display turn off and on
@@ -61,11 +61,12 @@ Run this once in the Unity editor and once in the final Windows build.
 
 ## Truck-chase pass
 
-1. Restart, begin accelerating, then press `F8`. Confirm the horn warning plays
-   before the active pursuit begins. `F8` should work without moving the car or
+1. Restart, begin accelerating, then press `T`. Confirm the horn warning plays
+   before the active pursuit begins. `T` should work without moving the car or
    requiring the natural distance trigger.
 2. Confirm two image-based side mirrors fade in and show the pursuing truck.
-   They must not render live cabin or road geometry.
+   They must not render live cabin or road geometry. The truck should already
+   read clearly at low proximity and grow beyond the mirror height as it closes.
 3. Confirm three small engine-health bars appear above the dashboard. Hold full
    throttle. Confirm the `DANGER BEHIND — KEEP SPEED` indicator and
    red border respond to proximity, and that the truck stops gaining or becomes
@@ -74,7 +75,7 @@ Run this once in the Unity editor and once in the final Windows build.
    more strongly and the truck grows in both side mirrors. If it reaches the
    player, confirm the truck image rapidly fills the screen, a loud impact
    plays, and the broken-glass `ENGINE DEAD` failure screen appears.
-5. Restart and press `F8` again. During the active chase, confirm ordinary
+5. Restart and press `T` again. During the active chase, confirm ordinary
    traffic is removed and reflective barricades spawn in only one of the three
    lane positions. Confirm they appear farther ahead, never overlap into an
    impossible wall, and always leave enough room to evade.
@@ -111,7 +112,7 @@ Run this once in the Unity editor and once in the final Windows build.
 5. Assign a traffic-car prefab whose root faces `+Z`. Confirm slower traffic
    faces forward, oncoming instances are rotated correctly, and collision still
    works even if the prefab contains colliders or rigidbodies.
-6. Assign a barricade prefab, press `F8`, and confirm spawned chase obstacles
+6. Assign a barricade prefab, press `T`, and confirm spawned chase obstacles
    use it and are grounded correctly.
 7. Remove the prefab assignments and confirm the procedural road and trees,
    Frost traffic model, and remaining procedural/image fallbacks return
@@ -150,8 +151,9 @@ Run this once in the Unity editor and once in the final Windows build.
 13. Complete the run and confirm both junction choices can reach the cliff,
     that the road-to-cliff transition plays once, and that Enter restarts after
     `NO ROAD BELOW`.
-14. During a full run, confirm the attainable speed begins increasing after
-    about one minute, reaches roughly 112 km/h by the late run, and makes
+14. During a full run, confirm the attainable speed begins near 130 km/h,
+    starts increasing after about one minute, reaches roughly 169 km/h by the
+    late run, and makes
     steering harder without causing sudden speed jumps. A clean run should
     still reach the cliff at roughly ten minutes.
 

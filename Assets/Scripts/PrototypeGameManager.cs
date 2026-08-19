@@ -48,7 +48,7 @@ namespace LastPassenger
 
         private const float JunctionWarningDistance = 540f;
         private const float JunctionDistance = 650f;
-        private const float FinishDistance = 7500f;
+        private const float FinishDistance = 12200f;
         private const float CliffEndingDuration = 3.5f;
 
         public RunState State => state;
@@ -164,7 +164,7 @@ namespace LastPassenger
                 redVignetteAlpha,
                 Mathf.Max(impactFlash, dangerPulse),
                 Time.deltaTime * 1.7f);
-            DevelopmentDebugShortcuts();
+            EventTestShortcuts();
         }
 
         private void ProcessRoadEvents()
@@ -332,9 +332,8 @@ namespace LastPassenger
             else SceneManager.LoadScene(active.name);
         }
 
-        private void DevelopmentDebugShortcuts()
+        private void EventTestShortcuts()
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (PrototypeInput.SkipToTruckPressed) anomalyDirector?.ForceTruckChase();
             if (PrototypeInput.SkipToJunctionPressed) vehicle.TeleportForward(JunctionWarningDistance);
             if (PrototypeInput.SkipToAnomalyPressed) anomalyDirector?.ForceApparition();
@@ -347,7 +346,6 @@ namespace LastPassenger
                 }
                 vehicle.TeleportForward(FinishDistance);
             }
-#endif
         }
 
         private void OnGUI()

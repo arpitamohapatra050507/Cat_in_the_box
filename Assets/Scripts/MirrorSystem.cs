@@ -258,7 +258,7 @@ namespace LastPassenger
             if (truckTexture != null)
             {
                 float easedProximity = truckProximity * truckProximity * (3f - 2f * truckProximity);
-                float truckHeight = rect.height * Mathf.Lerp(0.34f, 1.55f, easedProximity);
+                float truckHeight = rect.height * Mathf.Lerp(0.46f, 1.82f, easedProximity);
                 float truckWidth = truckHeight * (truckTexture.width / (float)truckTexture.height);
                 float centerOffset = rect.width * (leftSide ? 0.055f : -0.055f);
                 Rect truckRect = new Rect(
