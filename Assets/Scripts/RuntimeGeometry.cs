@@ -30,6 +30,15 @@ namespace LastPassenger
 
         public static Material TexturedMaterial(string name, Texture texture, bool transparent = false)
         {
+            return TexturedMaterial(name, texture, Color.white, transparent);
+        }
+
+        public static Material TexturedMaterial(
+            string name,
+            Texture texture,
+            Color tint,
+            bool transparent = false)
+        {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (shader == null) shader = Shader.Find("Unlit/Texture");
             if (shader == null)
@@ -37,10 +46,10 @@ namespace LastPassenger
                 Debug.LogError("The runtime Unlit shader is missing. Keep URP/Unlit in Graphics Settings > Always Included Shaders.");
                 return null;
             }
-            Material material = new Material(shader) { name = name, color = Color.white, mainTexture = texture };
+            Material material = new Material(shader) { name = name, color = tint, mainTexture = texture };
 
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
-            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", Color.white);
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", tint);
 
             if (transparent)
             {

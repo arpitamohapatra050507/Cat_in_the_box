@@ -38,13 +38,19 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.017f, 0.019f, 0.021f), 0.05f, 0.34f);
+            // The first cleaned team road/tree imports had incompatible axes in
+            // Unity. Treat those known assignments as empty so older scene
+            // configurations also return to the stable procedural fallbacks.
+            if (HasKnownBrokenRoadAxis(roadChunkPrefab)) roadChunkPrefab = null;
+            if (HasKnownBrokenTreeAxis(pineTreePrefab)) pineTreePrefab = null;
+
+            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.006f, 0.007f, 0.008f), 0.05f, 0.34f);
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
-            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.34f, 0.3f, 0.16f), 0f, 0.08f);
-            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.004f, 0.006f, 0.0045f));
-            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.025f, 0.018f, 0.014f));
-            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.006f, 0.013f, 0.009f));
+            lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.86f, 0.86f, 0.82f), 0f, 0.12f);
+            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.0008f, 0.0011f, 0.0009f));
+            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.008f, 0.005f, 0.004f));
+            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0015f, 0.003f, 0.002f));
             reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
             Texture2D farForestTexture = Resources.Load<Texture2D>("Forest/DarkFirBillboard");
             if (farForestTexture != null)
@@ -52,6 +58,9 @@ namespace LastPassenger
                 farForestMaterial = RuntimeGeometry.TexturedMaterial(
                     "Batched distant fir silhouettes",
                     farForestTexture,
+                    // Counter the source image's cyan-heavy highlights while
+                    // keeping distant cards just above black.
+                    new Color(0.075f, 0.038f, 0.034f, 1f),
                     transparent: true);
             }
 
@@ -179,6 +188,7 @@ namespace LastPassenger
                 isPine ? "Roadside pine tree" : "Roadside leafless tree",
                 parent,
                 position);
+            tree.transform.localEulerAngles = new Vector3(0f, Random.Range(0f, 360f), 0f);
             GameObject treePrefab = isPine ? pineTreePrefab : leaflessTreePrefab;
             if (treePrefab != null)
             {
@@ -233,6 +243,22 @@ namespace LastPassenger
                 desiredBase.x - bounds.center.x,
                 desiredBase.y - bounds.min.y,
                 desiredBase.z - bounds.center.z);
+        }
+
+        private static bool HasKnownBrokenRoadAxis(GameObject prefab)
+        {
+            if (prefab == null) return false;
+            return prefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase) ||
+                   prefab.name.Equals("RoadTemplateTestVisual", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool HasKnownBrokenTreeAxis(GameObject prefab)
+        {
+            if (prefab == null) return false;
+            return prefab.name.Equals(
+                       "Evergreen_Geometry_0801193826_texture",
+                       System.StringComparison.OrdinalIgnoreCase) ||
+                   prefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
         }
 
         private void BuildPineCrown(Transform tree, float height)
