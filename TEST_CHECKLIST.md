@@ -54,7 +54,8 @@ Run this once in the Unity editor and once in the final Windows build.
     with its blank screen at 1280x720 and 1920x1080. The dashboard should stay
     in the lower portion of the view, slope away from the camera, fill both
     lower side edges, and never cover the road horizon. Confirm the wheel has
-    clean transparent edges.
+    clean transparent edges with no black or opaque rectangular quad. Repeat
+    this check in the standalone Windows build, not only Play Mode.
 16. Look right and confirm the front passenger seat has visible cushion,
     backrest, headrest, and parallax without blocking the forward road view.
 
@@ -98,9 +99,12 @@ Run this once in the Unity editor and once in the final Windows build.
 2. Leave all five prefab fields empty, enter Play Mode, and confirm the stable
    procedural 8-by-80 road, procedural pine/leafless trees, cleaned Frost
    traffic cars, and framed reflective barricades appear. No road or tree mesh
-   may lie sideways across the camera.
-3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
-   common trees while the procedural default road and leafless trees remain.
+   may lie sideways across the camera. Confirm the generated asphalt texture
+   tiles without obvious gaps and its grey details stay rough rather than
+   reflecting large white headlight patches.
+3. Assign the team's previously working pine prefab, restart Play Mode, and
+   confirm it replaces the common trees while the procedural default road and
+   leafless trees remain. Its asset name must not make the override fall back.
 4. Assign a road prefab with the correct length, restart Play Mode, and confirm
    all ordinary chunks use it, remain gap-free, and continue recycling as the
    car advances.
@@ -135,11 +139,11 @@ Run this once in the Unity editor and once in the final Windows build.
     two long headlight cones and short wide fill reveal lane paint, traffic, and
     barricades before their collision boxes reach the player. There should be a
     visible light-to-dark boundary on the asphalt rather than uniform brightness.
+    The asphalt should show fine aggregate without looking metallic or mirror-wet.
 11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
-    forest of transparent fir silhouettes. Look for rectangular image edges,
-    excessive brightness, gaps in the distant wall, or visible billboard pivots.
-    The far cards must be neutral near-black rather than globally glowing cyan
-    or blue-green.
+    forest of texture-free, crossed pine silhouettes. The old detailed cyan
+    tree image and its rectangular glow must never appear. Look for excessive
+    brightness, gaps in the distant wall, or obviously intersecting geometry.
 12. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
     can appear around a randomized two-minute interval and vanishes harmlessly
     when driven through.

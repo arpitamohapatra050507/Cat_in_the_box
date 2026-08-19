@@ -35,11 +35,18 @@ record so judges can inspect how the temporary content was made.
 
 ## Generated runtime images
 
+- `Assets/Resources/Road/RoadAlbedo.png` — generated with OpenAI Codex built-in
+  image generation on 2026-08-19 as a seamless, top-down, dark rural-asphalt
+  albedo. Runtime code tiles it over the procedural road with a non-metallic,
+  low-smoothness material. Its full prompt, integration notes, and checksum are
+  stored in `RoadAlbedo_SOURCE.md`.
 - `Assets/Resources/Forest/DarkFirBillboard.png` — generated with OpenAI Codex
   built-in image generation on 2026-08-19 by editing the existing generated fir
-  reference into a transparent, near-black background tree. Runtime code batches
-  multiple crossed cards into one distant-forest mesh per road chunk. Its exact
-  prompt and checksum are stored beside it in `DarkFirBillboard_SOURCE.md`.
+  reference into a transparent, near-black background tree. It is retained for
+  provenance but no longer loaded at runtime because its cyan rim and background
+  read too brightly in standalone builds. The distant forest now uses batched,
+  texture-free procedural silhouettes. Its exact prompt and checksum remain
+  stored beside it in `DarkFirBillboard_SOURCE.md`.
 - `Assets/Resources/Dashboard/DarkDashboardFascia.png` — generated with OpenAI
   Codex built-in image generation on 2026-08-18 and used as the in-world
   dashboard fascia. Its exact prompt is stored beside it in
@@ -150,7 +157,8 @@ record so judges can inspect how the temporary content was made.
   `4fc1dfd`). The derivative reduces the source from
   about 145,000 polygons to 2,892 for repeated roadside use. Source path,
   transformation, and checksums are stored in `EvergreenOptimized_SOURCE.md`.
-  Its first Unity import also had an incompatible axis and is not currently
-  loaded by default; procedural pines remain the safe fallback.
+  Its first Unity import also had an incompatible axis and is not loaded by
+  default; procedural pines remain the empty-slot fallback. Explicit serialized
+  tree-prefab assignments are still honored without a name-based block.
   Confirm the original authorship/license and AI-only-rule eligibility before
   submission.

@@ -38,13 +38,24 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            // The first cleaned team road/tree imports had incompatible axes in
-            // Unity. Treat those known assignments as empty so older scene
-            // configurations also return to the stable procedural fallbacks.
+            // The experimental cleaned team road had an incompatible axis in
+            // Unity. Keep its exact old assignments on the stable procedural
+            // fallback, but accept every explicitly assigned tree prefab.
             if (HasKnownBrokenRoadAxis(roadChunkPrefab)) roadChunkPrefab = null;
-            if (HasKnownBrokenTreeAxis(pineTreePrefab)) pineTreePrefab = null;
 
-            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.006f, 0.007f, 0.008f), 0.05f, 0.34f);
+            roadMaterial = RuntimeGeometry.Material(
+                "Rough generated asphalt",
+                new Color(0.28f, 0.275f, 0.27f),
+                metallic: 0f,
+                smoothness: 0.055f);
+            if (roadMaterial != null)
+            {
+                if (roadMaterial.HasProperty("_SpecularHighlights"))
+                {
+                    roadMaterial.SetFloat("_SpecularHighlights", 0f);
+                }
+                roadMaterial.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            }
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
             lineMaterial = RuntimeGeometry.Material("White lane paint", new Color(0.86f, 0.86f, 0.82f), 0f, 0.12f);
@@ -52,16 +63,14 @@ namespace LastPassenger
             barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.008f, 0.005f, 0.004f));
             branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0015f, 0.003f, 0.002f));
             reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
-            Texture2D farForestTexture = Resources.Load<Texture2D>("Forest/DarkFirBillboard");
-            if (farForestTexture != null)
+            farForestMaterial = RuntimeGeometry.Material(
+                "Batched distant pine silhouettes",
+                new Color(0.0045f, 0.0055f, 0.0048f),
+                metallic: 0f,
+                smoothness: 0f);
+            if (farForestMaterial != null && farForestMaterial.HasProperty("_Cull"))
             {
-                farForestMaterial = RuntimeGeometry.TexturedMaterial(
-                    "Batched distant fir silhouettes",
-                    farForestTexture,
-                    // Counter the source image's cyan-heavy highlights while
-                    // keeping distant cards just above black.
-                    new Color(0.075f, 0.038f, 0.034f, 1f),
-                    transparent: true);
+                farForestMaterial.SetFloat("_Cull", 0f);
             }
 
             for (int i = 0; i < ChunkCount; i++)
@@ -106,9 +115,8 @@ namespace LastPassenger
 
         private void BuildFarForest(Transform chunk, System.Random random)
         {
-            List<Vector3> vertices = new List<Vector3>(FarTreesPerChunk * 8);
-            List<Vector2> uvs = new List<Vector2>(FarTreesPerChunk * 8);
-            List<int> triangles = new List<int>(FarTreesPerChunk * 12);
+            List<Vector3> vertices = new List<Vector3>(FarTreesPerChunk * 32);
+            List<int> triangles = new List<int>(FarTreesPerChunk * 48);
 
             for (int i = 0; i < FarTreesPerChunk; i++)
             {
@@ -117,19 +125,19 @@ namespace LastPassenger
                 float z = 1f + (float)random.NextDouble() * (chunkLength - 2f);
                 float height = 5.2f + (float)random.NextDouble() * 4.8f;
                 float width = height * (0.38f + (float)random.NextDouble() * 0.1f);
-                AddBillboardCard(vertices, uvs, triangles, new Vector3(x, height * 0.5f, z), Vector3.right, width, height);
-                AddBillboardCard(vertices, uvs, triangles, new Vector3(x, height * 0.5f, z),
+                Vector3 basePosition = new Vector3(x, 0f, z);
+                AddPineSilhouette(vertices, triangles, basePosition, Vector3.right, width, height);
+                AddPineSilhouette(vertices, triangles, basePosition,
                     new Vector3(0.58f, 0f, 0.82f).normalized, width, height);
             }
 
-            Mesh mesh = new Mesh { name = "Combined distant forest mesh" };
+            Mesh mesh = new Mesh { name = "Combined texture-free distant forest mesh" };
             mesh.SetVertices(vertices);
-            mesh.SetUVs(0, uvs);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
-            GameObject forest = new GameObject("Batched distant forest billboards");
+            GameObject forest = new GameObject("Batched texture-free distant pine silhouettes");
             forest.transform.SetParent(chunk, false);
             forest.AddComponent<MeshFilter>().sharedMesh = mesh;
             MeshRenderer renderer = forest.AddComponent<MeshRenderer>();
@@ -138,32 +146,41 @@ namespace LastPassenger
             renderer.receiveShadows = false;
         }
 
-        private static void AddBillboardCard(
+        private static void AddPineSilhouette(
             List<Vector3> vertices,
-            List<Vector2> uvs,
             List<int> triangles,
-            Vector3 center,
+            Vector3 basePosition,
             Vector3 horizontal,
             float width,
             float height)
         {
-            int start = vertices.Count;
-            Vector3 halfRight = horizontal * (width * 0.5f);
-            Vector3 halfUp = Vector3.up * (height * 0.5f);
-            vertices.Add(center - halfRight - halfUp);
-            vertices.Add(center - halfRight + halfUp);
-            vertices.Add(center + halfRight + halfUp);
-            vertices.Add(center + halfRight - halfUp);
-            uvs.Add(new Vector2(0f, 0f));
-            uvs.Add(new Vector2(0f, 1f));
-            uvs.Add(new Vector2(1f, 1f));
-            uvs.Add(new Vector2(1f, 0f));
-            triangles.Add(start);
-            triangles.Add(start + 1);
-            triangles.Add(start + 2);
-            triangles.Add(start);
-            triangles.Add(start + 2);
-            triangles.Add(start + 3);
+            float trunkHalfWidth = width * 0.055f;
+            int trunkStart = vertices.Count;
+            vertices.Add(basePosition - horizontal * trunkHalfWidth);
+            vertices.Add(basePosition + Vector3.up * (height * 0.35f) - horizontal * trunkHalfWidth);
+            vertices.Add(basePosition + Vector3.up * (height * 0.35f) + horizontal * trunkHalfWidth);
+            vertices.Add(basePosition + horizontal * trunkHalfWidth);
+            triangles.Add(trunkStart);
+            triangles.Add(trunkStart + 1);
+            triangles.Add(trunkStart + 2);
+            triangles.Add(trunkStart);
+            triangles.Add(trunkStart + 2);
+            triangles.Add(trunkStart + 3);
+
+            float[] baseHeights = { 0.16f, 0.34f, 0.51f, 0.66f };
+            float[] apexHeights = { 0.68f, 0.81f, 0.92f, 1f };
+            float[] halfWidths = { 0.5f, 0.41f, 0.31f, 0.2f };
+            for (int tier = 0; tier < baseHeights.Length; tier++)
+            {
+                int start = vertices.Count;
+                Vector3 tierBase = basePosition + Vector3.up * (height * baseHeights[tier]);
+                vertices.Add(tierBase - horizontal * (width * halfWidths[tier]));
+                vertices.Add(basePosition + Vector3.up * (height * apexHeights[tier]));
+                vertices.Add(tierBase + horizontal * (width * halfWidths[tier]));
+                triangles.Add(start);
+                triangles.Add(start + 1);
+                triangles.Add(start + 2);
+            }
         }
 
         private void BuildProceduralRoadChunk(Transform chunk)
@@ -250,15 +267,6 @@ namespace LastPassenger
             if (prefab == null) return false;
             return prefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase) ||
                    prefab.name.Equals("RoadTemplateTestVisual", System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool HasKnownBrokenTreeAxis(GameObject prefab)
-        {
-            if (prefab == null) return false;
-            return prefab.name.Equals(
-                       "Evergreen_Geometry_0801193826_texture",
-                       System.StringComparison.OrdinalIgnoreCase) ||
-                   prefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
         }
 
         private void BuildPineCrown(Transform tree, float height)
