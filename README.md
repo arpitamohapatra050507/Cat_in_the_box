@@ -125,10 +125,18 @@ or a barricade. During the truck chase it becomes a pulsing proximity warning:
 the stronger and faster it pulses, the closer the truck is. The dashboard also
 shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 
-The forest is darker under a generated soft edge vignette, with lower moon and
-ambient illumination. Two fixed long-range headlights plus a wide fill beam
-keep the lane, traffic, barricades, and figure readable. They are attached to
-the car and intentionally do not follow the mouse yet.
+The road now uses headlight-dominant night lighting rather than relying on a
+screen overlay: ambient and moon illumination are nearly black, while two
+focused warm spotlights reveal the lane and a short wide beam fills the area
+immediately in front of the car. Asphalt, soil, bark, and foliage remain almost
+unreadable outside those beams. The headlights are attached to the car and
+intentionally do not follow the mouse yet.
+
+Each recycled road chunk contains 16 near-field 3D trees, using the serialized
+pine/leafless prefabs when supplied and the procedural trees otherwise. Behind
+them are 36 generated distant firs. Those far trees are crossed transparent
+cards combined into one mesh and one renderer per chunk, so the forest looks
+dense without creating hundreds of separate background renderers.
 
 Road messages are editable without changing C# in
 `Assets/Resources/road_events.json`. Each entry has an ID, trigger distance,
@@ -163,8 +171,11 @@ in `ASSET_PLAN.md`.
 
 Use **File > Build Profiles**, select Windows x86-64, and include
 `Assets/Scenes/Prototype.unity`. The editor bootstrap normally configures this
-for you. The generated materials use this project's Universal Render Pipeline,
-and the controls support its Input System configuration.
+for you. The generated materials use this project's Universal Render Pipeline.
+URP Lit and Unlit are explicitly retained in Graphics Settings because runtime
+geometry resolves them by name; this prevents shader stripping from producing
+null materials in a standalone build. The controls support the Input System
+configuration.
 
 ## Scope boundaries
 

@@ -8,6 +8,11 @@ namespace LastPassenger
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null)
+            {
+                Debug.LogError("The runtime Lit shader is missing. Keep URP/Lit in Graphics Settings > Always Included Shaders.");
+                return null;
+            }
             Material material = new Material(shader) { name = name, color = color };
 
             if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", metallic);
@@ -27,6 +32,11 @@ namespace LastPassenger
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (shader == null) shader = Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                Debug.LogError("The runtime Unlit shader is missing. Keep URP/Unlit in Graphics Settings > Always Included Shaders.");
+                return null;
+            }
             Material material = new Material(shader) { name = name, color = Color.white, mainTexture = texture };
 
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
@@ -46,6 +56,7 @@ namespace LastPassenger
                     material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 }
                 if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 0f);
+                if (material.HasProperty("_Cull")) material.SetFloat("_Cull", 0f);
                 material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
                 material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             }

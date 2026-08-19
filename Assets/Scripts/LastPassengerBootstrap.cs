@@ -75,17 +75,17 @@ namespace LastPassenger
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.022f;
-            RenderSettings.fogColor = new Color(0.012f, 0.018f, 0.022f);
+            RenderSettings.fogDensity = 0.014f;
+            RenderSettings.fogColor = new Color(0.0015f, 0.0022f, 0.0025f);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.012f, 0.018f, 0.022f);
+            RenderSettings.ambientLight = new Color(0.0012f, 0.0016f, 0.0018f);
             RenderSettings.skybox = null;
 
             GameObject moonObject = new GameObject("Cold moon light");
             Light moon = moonObject.AddComponent<Light>();
             moon.type = LightType.Directional;
-            moon.color = new Color(0.28f, 0.38f, 0.5f);
-            moon.intensity = 0.18f;
+            moon.color = new Color(0.16f, 0.22f, 0.3f);
+            moon.intensity = 0.022f;
             moon.shadows = LightShadows.Soft;
             moonObject.transform.rotation = Quaternion.Euler(36f, -28f, 0f);
         }
@@ -300,30 +300,32 @@ namespace LastPassenger
             {
                 GameObject lightObject = new GameObject(i == 0 ? "Left headlight" : "Right headlight");
                 lightObject.transform.SetParent(vehicle, false);
-                lightObject.transform.localPosition = new Vector3(i == 0 ? -0.9f : 0.9f, 0.62f, 1.55f);
-                lightObject.transform.localRotation = Quaternion.Euler(4f, 0f, 0f);
+                lightObject.transform.localPosition = new Vector3(i == 0 ? -0.76f : 0.76f, 0.58f, 1.62f);
+                lightObject.transform.localRotation = Quaternion.Euler(6f, i == 0 ? -1.5f : 1.5f, 0f);
 
                 Light light = lightObject.AddComponent<Light>();
                 light.type = LightType.Spot;
-                light.range = 115f;
-                light.spotAngle = 58f;
-                light.innerSpotAngle = 38f;
-                light.intensity = 8.5f;
-                light.color = new Color(0.78f, 0.82f, 0.72f);
+                light.range = 108f;
+                light.spotAngle = 43f;
+                light.innerSpotAngle = 30f;
+                light.intensity = 21f;
+                light.color = new Color(1f, 0.88f, 0.68f);
                 light.shadows = LightShadows.Soft;
+                light.shadowStrength = 0.86f;
+                light.shadowBias = 0.035f;
             }
 
             GameObject fillObject = new GameObject("Headlight central fill");
             fillObject.transform.SetParent(vehicle, false);
-            fillObject.transform.localPosition = new Vector3(0f, 0.72f, 1.62f);
-            fillObject.transform.localRotation = Quaternion.Euler(5f, 0f, 0f);
+            fillObject.transform.localPosition = new Vector3(0f, 0.48f, 1.7f);
+            fillObject.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
             Light fill = fillObject.AddComponent<Light>();
             fill.type = LightType.Spot;
-            fill.range = 82f;
-            fill.spotAngle = 76f;
-            fill.innerSpotAngle = 42f;
-            fill.intensity = 2.2f;
-            fill.color = new Color(0.66f, 0.72f, 0.66f);
+            fill.range = 42f;
+            fill.spotAngle = 72f;
+            fill.innerSpotAngle = 46f;
+            fill.intensity = 6.2f;
+            fill.color = new Color(0.88f, 0.79f, 0.64f);
             fill.shadows = LightShadows.None;
         }
 

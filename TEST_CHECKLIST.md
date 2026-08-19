@@ -122,16 +122,20 @@ Run this once in the Unity editor and once in the final Windows build.
 8. Confirm the red border appears only as a brief collision flash or an active
    truck-proximity pulse, then fades fully when the danger ends.
 9. Confirm all messages fit at 1280×720 and 1920×1080.
-10. Confirm the dark vignette reduces peripheral visibility without obscuring
-    the dashboard, and that the fixed headlights reveal traffic and barricades
-    before their collision boxes reach the player.
-11. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
+10. Confirm the road and forest are nearly black outside the beams, while the
+    two long headlight cones and short wide fill reveal lane paint, traffic, and
+    barricades before their collision boxes reach the player. There should be a
+    visible light-to-dark boundary on the asphalt rather than uniform brightness.
+11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
+    forest of transparent fir silhouettes. Look for rectangular image edges,
+    excessive brightness, gaps in the distant wall, or visible billboard pivots.
+12. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
     can appear around a randomized two-minute interval and vanishes harmlessly
     when driven through.
-12. Complete the run and confirm both junction choices can reach the cliff,
+13. Complete the run and confirm both junction choices can reach the cliff,
     that the road-to-cliff transition plays once, and that Enter restarts after
     `NO ROAD BELOW`.
-13. During a full run, confirm the attainable speed begins increasing after
+14. During a full run, confirm the attainable speed begins increasing after
     about one minute, reaches roughly 112 km/h by the late run, and makes
     steering harder without causing sudden speed jumps. A clean run should
     still reach the cliff at roughly ten minutes.
