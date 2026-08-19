@@ -24,7 +24,8 @@ namespace LastPassenger
         {
             PrototypeGameManager manager = PrototypeGameManager.Instance;
             bool radioEnabled = manager == null || manager.RadioEnabled;
-            bool anomaly = manager != null && manager.State == PrototypeGameManager.RunState.Anomaly;
+            bool anomaly = manager != null &&
+                (manager.ThreatLevel > 0.05f || manager.AmbientAnomalyActive);
 
             float noise = Mathf.PerlinNoise(phase, Time.time * 4.1f);
             float pulse = 0.7f + Mathf.Sin(Time.time * 7.3f + phase) * 0.14f + noise * 0.16f;

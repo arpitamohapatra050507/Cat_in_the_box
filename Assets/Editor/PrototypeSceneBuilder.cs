@@ -19,6 +19,8 @@ namespace LastPassenger.Editor
             public GameObject roadChunkPrefab;
             public GameObject pineTreePrefab;
             public GameObject leaflessTreePrefab;
+            public GameObject trafficCarPrefab;
+            public GameObject barricadePrefab;
             public float roadChunkLength;
         }
 
@@ -84,6 +86,8 @@ namespace LastPassenger.Editor
                     previousConfiguration.roadChunkPrefab,
                     previousConfiguration.pineTreePrefab,
                     previousConfiguration.leaflessTreePrefab,
+                    previousConfiguration.trafficCarPrefab,
+                    previousConfiguration.barricadePrefab,
                     previousConfiguration.roadChunkLength);
             }
 
@@ -167,6 +171,8 @@ namespace LastPassenger.Editor
                 snapshot.roadChunkPrefab = configuration.RoadChunkPrefab;
                 snapshot.pineTreePrefab = configuration.PineTreePrefab;
                 snapshot.leaflessTreePrefab = configuration.LeaflessTreePrefab;
+                snapshot.trafficCarPrefab = configuration.TrafficCarPrefab;
+                snapshot.barricadePrefab = configuration.BarricadePrefab;
                 snapshot.roadChunkLength = configuration.RoadChunkLength;
             }
 

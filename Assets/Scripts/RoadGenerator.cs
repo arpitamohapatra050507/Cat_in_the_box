@@ -8,6 +8,8 @@ namespace LastPassenger
         private const int ChunkCount = 16;
         private const float DefaultChunkLength = 80f;
         private const float RoadWidth = 8f;
+        private const int NearTreesPerChunk = 16;
+        private const int FarTreesPerChunk = 36;
 
         private readonly List<Transform> chunks = new List<Transform>();
         private Transform vehicle;
@@ -21,6 +23,7 @@ namespace LastPassenger
         private Material barkMaterial;
         private Material branchMaterial;
         private Material reflectorMaterial;
+        private Material farForestMaterial;
 
         public void Build(
             Transform vehicleTransform,
@@ -35,14 +38,22 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.035f, 0.04f, 0.045f), 0.05f, 0.32f);
+            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.017f, 0.019f, 0.021f), 0.05f, 0.34f);
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
-            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.46f, 0.43f, 0.29f), 0f, 0.08f);
-            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.018f, 0.024f, 0.018f));
-            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.075f, 0.055f, 0.045f));
-            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.025f, 0.05f, 0.035f));
+            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.34f, 0.3f, 0.16f), 0f, 0.08f);
+            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.004f, 0.006f, 0.0045f));
+            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.025f, 0.018f, 0.014f));
+            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.006f, 0.013f, 0.009f));
             reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
+            Texture2D farForestTexture = Resources.Load<Texture2D>("Forest/DarkFirBillboard");
+            if (farForestTexture != null)
+            {
+                farForestMaterial = RuntimeGeometry.TexturedMaterial(
+                    "Batched distant fir silhouettes",
+                    farForestTexture,
+                    transparent: true);
+            }
 
             for (int i = 0; i < ChunkCount; i++)
             {
@@ -69,17 +80,81 @@ namespace LastPassenger
             }
 
             System.Random random = new System.Random(7331 + index * 109);
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < NearTreesPerChunk; i++)
             {
                 float localZ = 4f + (float)random.NextDouble() * (chunkLength - 8f);
                 float side = i % 2 == 0 ? -1f : 1f;
-                float x = side * (6f + (float)random.NextDouble() * 7f);
-                float height = 2.5f + (float)random.NextDouble() * 3.5f;
-                bool isPine = random.NextDouble() < 0.8;
+                float x = side * (5.4f + (float)random.NextDouble() * 6.4f);
+                float height = 3.4f + (float)random.NextDouble() * 3.8f;
+                bool isPine = random.NextDouble() < 0.84;
                 BuildTree(chunk.transform, new Vector3(x, 0f, localZ), height, isPine);
             }
 
+            if (farForestMaterial != null) BuildFarForest(chunk.transform, random);
+
             return chunk.transform;
+        }
+
+        private void BuildFarForest(Transform chunk, System.Random random)
+        {
+            List<Vector3> vertices = new List<Vector3>(FarTreesPerChunk * 8);
+            List<Vector2> uvs = new List<Vector2>(FarTreesPerChunk * 8);
+            List<int> triangles = new List<int>(FarTreesPerChunk * 12);
+
+            for (int i = 0; i < FarTreesPerChunk; i++)
+            {
+                float side = i % 2 == 0 ? -1f : 1f;
+                float x = side * (10.5f + (float)random.NextDouble() * 15.5f);
+                float z = 1f + (float)random.NextDouble() * (chunkLength - 2f);
+                float height = 5.2f + (float)random.NextDouble() * 4.8f;
+                float width = height * (0.38f + (float)random.NextDouble() * 0.1f);
+                AddBillboardCard(vertices, uvs, triangles, new Vector3(x, height * 0.5f, z), Vector3.right, width, height);
+                AddBillboardCard(vertices, uvs, triangles, new Vector3(x, height * 0.5f, z),
+                    new Vector3(0.58f, 0f, 0.82f).normalized, width, height);
+            }
+
+            Mesh mesh = new Mesh { name = "Combined distant forest mesh" };
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            GameObject forest = new GameObject("Batched distant forest billboards");
+            forest.transform.SetParent(chunk, false);
+            forest.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = forest.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = farForestMaterial;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        private static void AddBillboardCard(
+            List<Vector3> vertices,
+            List<Vector2> uvs,
+            List<int> triangles,
+            Vector3 center,
+            Vector3 horizontal,
+            float width,
+            float height)
+        {
+            int start = vertices.Count;
+            Vector3 halfRight = horizontal * (width * 0.5f);
+            Vector3 halfUp = Vector3.up * (height * 0.5f);
+            vertices.Add(center - halfRight - halfUp);
+            vertices.Add(center - halfRight + halfUp);
+            vertices.Add(center + halfRight + halfUp);
+            vertices.Add(center + halfRight - halfUp);
+            uvs.Add(new Vector2(0f, 0f));
+            uvs.Add(new Vector2(0f, 1f));
+            uvs.Add(new Vector2(1f, 1f));
+            uvs.Add(new Vector2(1f, 0f));
+            triangles.Add(start);
+            triangles.Add(start + 1);
+            triangles.Add(start + 2);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 3);
         }
 
         private void BuildProceduralRoadChunk(Transform chunk)

@@ -8,6 +8,11 @@ namespace LastPassenger
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null)
+            {
+                Debug.LogError("The runtime Lit shader is missing. Keep URP/Lit in Graphics Settings > Always Included Shaders.");
+                return null;
+            }
             Material material = new Material(shader) { name = name, color = color };
 
             if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", metallic);
@@ -27,6 +32,11 @@ namespace LastPassenger
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
             if (shader == null) shader = Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                Debug.LogError("The runtime Unlit shader is missing. Keep URP/Unlit in Graphics Settings > Always Included Shaders.");
+                return null;
+            }
             Material material = new Material(shader) { name = name, color = Color.white, mainTexture = texture };
 
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
@@ -46,6 +56,7 @@ namespace LastPassenger
                     material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 }
                 if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 0f);
+                if (material.HasProperty("_Cull")) material.SetFloat("_Cull", 0f);
                 material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
                 material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             }
@@ -73,7 +84,9 @@ namespace LastPassenger
             Vector3 localPosition,
             Vector2 localSize,
             Material material,
-            Vector3 localEuler = default)
+            Vector3 localEuler = default,
+            bool flipHorizontal = false,
+            bool flipVertical = false)
         {
             GameObject created = new GameObject(name);
             created.transform.SetParent(parent, false);
@@ -89,12 +102,16 @@ namespace LastPassenger
                 new Vector3(0.5f, 0.5f, 0f),
                 new Vector3(0.5f, -0.5f, 0f)
             };
+            float left = flipHorizontal ? 1f : 0f;
+            float right = flipHorizontal ? 0f : 1f;
+            float bottom = flipVertical ? 1f : 0f;
+            float top = flipVertical ? 0f : 1f;
             mesh.uv = new[]
             {
-                new Vector2(0f, 0f),
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(1f, 0f)
+                new Vector2(left, bottom),
+                new Vector2(left, top),
+                new Vector2(right, top),
+                new Vector2(right, bottom)
             };
             mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
             mesh.RecalculateNormals();
@@ -130,6 +147,55 @@ namespace LastPassenger
 
             Collider collider = created.GetComponent<Collider>();
             if (collider != null && !keepCollider) Object.Destroy(collider);
+            return created;
+        }
+
+        public static GameObject TaperedBox(
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector2 bottomSize,
+            Vector2 topSize,
+            float height,
+            Material material)
+        {
+            GameObject created = new GameObject(name);
+            created.transform.SetParent(parent, false);
+            created.transform.localPosition = localPosition;
+
+            float bottomHalfWidth = bottomSize.x * 0.5f;
+            float bottomHalfDepth = bottomSize.y * 0.5f;
+            float topHalfWidth = topSize.x * 0.5f;
+            float topHalfDepth = topSize.y * 0.5f;
+            float halfHeight = height * 0.5f;
+
+            Mesh mesh = new Mesh { name = $"{name} mesh" };
+            mesh.vertices = new[]
+            {
+                new Vector3(-bottomHalfWidth, -halfHeight, -bottomHalfDepth),
+                new Vector3(bottomHalfWidth, -halfHeight, -bottomHalfDepth),
+                new Vector3(bottomHalfWidth, -halfHeight, bottomHalfDepth),
+                new Vector3(-bottomHalfWidth, -halfHeight, bottomHalfDepth),
+                new Vector3(-topHalfWidth, halfHeight, -topHalfDepth),
+                new Vector3(topHalfWidth, halfHeight, -topHalfDepth),
+                new Vector3(topHalfWidth, halfHeight, topHalfDepth),
+                new Vector3(-topHalfWidth, halfHeight, topHalfDepth)
+            };
+            mesh.triangles = new[]
+            {
+                0, 4, 5, 0, 5, 1,
+                1, 5, 6, 1, 6, 2,
+                2, 6, 7, 2, 7, 3,
+                3, 7, 4, 3, 4, 0,
+                4, 7, 6, 4, 6, 5,
+                3, 0, 1, 3, 1, 2
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            created.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = created.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
             return created;
         }
 

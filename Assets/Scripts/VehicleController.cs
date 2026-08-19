@@ -6,6 +6,9 @@ namespace LastPassenger
     {
         [Header("Lane driving")]
         [SerializeField] private float maximumSpeed = 10f;
+        [SerializeField] private float lateRunMaximumSpeed = 15.5f;
+        [SerializeField] private float speedRampStartsAfter = 60f;
+        [SerializeField] private float speedRampDuration = 480f;
         [SerializeField] private float acceleration = 3.4f;
         [SerializeField] private float braking = 7f;
         [SerializeField] private float naturalDrag = 0.8f;
@@ -27,14 +30,18 @@ namespace LastPassenger
         private float heading;
         private float visualRoll;
         private float edgeCooldown;
+        private float currentMaximumSpeed;
         private bool controlsEnabled = true;
+        private bool cliffFalling;
+        private float cliffFallStartedAt;
 
         public float Speed => speed;
-        public float MaximumSpeed => maximumSpeed;
+        public float MaximumSpeed => currentMaximumSpeed > 0f ? currentMaximumSpeed : maximumSpeed;
         public float Distance => transform.position.z;
         public float LanePosition => transform.position.x;
         public float SteeringInput => steeringInput;
         public float Heading => heading;
+        public float SpeedRatio => MaximumSpeed > 0f ? Mathf.Clamp01(speed / MaximumSpeed) : 0f;
 
         public void ConfigureAudio(AudioClip engine, AudioClip impact)
         {
@@ -67,8 +74,36 @@ namespace LastPassenger
             transform.position = position;
         }
 
+        public void ApplyImpact(float retainedSpeed)
+        {
+            speed *= Mathf.Clamp01(retainedSpeed);
+            heading = Mathf.Clamp(
+                heading + Random.Range(-4.5f, 4.5f),
+                -maximumHeading,
+                maximumHeading);
+            visualRoll += Random.Range(-2.2f, 2.2f);
+            edgeCooldown = Mathf.Max(edgeCooldown, 0.3f);
+            impactSource?.Play();
+        }
+
+        public void BeginCliffFall()
+        {
+            controlsEnabled = false;
+            cliffFalling = true;
+            cliffFallStartedAt = Time.time;
+            speed = Mathf.Max(speed, MaximumSpeed * 0.82f);
+            heading *= 0.35f;
+        }
+
         private void Update()
         {
+            UpdateMaximumSpeed();
+            if (cliffFalling)
+            {
+                UpdateCliffFall();
+                return;
+            }
+
             edgeCooldown -= Time.deltaTime;
 
             float throttle = controlsEnabled && PrototypeInput.AccelerateHeld ? 1f : 0f;
@@ -76,7 +111,7 @@ namespace LastPassenger
 
             if (throttle > 0f)
             {
-                speed = Mathf.MoveTowards(speed, maximumSpeed, acceleration * Time.deltaTime);
+                speed = Mathf.MoveTowards(speed, MaximumSpeed, acceleration * Time.deltaTime);
             }
             else
             {
@@ -100,7 +135,7 @@ namespace LastPassenger
                 targetSteering,
                 steeringChangeSpeed * Time.deltaTime);
 
-            float speedRatio = maximumSpeed > 0f ? Mathf.Clamp01(speed / maximumSpeed) : 0f;
+            float speedRatio = SpeedRatio;
             float steeringAuthority = Mathf.Lerp(0.18f, 1f, speedRatio);
             if (Mathf.Abs(steeringInput) > 0.01f)
             {
@@ -154,6 +189,43 @@ namespace LastPassenger
                     engineSource.volume = 0f;
                 }
             }
+        }
+
+        private void UpdateCliffFall()
+        {
+            float elapsed = Time.time - cliffFallStartedAt;
+            speed = Mathf.MoveTowards(speed, MaximumSpeed * 1.08f, acceleration * Time.deltaTime);
+            Vector3 position = transform.position;
+            position += Vector3.forward * speed * Time.deltaTime;
+            if (elapsed > 0.65f)
+            {
+                float fallTime = elapsed - 0.65f;
+                position.y -= (2.5f + fallTime * 9f) * Time.deltaTime;
+            }
+            transform.position = position;
+            transform.rotation = Quaternion.Euler(
+                Mathf.Lerp(0f, 34f, Mathf.Clamp01(elapsed / 2.2f)),
+                heading,
+                Mathf.Sin(elapsed * 2.8f) * 5f);
+
+            if (engineSource != null)
+            {
+                engineSource.pitch = Mathf.Lerp(1.38f, 1.7f, Mathf.Clamp01(elapsed / 2f));
+                engineSource.volume = maximumEngineVolume;
+            }
+        }
+
+        private void UpdateMaximumSpeed()
+        {
+            float ramp = Mathf.InverseLerp(
+                speedRampStartsAfter,
+                speedRampStartsAfter + Mathf.Max(1f, speedRampDuration),
+                Time.timeSinceLevelLoad);
+            ramp = ramp * ramp * (3f - 2f * ramp);
+            currentMaximumSpeed = Mathf.Lerp(
+                maximumSpeed,
+                Mathf.Max(maximumSpeed, lateRunMaximumSpeed),
+                ramp);
         }
     }
 }
