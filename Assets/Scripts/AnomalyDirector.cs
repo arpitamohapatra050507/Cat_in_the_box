@@ -33,7 +33,9 @@ namespace LastPassenger
         private AudioClip hornClip;
         private AudioClip truckImpactClip;
         private float apparitionCheckTimer;
-        private float apparitionThreatStartedAt;
+        private float apparitionThreatSeconds;
+        private float apparitionFadeStartSeconds;
+        private bool apparitionBeingObserved;
         private float truckGap;
         private bool apparitionThreatActive;
         private bool truckSequenceRequested;
@@ -146,8 +148,11 @@ namespace LastPassenger
             if (!mirror.ShowSeatApparition(Random.value < 0.5f, apparitionKillDelay)) return;
 
             apparitionThreatActive = true;
-            apparitionThreatStartedAt = Time.time;
+            apparitionThreatSeconds = 0.01f;
+            apparitionFadeStartSeconds = 0f;
+            apparitionBeingObserved = false;
             mirror.SetApparitionDanger(0f);
+            mirror.SetApparitionOpacity(1f);
             if (apparitionSource != null && ghostClip != null)
             {
                 apparitionSource.volume = ghostStartingVolume;
@@ -157,31 +162,55 @@ namespace LastPassenger
             gameManager.ShowGameplayMessage(
                 "Something is behind you. HOLD R. LOOK AT IT.",
                 new Color(1f, 0.3f, 0.26f),
-                apparitionKillDelay);
+                apparitionKillDelay * 2f);
         }
 
         private void UpdateApparitionThreat()
         {
-            if (mirror.WasDispelledByObservation)
+            float killDelay = Mathf.Max(0.1f, apparitionKillDelay);
+            bool observing = PrototypeInput.MirrorHeld;
+            if (observing)
+            {
+                if (!apparitionBeingObserved)
+                {
+                    apparitionBeingObserved = true;
+                    apparitionFadeStartSeconds = Mathf.Max(0.01f, apparitionThreatSeconds);
+                }
+                apparitionThreatSeconds = Mathf.MoveTowards(
+                    apparitionThreatSeconds,
+                    0f,
+                    Time.deltaTime);
+            }
+            else
+            {
+                apparitionBeingObserved = false;
+                apparitionFadeStartSeconds = 0f;
+                apparitionThreatSeconds = Mathf.Min(
+                    killDelay,
+                    apparitionThreatSeconds + Time.deltaTime);
+            }
+
+            float progress = Mathf.Clamp01(apparitionThreatSeconds / killDelay);
+            float opacity = observing
+                ? Mathf.Clamp01(apparitionThreatSeconds / Mathf.Max(0.01f, apparitionFadeStartSeconds))
+                : 1f;
+            mirror.SetApparitionDanger(progress);
+            mirror.SetApparitionOpacity(opacity);
+            gameManager.SetThreatLevel(progress * 0.62f);
+            if (apparitionSource != null && apparitionSource.isPlaying)
+            {
+                float dangerVolume = Mathf.Lerp(ghostStartingVolume, ghostMaximumVolume,
+                    progress * progress);
+                apparitionSource.volume = dangerVolume * opacity;
+            }
+
+            if (observing && apparitionThreatSeconds <= 0f)
             {
                 EndApparition(true);
                 return;
             }
 
-            float progress = Mathf.Clamp01((Time.time - apparitionThreatStartedAt) /
-                Mathf.Max(0.1f, apparitionKillDelay));
-            float observationProgress = mirror.ApparitionObservationProgress;
-            float visibleDanger = progress * Mathf.Lerp(1f, 0.22f, observationProgress);
-            mirror.SetApparitionDanger(visibleDanger);
-            gameManager.SetThreatLevel(visibleDanger * 0.62f);
-            if (apparitionSource != null && apparitionSource.isPlaying)
-            {
-                float dangerVolume = Mathf.Lerp(ghostStartingVolume, ghostMaximumVolume,
-                    progress * progress);
-                apparitionSource.volume = dangerVolume * Mathf.Lerp(1f, 0.24f, observationProgress);
-            }
-
-            if (progress < 1f) return;
+            if (apparitionThreatSeconds < killDelay) return;
 
             mirror.HideSeatApparition();
             mirror.SetApparitionDanger(1f);
@@ -195,6 +224,7 @@ namespace LastPassenger
             apparitionThreatActive = false;
             mirror?.HideSeatApparition();
             mirror?.SetApparitionDanger(0f);
+            mirror?.SetApparitionOpacity(0f);
             if (apparitionSource != null) apparitionSource.Stop();
             if (gameManager != null) gameManager.SetThreatLevel(0f);
             if (dispelled && gameManager != null)

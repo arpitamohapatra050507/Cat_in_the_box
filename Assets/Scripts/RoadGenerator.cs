@@ -16,6 +16,10 @@ namespace LastPassenger
         private GameObject roadChunkPrefab;
         private GameObject pineTreePrefab;
         private GameObject leaflessTreePrefab;
+        private GameObject defaultRoadChunkPrefab;
+        private GameObject defaultPineTreePrefab;
+        private bool usingDefaultRoad;
+        private bool usingDefaultPine;
         private float chunkLength = DefaultChunkLength;
         private Material roadMaterial;
         private Material lineMaterial;
@@ -24,6 +28,8 @@ namespace LastPassenger
         private Material branchMaterial;
         private Material reflectorMaterial;
         private Material farForestMaterial;
+        private Material railingMaterial;
+        private Material defaultPineMaterial;
 
         public void Build(
             Transform vehicleTransform,
@@ -38,21 +44,43 @@ namespace LastPassenger
                 chunkLength = assetConfiguration.RoadChunkLength;
             }
 
-            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.017f, 0.019f, 0.021f), 0.05f, 0.34f);
+            defaultRoadChunkPrefab = Resources.Load<GameObject>("Models/Road/RoadTemplateTestVisual");
+            defaultPineTreePrefab = Resources.Load<GameObject>("Models/Trees/EvergreenOptimized");
+            usingDefaultRoad = roadChunkPrefab == null ||
+                roadChunkPrefab.name.Equals("RoadTemplate", System.StringComparison.OrdinalIgnoreCase);
+            usingDefaultPine = pineTreePrefab == null ||
+                pineTreePrefab.name.Equals(
+                    "Evergreen_Geometry_0801193826_texture",
+                    System.StringComparison.OrdinalIgnoreCase) ||
+                pineTreePrefab.name.Equals("EvergreenOptimized", System.StringComparison.OrdinalIgnoreCase);
+            if (usingDefaultRoad && defaultRoadChunkPrefab != null) roadChunkPrefab = defaultRoadChunkPrefab;
+            if (usingDefaultPine && defaultPineTreePrefab != null) pineTreePrefab = defaultPineTreePrefab;
+
+            roadMaterial = RuntimeGeometry.Material("Wet black asphalt", new Color(0.006f, 0.007f, 0.008f), 0.05f, 0.34f);
             Texture2D roadTexture = Resources.Load<Texture2D>("Road/RoadAlbedo");
             RuntimeGeometry.ApplyTexture(roadMaterial, roadTexture, new Vector2(1f, 10f));
-            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.34f, 0.3f, 0.16f), 0f, 0.08f);
-            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.004f, 0.006f, 0.0045f));
-            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.025f, 0.018f, 0.014f));
-            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.006f, 0.013f, 0.009f));
+            lineMaterial = RuntimeGeometry.Material("Faded lane paint", new Color(0.24f, 0.21f, 0.1f), 0f, 0.08f);
+            dirtMaterial = RuntimeGeometry.Material("Night soil", new Color(0.0008f, 0.0011f, 0.0009f));
+            barkMaterial = RuntimeGeometry.Material("Dead bark", new Color(0.008f, 0.005f, 0.004f));
+            branchMaterial = RuntimeGeometry.Material("Dead needles", new Color(0.0015f, 0.003f, 0.002f));
+            railingMaterial = RuntimeGeometry.Material("Road railing", new Color(0.018f, 0.02f, 0.021f), 0.7f, 0.28f);
             reflectorMaterial = RuntimeGeometry.Material("Cold reflector", new Color(0.4f, 0.72f, 0.76f), 0f, 0.35f, true);
             Texture2D farForestTexture = Resources.Load<Texture2D>("Forest/DarkFirBillboard");
             if (farForestTexture != null)
             {
-                farForestMaterial = RuntimeGeometry.TexturedMaterial(
+                farForestMaterial = RuntimeGeometry.TexturedLitMaterial(
                     "Batched distant fir silhouettes",
                     farForestTexture,
+                    new Color(0.22f, 0.25f, 0.24f, 1f),
                     transparent: true);
+            }
+            Texture2D defaultPineTexture = Resources.Load<Texture2D>("Models/Trees/EvergreenTexture");
+            if (defaultPineTexture != null)
+            {
+                defaultPineMaterial = RuntimeGeometry.TexturedLitMaterial(
+                    "Optimized evergreen night material",
+                    defaultPineTexture,
+                    new Color(0.16f, 0.19f, 0.14f, 1f));
             }
 
             for (int i = 0; i < ChunkCount; i++)
@@ -73,6 +101,7 @@ namespace LastPassenger
                 customRoad.name = $"Custom road chunk {index:00}";
                 customRoad.transform.localPosition = Vector3.zero;
                 customRoad.transform.localRotation = Quaternion.identity;
+                if (usingDefaultRoad) ApplyDefaultRoadMaterials(customRoad);
             }
             else
             {
@@ -179,10 +208,15 @@ namespace LastPassenger
                 isPine ? "Roadside pine tree" : "Roadside leafless tree",
                 parent,
                 position);
+            tree.transform.localEulerAngles = new Vector3(0f, Random.Range(0f, 360f), 0f);
             GameObject treePrefab = isPine ? pineTreePrefab : leaflessTreePrefab;
             if (treePrefab != null)
             {
-                BuildPrefabTree(tree.transform, treePrefab, height);
+                GameObject instance = BuildPrefabTree(tree.transform, treePrefab, height);
+                if (usingDefaultPine && isPine && defaultPineMaterial != null && instance != null)
+                {
+                    ApplyMaterial(instance, defaultPineMaterial);
+                }
                 return;
             }
 
@@ -206,7 +240,7 @@ namespace LastPassenger
             }
         }
 
-        private static void BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
+        private static GameObject BuildPrefabTree(Transform parent, GameObject prefab, float targetHeight)
         {
             GameObject instance = Instantiate(prefab, parent);
             instance.name = $"Custom {prefab.name}";
@@ -215,11 +249,11 @@ namespace LastPassenger
             instance.transform.localScale = Vector3.one;
 
             Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return;
+            if (renderers.Length == 0) return instance;
 
             Bounds bounds = renderers[0].bounds;
             for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            if (bounds.size.y <= 0.001f) return;
+            if (bounds.size.y <= 0.001f) return instance;
 
             float uniformScale = targetHeight / bounds.size.y;
             instance.transform.localScale = Vector3.one * uniformScale;
@@ -233,6 +267,33 @@ namespace LastPassenger
                 desiredBase.x - bounds.center.x,
                 desiredBase.y - bounds.min.y,
                 desiredBase.z - bounds.center.z);
+            return instance;
+        }
+
+        private void ApplyDefaultRoadMaterials(GameObject road)
+        {
+            Renderer[] renderers = road.GetComponentsInChildren<Renderer>(true);
+            for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+            {
+                Material[] imported = renderers[rendererIndex].sharedMaterials;
+                Material[] replacements = new Material[imported.Length];
+                for (int materialIndex = 0; materialIndex < imported.Length; materialIndex++)
+                {
+                    string materialName = imported[materialIndex] != null
+                        ? imported[materialIndex].name.ToLowerInvariant()
+                        : string.Empty;
+                    replacements[materialIndex] = materialName.Contains("strip")
+                        ? lineMaterial
+                        : materialName.Contains("railing") ? railingMaterial : roadMaterial;
+                }
+                renderers[rendererIndex].sharedMaterials = replacements;
+            }
+        }
+
+        private static void ApplyMaterial(GameObject root, Material material)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++) renderers[i].sharedMaterial = material;
         }
 
         private void BuildPineCrown(Transform tree, float height)

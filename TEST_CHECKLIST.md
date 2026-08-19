@@ -31,11 +31,14 @@ Run this once in the Unity editor and once in the final Windows build.
    `F10`, hold `R` again, and verify the grainy white passenger appears and
    flickers as a separate image layer while its appearance sound plays. The
    mirror must remain dark and must not change with the live camera view.
-   Keep observing it for roughly 1.1 seconds and confirm it fades progressively
-   rather than popping out, while the hands and apparition audio also recede.
-   Note that
+   Wait about 2.5 seconds before holding `R`, then keep observing it. Confirm
+   the apparition, hands, and audio reverse and fade progressively over about
+   the same 2.5 seconds rather than popping out or killing the driver. Note that
    `F10` forces the apparition in place; it does not teleport the vehicle.
-10. Press `F10` again and do not touch `R`. Confirm hands grow inward from the
+10. Press `F10` again, let danger rise for about two seconds, hold `R` for only
+   one second, then release it. Confirm the fading reverses and danger begins
+   climbing from its reduced value. Press `F10` once more and do not touch `R`.
+   Confirm hands grow inward from the
    screen edges, apparition audio becomes louder, and the driver dies after
    about three seconds. Repeat once and verify holding `R` is the only way to
    interrupt the threat.
@@ -92,11 +95,11 @@ Run this once in the Unity editor and once in the final Windows build.
 1. Use **Tools > The Last Passenger > Select Prefab Overrides** and confirm the
    scene configuration object exposes Road Chunk, Pine Tree, Leafless Tree,
    Traffic Car, Barricade, and Road Chunk Length fields.
-2. Leave all five prefab fields empty, enter Play Mode, and confirm the current
-   generated road, both generated tree types, cleaned Frost traffic cars, and
-   framed reflective barricades still appear.
+2. Leave all five prefab fields empty, enter Play Mode, and confirm the cleaned
+   8-by-80 team road, optimized team evergreen, generated leafless trees,
+   cleaned Frost traffic cars, and framed reflective barricades appear.
 3. Assign only a pine prefab, restart Play Mode, and confirm it replaces the
-   common trees while the generated road and leafless trees remain.
+   common trees while the cleaned default road and generated leafless trees remain.
 4. Assign a road prefab with the correct length, restart Play Mode, and confirm
    all ordinary chunks use it, remain gap-free, and continue recycling as the
    car advances.
@@ -105,8 +108,9 @@ Run this once in the Unity editor and once in the final Windows build.
    works even if the prefab contains colliders or rigidbodies.
 6. Assign a barricade prefab, press `F8`, and confirm spawned chase obstacles
    use it and are grounded correctly.
-7. Remove the prefab assignments and confirm the default Frost traffic model
-   returns while the other procedural/image fallbacks return independently.
+7. Remove the prefab assignments and confirm the cleaned default road,
+   optimized evergreen, Frost traffic model, and remaining procedural/image
+   fallbacks return independently.
 8. Use **Rebuild Prototype Scene** and confirm assigned overrides are preserved.
 
 ## Full pacing pass
@@ -133,6 +137,8 @@ Run this once in the Unity editor and once in the final Windows build.
 11. Confirm every road chunk has a dense first row of 3D trees plus a deeper
     forest of transparent fir silhouettes. Look for rectangular image edges,
     excessive brightness, gaps in the distant wall, or visible billboard pivots.
+    The far cards must be nearly black outside the headlights rather than
+    globally glowing blue-green.
 12. Drive naturally for at least 2–3 minutes. Confirm a black human silhouette
     can appear around a randomized two-minute interval and vanishes harmlessly
     when driven through.

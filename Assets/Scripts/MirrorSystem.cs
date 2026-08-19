@@ -12,11 +12,8 @@ namespace LastPassenger
 
         private bool apparitionVisible;
         private bool severeApparition;
-        private bool apparitionDispelled;
         private float apparitionStartedAt;
-        private float apparitionSafetyExpiry;
-        private float observationTime;
-        [SerializeField] private float apparitionObservationSeconds = 1.1f;
+        private float apparitionOpacity = 1f;
         private float pulse;
         private Vector2 anomalyJitter;
         private float anomalyAlpha;
@@ -30,12 +27,7 @@ namespace LastPassenger
         private float truckJumpscareDuration;
 
         public bool IsExpanded { get; private set; }
-        public bool WasObservedAfterAnomaly => apparitionDispelled;
-        public bool WasDispelledByObservation => apparitionDispelled;
         public bool ApparitionVisible => apparitionVisible;
-        public float ApparitionObservationProgress => apparitionVisible
-            ? Mathf.Clamp01(observationTime / Mathf.Max(0.1f, apparitionObservationSeconds))
-            : (apparitionDispelled ? 1f : 0f);
         public Texture MirrorTexture => mirrorTexture;
 
         public void Build(Transform vehicle, Transform body)
@@ -55,11 +47,9 @@ namespace LastPassenger
 
             apparitionVisible = true;
             severeApparition = severe;
-            apparitionDispelled = false;
-            observationTime = 0f;
+            apparitionOpacity = 1f;
             pulse = Random.Range(0f, 20f);
             apparitionStartedAt = Time.time;
-            apparitionSafetyExpiry = apparitionStartedAt + Mathf.Max(8f, seconds + 5f);
             anomalyAlpha = 0f;
             apparitionDanger = 0f;
             return true;
@@ -73,13 +63,17 @@ namespace LastPassenger
         public void HideSeatApparition()
         {
             apparitionVisible = false;
-            observationTime = 0f;
             apparitionDanger = 0f;
         }
 
         public void SetApparitionDanger(float danger)
         {
             apparitionDanger = Mathf.Clamp01(danger);
+        }
+
+        public void SetApparitionOpacity(float opacity)
+        {
+            apparitionOpacity = Mathf.Clamp01(opacity);
         }
 
         public void SetTruckPursuit(bool visible, float proximity)
@@ -103,36 +97,11 @@ namespace LastPassenger
                 pulse += Time.deltaTime;
                 float elapsed = Time.time - apparitionStartedAt;
 
-                if (IsExpanded)
-                {
-                    observationTime += Time.deltaTime;
-                }
-                else
-                {
-                    observationTime = Mathf.MoveTowards(observationTime, 0f, Time.deltaTime * 2f);
-                }
-
-                float observationProgress = Mathf.Clamp01(
-                    observationTime / Mathf.Max(0.1f, apparitionObservationSeconds));
                 float fadeIn = Mathf.Clamp01(elapsed / 0.25f);
-                float fadeFromLooking = 1f - Mathf.SmoothStep(0f, 1f, observationProgress);
                 float flicker = 0.54f + Mathf.PerlinNoise(pulse * 12f, 4.1f) * 0.42f;
-                anomalyAlpha = fadeIn * fadeFromLooking * flicker;
+                anomalyAlpha = fadeIn * Mathf.SmoothStep(0f, 1f, apparitionOpacity) * flicker;
                 anomalyJitter.x = (Mathf.PerlinNoise(pulse * 17f, 0.2f) - 0.5f) * 0.018f;
                 anomalyJitter.y = (Mathf.PerlinNoise(0.7f, pulse * 21f) - 0.5f) * 0.025f;
-
-                if (observationProgress >= 1f)
-                {
-                    apparitionDispelled = true;
-                    apparitionVisible = false;
-                    apparitionDanger = 0f;
-                    anomalyAlpha = 0f;
-                }
-
-                if (Time.time >= apparitionSafetyExpiry)
-                {
-                    HideSeatApparition();
-                }
             }
             else
             {

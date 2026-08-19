@@ -28,9 +28,11 @@ scene. Its Inspector contains these optional serialized fields:
 - **Road Chunk Length** — distance between repeated road-prefab instances;
   leave it at `80` unless the custom chunk has a different length.
 
-Each field falls back independently. For example, assigning only the Meshy fir
-prefab replaces the pine trees while the generated road and leafless trees stay
-in use. Custom trees are automatically scaled to the randomized target height,
+Each field falls back independently. With no assignments, the road uses the
+cleaned, normalized team road and pine slots use the optimized team evergreen;
+leafless trees and barricades retain their procedural fallbacks. Assigning only
+a Meshy fir replaces those default evergreens without affecting anything else.
+Custom trees are automatically scaled to the randomized target height,
 centered, and placed on the ground, so arbitrary Meshy export scale is fine.
 
 A road prefab's root must represent the beginning of the chunk at local
@@ -52,7 +54,11 @@ An existing Inspector assignment pointing at the original asset named
 do not need their Traffic Car field repaired by hand.
 If that resource is unavailable, traffic falls back again to the generated
 low-poly car and AI-generated images in `Assets/Resources/Traffic`. Empty road,
-tree, and barricade fields retain their existing generated versions.
+pine, leafless-tree, and barricade fields use the cleaned team road, optimized
+evergreen, generated bare tree, and generated barricade respectively. Existing
+Inspector references named `RoadTemplate` or `Evergreen...` are redirected to
+the cleaned runtime copies so old scene assignments cannot reintroduce the
+oversized roadside scene or 145,000-polygon source tree.
 
 All instantiated traffic overrides are first created beneath an inactive
 quarantine object, then treated as visuals before activation: inherited
@@ -98,13 +104,14 @@ headlights, and tail lights. The previous tapered low-poly sedan and its
 generated image skins remain available as a last-resort fallback if the cleaned
 model cannot be loaded.
 
-The rear-seat apparition checks once every 30 seconds with a 50% chance. When
-it appears, the player has three seconds to hold `R` and face it in the
-rear-view mirror. Over roughly 1.1 seconds of continuous observation it visibly
-fades away while the hands and apparition audio recede. Ignoring it makes pale
-hands creep in from the screen edges while its audio rises; once
-the timer expires, the apparition kills the driver. Missed probability rolls
-do not accumulate or overlap later checks.
+The rear-seat apparition checks once every 30 seconds with a 50% chance. Its
+danger meter rises from zero to three seconds while ignored. Holding `R` turns
+that same meter backwards at the same rate: looking after 2.75 seconds therefore
+takes 2.75 seconds of uninterrupted observation to clear it. The apparition,
+edge hands, and audio all fade continuously as the meter drains. Releasing `R`
+before zero makes the danger climb again; reaching three seconds while not
+draining it kills the driver. Missed probability rolls do not accumulate or
+overlap later checks.
 
 Once the player has passed the junction and travelled far enough, a horn warns
 of a pursuing truck. The chase lasts about 30 seconds. Image-based side mirrors
@@ -142,15 +149,18 @@ the stronger and faster it pulses, the closer the truck is. The dashboard also
 shows `DANGER BEHIND — KEEP SPEED` while that threat is active.
 
 The road now uses headlight-dominant night lighting rather than relying on a
-screen overlay: ambient and moon illumination are nearly black, while two
-focused warm spotlights reveal the lane and a short wide beam fills the area
-immediately in front of the car. Asphalt, soil, bark, and foliage remain almost
-unreadable outside those beams. The headlights are attached to the car and
-intentionally do not follow the mouse yet.
+screen overlay: ambient and moon illumination are effectively black, while two
+strong focused warm spotlights reveal the lane and a short wide beam fills the
+area immediately in front of the car. Asphalt, soil, bark, and foliage remain
+almost unreadable outside those beams. Distant forest cards use a Lit material,
+so they no longer glow cyan from an Unlit shader and respond to the same night
+lighting. The headlights are attached to the car and intentionally do not
+follow the mouse yet.
 
-Each recycled road chunk contains 16 near-field 3D trees, using the serialized
-pine/leafless prefabs when supplied and the procedural trees otherwise. Behind
-them are 36 generated distant firs. Those far trees are crossed transparent
+Each recycled road chunk contains 16 near-field 3D trees. The default pine is a
+2,892-polygon optimized copy of the team's evergreen source; serialized pine or
+leafless overrides still take priority, with procedural geometry as the final
+fallback. Behind them are 36 generated distant firs. Those far trees are crossed transparent
 cards combined into one mesh and one renderer per chunk, so the forest looks
 dense without creating hundreds of separate background renderers.
 
@@ -175,10 +185,12 @@ at full speed, and returns to silence when the car stops. Procedural audio is
 used if either custom clip is missing. The apparition and truck-chase clips are
 loaded separately, allowing the radio, engine, and anomaly sounds to overlap.
 
-When no road prefab is assigned, the generated road material loads
-`Assets/Resources/Road/RoadAlbedo.png` when provided. The `demo` branch's FBX
-currently references a texture that was not committed, so the procedural
-asphalt remains the safe fallback.
+When no road prefab is assigned, the prototype loads
+`Assets/Resources/Models/Road/RoadTemplateTestVisual.fbx`: a cleaned copy of the
+team road normalized to exactly 8 by 80 world units. Its material slots are
+remapped at runtime to the prototype's dark asphalt, lane paint, and rail
+materials, so the missing legacy `Color_Grid.png` is not required. Procedural
+road geometry remains the final fallback if that resource cannot load.
 
 The production asset workflow and first three generation batches are described
 in `ASSET_PLAN.md`.

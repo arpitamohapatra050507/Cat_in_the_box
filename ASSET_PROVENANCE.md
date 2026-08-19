@@ -133,8 +133,21 @@ record so judges can inspect how the temporary content was made.
   this older, apparently non-AI model is eligible under the jam's AI-only asset
   rule before submission.
 
-- The `demo` branch contains `Assets/Models/RoadTemplate.fbx`, credited by the
-  team as an older custom racing-game asset. Its referenced `Color_Grid.png`
-  texture is not present in Git yet, so it has not been imported into the
-  prototype. Record the original author and license/permission when the missing
-  texture is supplied.
+- `Assets/Models/RoadTemplate.fbx` — team-supplied road scene from the older
+  racing project, originally uploaded to the `demo` branch in commit `b02d5a5`.
+  A Blender-cleaned
+  road-only derivative is used at
+  `Assets/Resources/Models/Road/RoadTemplateTestVisual.fbx`; it is normalized
+  to 8 by 80 world units and has runtime-remapped materials, so the missing
+  legacy `Color_Grid.png` is not required. Extraction details and checksums are
+  stored in `RoadTemplateTestVisual_SOURCE.md`. Confirm the original
+  authorship/license and AI-only-rule eligibility before submission.
+
+- `Assets/Resources/Models/Trees/EvergreenOptimized.fbx` and
+  `EvergreenTexture.png` — optimized runtime derivative and texture from the
+  team's `demo`-branch evergreen source (mesh commit `aedabbc`, texture commit
+  `4fc1dfd`). The derivative reduces the source from
+  about 145,000 polygons to 2,892 for repeated roadside use. Source path,
+  transformation, and checksums are stored in `EvergreenOptimized_SOURCE.md`.
+  Confirm the original authorship/license and AI-only-rule eligibility before
+  submission.

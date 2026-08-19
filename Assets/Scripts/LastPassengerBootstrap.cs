@@ -75,17 +75,17 @@ namespace LastPassenger
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.014f;
-            RenderSettings.fogColor = new Color(0.0015f, 0.0022f, 0.0025f);
+            RenderSettings.fogDensity = 0.019f;
+            RenderSettings.fogColor = new Color(0.0001f, 0.00015f, 0.00018f);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.0012f, 0.0016f, 0.0018f);
+            RenderSettings.ambientLight = new Color(0.00012f, 0.00016f, 0.0002f);
             RenderSettings.skybox = null;
 
             GameObject moonObject = new GameObject("Cold moon light");
             Light moon = moonObject.AddComponent<Light>();
             moon.type = LightType.Directional;
-            moon.color = new Color(0.16f, 0.22f, 0.3f);
-            moon.intensity = 0.022f;
+            moon.color = new Color(0.11f, 0.16f, 0.22f);
+            moon.intensity = 0.0035f;
             moon.shadows = LightShadows.Soft;
             moonObject.transform.rotation = Quaternion.Euler(36f, -28f, 0f);
         }
@@ -103,7 +103,7 @@ namespace LastPassenger
             camera.nearClipPlane = 0.04f;
             camera.farClipPlane = 360f;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.004f, 0.007f, 0.009f);
+            camera.backgroundColor = new Color(0.0001f, 0.00015f, 0.0002f);
             cameraObject.AddComponent<AudioListener>();
             cameraObject.AddComponent<DriverCameraLook>();
             return camera;
@@ -305,11 +305,11 @@ namespace LastPassenger
 
                 Light light = lightObject.AddComponent<Light>();
                 light.type = LightType.Spot;
-                light.range = 108f;
-                light.spotAngle = 43f;
-                light.innerSpotAngle = 30f;
-                light.intensity = 21f;
-                light.color = new Color(1f, 0.88f, 0.68f);
+                light.range = 128f;
+                light.spotAngle = 40f;
+                light.innerSpotAngle = 31f;
+                light.intensity = 46f;
+                light.color = new Color(1f, 0.9f, 0.72f);
                 light.shadows = LightShadows.Soft;
                 light.shadowStrength = 0.86f;
                 light.shadowBias = 0.035f;
@@ -321,10 +321,10 @@ namespace LastPassenger
             fillObject.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
             Light fill = fillObject.AddComponent<Light>();
             fill.type = LightType.Spot;
-            fill.range = 42f;
-            fill.spotAngle = 72f;
-            fill.innerSpotAngle = 46f;
-            fill.intensity = 6.2f;
+            fill.range = 50f;
+            fill.spotAngle = 68f;
+            fill.innerSpotAngle = 48f;
+            fill.intensity = 13f;
             fill.color = new Color(0.88f, 0.79f, 0.64f);
             fill.shadows = LightShadows.None;
         }
