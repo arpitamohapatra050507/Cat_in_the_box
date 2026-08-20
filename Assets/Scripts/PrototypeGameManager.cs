@@ -500,6 +500,7 @@ namespace LastPassenger
             if (PrototypeInput.SkipToEndingPressed)
             {
                 vehicle.TeleportForward(FinishDistance);
+                BeginCliffEnding();
             }
         }
 
