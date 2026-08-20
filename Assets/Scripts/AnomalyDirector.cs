@@ -88,6 +88,7 @@ namespace LastPassenger
         private void BuildAudio()
         {
             effectsSource = EnsureSource(effectsSource, false);
+            effectsSource.volume = 1f;
             apparitionSource = EnsureSource(apparitionSource, true);
             truckSource = EnsureSource(truckSource, true);
 

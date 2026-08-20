@@ -48,9 +48,11 @@ namespace LastPassenger
         private Texture2D nightVignetteTexture;
         private Texture2D carDeathTexture;
         private Texture2D truckDeathTexture;
+        private Texture2D endDeathTexture;
         private Texture2D failureTexture;
         private Texture2D cliffEndingTexture;
         private float cliffEndingStartedAt;
+        private float terminalStartedAt;
 
         private const float FinishDistance = 6000f;
         private const float CliffEndingDuration = 3.5f;
@@ -190,6 +192,7 @@ namespace LastPassenger
         {
             carDeathTexture = Resources.Load<Texture2D>("Anomalies/CarDeathScreen");
             truckDeathTexture = Resources.Load<Texture2D>("Anomalies/TruckDeathScreen");
+            endDeathTexture = Resources.Load<Texture2D>("Anomalies/EndDeathScreen");
             cliffEndingTexture = Resources.Load<Texture2D>("Anomalies/CliffRoadEnding");
             nightVignetteTexture = BuildRadialVignetteTexture(192);
         }
@@ -207,8 +210,8 @@ namespace LastPassenger
 
             if (state == RunState.Success || state == RunState.Failure)
             {
-                if (PrototypeInput.ConfirmPressed) Restart();
-                if (PrototypeInput.CancelPressed) Application.Quit();
+                if (PrototypeInput.ConfirmPressed || Time.time - terminalStartedAt >= 6f)
+                    ReturnToMainMenu();
                 return;
             }
 
@@ -328,12 +331,14 @@ namespace LastPassenger
             state = RunState.Success;
             vehicle.SetControlsEnabled(false);
             windSource.volume = 0.04f;
+            terminalStartedAt = Time.time;
         }
 
         private void FailRun()
         {
             if (!IsGameplayActive) return;
             state = RunState.Failure;
+            terminalStartedAt = Time.time;
             chaseHudVisible = false;
             vehicle.SetControlsEnabled(false);
             stingSource.pitch = 0.55f;
@@ -442,6 +447,11 @@ namespace LastPassenger
             Scene active = SceneManager.GetActiveScene();
             if (active.buildIndex >= 0) SceneManager.LoadScene(active.buildIndex);
             else SceneManager.LoadScene(active.name);
+        }
+
+        private void ReturnToMainMenu()
+        {
+            SceneManager.LoadScene("SampleScene");
         }
 
         private void EventTestShortcuts()
@@ -586,12 +596,13 @@ namespace LastPassenger
         private void DrawEnding(bool success)
         {
             Color previous = GUI.color;
-            GUI.color = success ? new Color(0.005f, 0.008f, 0.008f, 0.97f) : new Color(0.08f, 0f, 0f, 0.9f);
+            GUI.color = Color.black;
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
-            if (!success && failureTexture != null)
+            Texture2D endingTexture = success ? endDeathTexture : failureTexture;
+            if (endingTexture != null)
             {
                 GUI.color = Color.white;
-                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), failureTexture, ScaleMode.ScaleAndCrop, true);
+                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), endingTexture, ScaleMode.ScaleAndCrop, true);
             }
             GUI.color = Color.white;
 
