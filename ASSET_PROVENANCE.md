@@ -128,6 +128,15 @@ record so judges can inspect how the temporary content was made.
   details are stored in `TruckChase_SOURCE.md`; confirm the original
   creator/license before final submission. This source is unusually loud, so
   runtime playback must remain strongly attenuated.
+- `Assets/Resources/Anomalies/CarDeathScreen.png` and
+  `TruckDeathScreen.png` — team-supplied death-screen artwork copied from the
+  local project handoff on 2026-08-20. The car-collision and truck-catch paths
+  use them directly; the former broken-glass overlay is no longer drawn.
+- `Assets/Resources/Audio/Anomalies/Scary3.mp3`, `Scary4.wav`, `Scary5.wav`,
+  `Thunder.wav`, and `TruckJumpscare.mp3` — copied from the team-supplied
+  `sfx/` folder in the latest audio update. The first four are scattered as
+  low-volume ambient stings; `TruckJumpscare.mp3` replaces the procedural truck
+  impact sound.
 - `Assets/Resources/Audio/Anomalies/Scary1.mp3` and `Scary2.mp3` — copied from
   the team-supplied `sfx/scary_noises/` folder in commit `62bcb42` on
   2026-08-19 and used as restrained checkpoint stings. Their format, measured

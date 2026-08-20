@@ -93,7 +93,8 @@ namespace LastPassenger
 
             ghostClip = Resources.Load<AudioClip>("Audio/Anomalies/GhostAppearance");
             hornClip = ProceduralAudio.TruckHorn();
-            truckImpactClip = ProceduralAudio.TruckImpact();
+            truckImpactClip = Resources.Load<AudioClip>("Audio/Anomalies/TruckJumpscare");
+            if (truckImpactClip == null) truckImpactClip = ProceduralAudio.TruckImpact();
             apparitionSource.clip = ghostClip;
             truckSource.clip = Resources.Load<AudioClip>("Audio/Anomalies/TruckChase");
         }

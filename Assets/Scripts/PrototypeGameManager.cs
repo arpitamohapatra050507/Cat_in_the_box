@@ -29,6 +29,8 @@ namespace LastPassenger
         private AudioSource radioSource;
         private AudioSource stingSource;
         private AudioSource checkpointScareSource;
+        private AudioClip[] ambientScareClips;
+        private float nextAmbientScareTime;
         private RunState state = RunState.Driving;
         private int nextCheckpointIndex;
         private int checkpointLevel;
@@ -41,11 +43,12 @@ namespace LastPassenger
         private float impactFlash;
         private int chaseHealth;
         private bool chaseHudVisible;
-        private bool showBrokenGlass;
         private string failureTitle = "THE PASSENGER ARRIVED";
         private string failureDescription = "The road finished the journey for you.";
         private Texture2D nightVignetteTexture;
-        private Texture2D brokenGlassTexture;
+        private Texture2D carDeathTexture;
+        private Texture2D truckDeathTexture;
+        private Texture2D failureTexture;
         private Texture2D cliffEndingTexture;
         private float cliffEndingStartedAt;
 
@@ -174,11 +177,19 @@ namespace LastPassenger
             checkpointScareSource.playOnAwake = false;
             checkpointScareSource.loop = false;
             checkpointScareSource.spatialBlend = 0f;
+            ambientScareClips = new[] {
+                Resources.Load<AudioClip>("Audio/Anomalies/Scary3"),
+                Resources.Load<AudioClip>("Audio/Anomalies/Scary4"),
+                Resources.Load<AudioClip>("Audio/Anomalies/Scary5"),
+                Resources.Load<AudioClip>("Audio/Anomalies/Thunder")
+            };
+            nextAmbientScareTime = Time.time + Random.Range(55f, 95f);
         }
 
         private void BuildScreenAssets()
         {
-            brokenGlassTexture = Resources.Load<Texture2D>("Anomalies/BrokenGlassOverlay");
+            carDeathTexture = Resources.Load<Texture2D>("Anomalies/CarDeathScreen");
+            truckDeathTexture = Resources.Load<Texture2D>("Anomalies/TruckDeathScreen");
             cliffEndingTexture = Resources.Load<Texture2D>("Anomalies/CliffRoadEnding");
             nightVignetteTexture = BuildRadialVignetteTexture(192);
         }
@@ -211,6 +222,12 @@ namespace LastPassenger
 
             ProcessRoadEvents();
             ProcessAnomalyCheckpoints();
+            if (Time.time >= nextAmbientScareTime && checkpointScareSource != null && ambientScareClips != null)
+            {
+                AudioClip scare = ambientScareClips[Random.Range(0, ambientScareClips.Length)];
+                if (scare != null) checkpointScareSource.PlayOneShot(scare, 0.16f);
+                nextAmbientScareTime = Time.time + Random.Range(55f, 95f);
+            }
             if (vehicle.Distance >= FinishDistance) BeginCliffEnding();
 
             impactFlash = Mathf.MoveTowards(impactFlash, 0f, Time.deltaTime * 0.9f);
@@ -335,7 +352,7 @@ namespace LastPassenger
         {
             if (!IsGameplayActive) return;
             impactFlash = 0.45f;
-            showBrokenGlass = true;
+            failureTexture = carDeathTexture;
             failureTitle = "HEAD-ON";
             failureDescription = "There is no second chance at this speed.";
             FailRun();
@@ -387,7 +404,7 @@ namespace LastPassenger
             if (!IsGameplayActive) return;
             failureTitle = "DON'T LOOK AWAY";
             failureDescription = "The hands reached the driver's seat before you faced what was behind you.";
-            showBrokenGlass = false;
+            failureTexture = carDeathTexture;
             threatLevel = 1f;
             FailRun();
         }
@@ -397,7 +414,7 @@ namespace LastPassenger
             if (!IsGameplayActive) return;
             failureTitle = "ENGINE DEAD";
             failureDescription = "The truck does not brake. It drives through the rear of the car.";
-            showBrokenGlass = true;
+            failureTexture = truckDeathTexture;
             threatLevel = 1f;
             impactFlash = 0.55f;
             FailRun();
@@ -408,7 +425,7 @@ namespace LastPassenger
             if (!IsGameplayActive) return;
             failureTitle = "RUN DOWN";
             failureDescription = description;
-            showBrokenGlass = true;
+            failureTexture = carDeathTexture;
             threatLevel = 1f;
             FailRun();
         }
@@ -571,10 +588,10 @@ namespace LastPassenger
             Color previous = GUI.color;
             GUI.color = success ? new Color(0.005f, 0.008f, 0.008f, 0.97f) : new Color(0.08f, 0f, 0f, 0.9f);
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
-            if (!success && showBrokenGlass && brokenGlassTexture != null)
+            if (!success && failureTexture != null)
             {
                 GUI.color = Color.white;
-                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), brokenGlassTexture, ScaleMode.StretchToFill, true);
+                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), failureTexture, ScaleMode.ScaleAndCrop, true);
             }
             GUI.color = Color.white;
 
