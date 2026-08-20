@@ -53,9 +53,14 @@ namespace LastPassenger
         private Texture2D cliffEndingTexture;
         private float cliffEndingStartedAt;
         private float terminalStartedAt;
+        private bool cliffFallStarted;
+        private Transform cliffCamera;
+        private Vector3 cliffCameraBasePosition;
+        private Quaternion cliffCameraBaseRotation;
 
         private const float FinishDistance = 6000f;
         private const float CliffEndingDuration = 3.5f;
+        private const float CliffApproachDuration = 1.8f;
 
         public RunState State => state;
         public bool RadioEnabled => radioEnabled;
@@ -203,7 +208,14 @@ namespace LastPassenger
 
             if (state == RunState.CliffEnding)
             {
-                if (Time.time - cliffEndingStartedAt >= CliffEndingDuration) CompleteRun();
+                float endingTime = Time.time - cliffEndingStartedAt;
+                if (!cliffFallStarted && endingTime >= CliffApproachDuration)
+                {
+                    cliffFallStarted = true;
+                    vehicle.BeginCliffFall();
+                }
+                UpdateCliffCameraShake(endingTime);
+                if (endingTime >= CliffApproachDuration + CliffEndingDuration) CompleteRun();
                 impactFlash = Mathf.MoveTowards(impactFlash, 0f, Time.deltaTime * 0.9f);
                 return;
             }
@@ -318,12 +330,38 @@ namespace LastPassenger
             if (!IsGameplayActive) return;
             state = RunState.CliffEnding;
             cliffEndingStartedAt = Time.time;
+            cliffFallStarted = false;
+            cliffCamera = Camera.main != null ? Camera.main.transform : null;
+            if (cliffCamera != null)
+            {
+                cliffCameraBasePosition = cliffCamera.localPosition;
+                cliffCameraBaseRotation = cliffCamera.localRotation;
+            }
             chaseHudVisible = false;
             threatLevel = 0f;
             radioSource.Stop();
             windSource.volume = 0.3f;
-            vehicle.BeginCliffFall();
+            vehicle.SetControlsEnabled(false);
             ShowMessage(string.Empty, Color.white, 0f);
+        }
+
+        private void UpdateCliffCameraShake(float elapsed)
+        {
+            if (cliffCamera == null) return;
+            float approach = Mathf.Clamp01(elapsed / CliffApproachDuration);
+            float fall = Mathf.Clamp01((elapsed - CliffApproachDuration) / CliffEndingDuration);
+            float strength = Mathf.Lerp(0.008f, 0.045f, Mathf.Max(approach, fall));
+            float frequency = Mathf.Lerp(7f, 18f, Mathf.Max(approach, fall));
+            Vector3 offset = new Vector3(
+                Mathf.Sin(Time.time * frequency * 1.37f),
+                Mathf.Sin(Time.time * frequency * 1.91f),
+                0f) * strength;
+            cliffCamera.localPosition = cliffCameraBasePosition + offset;
+            cliffCamera.localRotation = cliffCameraBaseRotation *
+                Quaternion.Euler(
+                    Mathf.Sin(Time.time * frequency * 1.21f) * strength * 90f,
+                    Mathf.Sin(Time.time * frequency * 0.83f) * strength * 55f,
+                    Mathf.Sin(Time.time * frequency * 1.63f) * strength * 70f);
         }
 
         private void CompleteRun()
@@ -581,7 +619,7 @@ namespace LastPassenger
 
         private void DrawCliffEnding()
         {
-            float progress = Mathf.Clamp01((Time.time - cliffEndingStartedAt) / CliffEndingDuration);
+            float progress = Mathf.Clamp01((Time.time - cliffEndingStartedAt - CliffApproachDuration) / CliffEndingDuration);
             Color previous = GUI.color;
             if (cliffEndingTexture != null)
             {
