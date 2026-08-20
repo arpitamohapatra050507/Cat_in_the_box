@@ -609,11 +609,6 @@ namespace LastPassenger
                 wordWrap = true,
                 normal = { textColor = new Color(0.78f, 0.78f, 0.74f) }
             };
-
-            GUI.Label(new Rect(0f, Screen.height * 0.27f, Screen.width, 90f), success ? "NO ROAD BELOW" : failureTitle, title);
-            GUI.Label(new Rect(Screen.width * 0.18f, Screen.height * 0.45f, Screen.width * 0.64f, 100f),
-                success ? "At the end of the road, you keep driving." : failureDescription, body);
-            GUI.Label(new Rect(0f, Screen.height * 0.7f, Screen.width, 40f), "Press Enter to restart", body);
             GUI.color = previous;
         }
 

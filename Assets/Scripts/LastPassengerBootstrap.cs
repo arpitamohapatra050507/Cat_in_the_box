@@ -17,6 +17,7 @@ namespace LastPassenger
 
         private static void CreatePrototype(Scene scene, LoadSceneMode mode)
         {
+            if (scene.name != "Prototype") return;
             if (started || Object.FindFirstObjectByType<PrototypeGameManager>() != null) return;
             started = true;
             new GameObject("The Last Passenger — Generated Prototype").AddComponent<LastPassengerBootstrap>();
