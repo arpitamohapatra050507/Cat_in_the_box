@@ -318,7 +318,7 @@ namespace LastPassenger
                 light.range = 112f;
                 light.spotAngle = 36f;
                 light.innerSpotAngle = 27f;
-                light.intensity = 42f;
+                light.intensity = 70f;
                 light.color = new Color(1f, 0.9f, 0.72f);
                 light.shadows = LightShadows.Soft;
                 light.shadowStrength = 0.86f;
